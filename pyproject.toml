@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "DictDataBase"
+version = "0.1.0"
+description = "Easy-to-use database using dicts"
+authors = ["Marcel Kröker <kroeker.marcel@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+classifiers=[
+	"Programming Language :: Python :: 3",
+	"License :: OSI Approved :: MIT License",
+	"Operating System :: OS Independent",
+	"Intended Audience :: Developers",
+	"Programming Language :: Python",
+	"Topic :: Software Development :: Libraries :: Python Modules"
+]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+path-dict = "^1.0.4"
+
+[tool.poetry.dev-dependencies]
+pylint = "^2.6.0"
+flake8 = "^3.8.4"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
