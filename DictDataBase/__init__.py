@@ -1,6 +1,6 @@
 import glob
-from DictDataBase.objects import DDBSession, DDBMultiSession, PathDict
-from DictDataBase import utils
+from .objects import DDBSession, DDBMultiSession, PathDict
+from . import utils
 from . import config
 from .objects import SubModel
 from .locking import find_locks
