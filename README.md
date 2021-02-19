@@ -1,5 +1,9 @@
 # DictDataBase
 
+[![Downloads](https://pepy.tech/badge/dictdatabase)](https://pepy.tech/project/dictdatabase)
+[![Downloads](https://pepy.tech/badge/dictdatabase/month)](https://pepy.tech/project/dictdatabase)
+[![Downloads](https://pepy.tech/badge/dictdatabase/week)](https://pepy.tech/project/dictdatabase)
+
 DictDataBase is a simple but fast and secure database for handling dicts (or PathDicts for more advanced features), that uses json files as the underlying storage mechanism.
 It is also multiprocessind and multithreading safe, due to the employed locking mechanisms.
 
