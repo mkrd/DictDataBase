@@ -1,8 +1,6 @@
 import os
 import shutil
 import dictdatabase as DDB
-from dictdatabase.objects import PathDict
-from dictdatabase.locking import ReadLock, WriteLock
 import super_py as sp
 import sys
 import time
@@ -10,8 +8,8 @@ import time
 
 def setup():
 	DDB.config.storage_directory = ".ddb_storage_testing"
-	DDB.config.pretty_json_files = False
-	DDB.config.use_compression = True
+	DDB.config.pretty_json_files = True
+	DDB.config.use_compression = False
 	os.makedirs(DDB.config.storage_directory, exist_ok=True)
 
 
@@ -21,6 +19,19 @@ def teardown():
 	DDB.config.storage_directory = "./ddb_storage"
 	DDB.config.use_compression = False
 	DDB.config.pretty_json_files = True
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -39,8 +50,10 @@ def test_file_creation():
 		session.write()
 	assert DDB.read("db1") == {"a": {"b": {"c": "dee"}}}
 
+
+
+
 @sp.test(setup, teardown)
-@sp.log()
 def test_nested_file_creation():
 	n = DDB.read("blobbles/bla/blub")
 	assert n is None
@@ -80,13 +93,33 @@ def except_during_open():
 
 
 
-# @sp.test(setup, teardown)
+
+
+
+@sp.test(setup, teardown)
 def save_unserializable():
+	try:
+		d = {"test": "value"}
+		DDB.create("test", db=d)
+		with DDB.session("test", as_PathDict=True) as (session, test):
+			test["test"] = {"key": set([1, 2, 2])}
+			session.write()
+		assert False
+	except TypeError:
+		assert True
+
+
+
+@sp.test(setup, teardown)
+def test_session_in_session():
 	d = {"test": "value"}
 	DDB.create("test", db=d)
-	with DDB.session("test", as_PathDict=True) as (session, test):
-		test["test"] = {"key": set([1, 2, 2])}
-		session.write()
+	try:
+		with DDB.session("test", as_PathDict=True) as (session, test):
+			with DDB.session("test", as_PathDict=True) as (session2, test2):
+				assert False
+	except RuntimeError:
+		assert True
 
 
 @sp.test_class(each_setup=setup, each_teardown=teardown)
@@ -197,8 +230,8 @@ def incr_db(n, tables):
 
 
 
-# sp.test(setup, teardown)
-def test_stress_threaded(tables=2, threads=8, per_thread=20):
+@sp.test(setup, teardown)
+def test_stress_threaded(tables=4, threads=20, per_thread=200):
 	for t in range(tables):
 		incr = {}
 		for i in range(1_000):
@@ -229,7 +262,7 @@ def test_stress_threaded(tables=2, threads=8, per_thread=20):
 
 
 @sp.test(setup, teardown)
-def parallel_stress(tables=4, processes=20, per_process=2000):
+def parallel_stress(tables=4, processes=20, per_process=20):
 	for t in range(tables):
 		incr = {}
 		for i in range(1_000):
@@ -248,7 +281,6 @@ def parallel_stress(tables=4, processes=20, per_process=2000):
 
 	for t in range(tables):
 		t_counter = DDB.read(f"incr{t}")["counter"]
-		print(f"{t_counter=}, should be {processes * per_process}")
 		assert t_counter == processes * per_process
 
 
@@ -256,31 +288,27 @@ def parallel_stress(tables=4, processes=20, per_process=2000):
 
 
 
-# @sp.test_class(class_setup=setup, class_teardown=teardown)
-# class TestBigDB:
-# 	def test_a_create(self):
-# 		d = {"key1": "val1", "key2": 2, "key3": [1, "2", [3, 3]]}
-# 		for i in range(4):
-# 			d_new = {}
-# 			for j in range(20):
-# 				d_new[f"key{i}{j}"] = d
-# 			d = d_new
-# 		DDB.create("_test_big_db", db=d)
+@sp.test_class(class_setup=setup, class_teardown=teardown)
+class TestBigDB:
+	def test_a_create(self):
+		d = {"key1": "val1", "key2": 2, "key3": [1, "2", [3, 3]]}
+		for i in range(4):
+			d_new = {}
+			for j in range(20):
+				d_new[f"key{i}{j}"] = d
+			d = d_new
+		# About 22MB
+		DDB.create("_test_big_db", db=d)
 
-# 	def test_b_read(self):
-# 		d = DDB.read("_test_big_db")
+	def test_b_read(self):
+		d = DDB.read("_test_big_db")
 
-# 	def test_c_open_session(self):
-# 		# print("opening")
-# 		with DDB.session("_test_big_db") as (session, d):
-# 			assert True
-# 			# print("is open")
-# 		# print("closed")
+	def test_c_open_session(self):
+		with DDB.session("_test_big_db") as (session, d):
+			assert True
 
 
-# 	def test_d_open_session_and_write(self):
-# 		# print("opening")
-# 		with DDB.session("_test_big_db") as (session, d):
-# 			# print("is open")
-# 			session.write()
-# 		# print("closed")
+
+	def test_d_open_session_and_write(self):
+		with DDB.session("_test_big_db") as (session, d):
+			session.write()
