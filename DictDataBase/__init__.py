@@ -58,10 +58,6 @@ def exists(*pattern) -> bool:
 
 def read(*name, as_PathDict: bool = False) -> dict | PathDict:
 	name = _to_path_if_tuple(name)
-
-	if len(find_locks("haswrite", name)) > 0:
-		raise Exception("Never access the same db again during an open session!")
-
 	db = utils.protected_read_json_as_dict(name)
 	if as_PathDict:
 		return PathDict(db)
