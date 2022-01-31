@@ -1,7 +1,6 @@
 from __future__ import annotations
 import glob
 from . import utils, config
-from .locking import find_locks
 
 from path_dict import PathDict
 

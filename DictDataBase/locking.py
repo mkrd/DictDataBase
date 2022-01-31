@@ -1,8 +1,7 @@
+import threading
 import time
-import string
 from pathlib import Path
 import glob
-import random
 
 from . import config
 
@@ -38,6 +37,12 @@ def path_str(db_name, lock_id, time_ns, lock_type):
 
 
 
+def check_if_lock_exists(db_name: str, thread_id: str, lock_type: str):
+	locks = glob.glob(path_str(db_name, thread_id, "*", lock_type))
+	return len(locks) > 0
+
+
+
 def find_locks(lock_type: str, db_name: str):
 	return glob.glob(path_str(db_name, "*", "*", lock_type))
 
@@ -54,15 +59,19 @@ def is_oldest_lock_candidate(lock_id, db_name):
 class AbstractLock(object):
 	"""
 		An abstract lock doesn't do anything by itself. A subclass of it needs to
-		call super().__init__(...) and then only exit when the lock is aquired.
+		call super().__init__(...) and then only exit __init__ when the lock is aquired.
 	"""
-	def __init__(self, db_name):
+	id: str
+	time_ns: int
+	db_name: str
+	path: Path | None
+
+	def __init__(self, db_name: str):
 		"""
-			If key is None, create a random identifier.
-			if time_ns is None, initialize it to the current time.
+			Create a lock, with the current thread id as the lock id,
+			and the current time in nanoseconds as the time.
 		"""
-		# Create a random id (62^5 = 916.132.832 possibilities)
-		self.id = "".join(random.choices(string.ascii_letters + string.digits, k=5))
+		self.id = str(threading.get_native_id())
 		self.time_ns = time.time_ns()
 		self.db_name = db_name
 		self.path = None
@@ -93,6 +102,12 @@ class WriteLock(AbstractLock):
 		need_write_path_str = path_str(db_name, self.id, self.time_ns, "needwrite")
 		need_write_path = Path(need_write_path_str)
 		need_write_path.touch()
+
+		# Except if current thread already has a write lock
+		if check_if_lock_exists(db_name, self.id, "haswrite"):
+			raise RuntimeError("Thread already has a write lock. Do not open sessions while already in a session.")
+
+
 		self.path = Path(path_str(db_name, self.id, self.time_ns, "haswrite"))
 		while True:
 			clean_dead_locks(db_name, ignore=need_write_path_str)
