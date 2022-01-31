@@ -41,8 +41,6 @@ class DDBSession(object):
 			No new read tasks will be allowed. When all read tasks are done, the session aquire the write lock.
 			Now, it can savely read and write while all other tasks wait.
 		"""
-		if len(find_locks("haswrite", self.db_name)):
-			raise Exception("Never access the same db again during an open session!")
 		self.write_lock = utils.WriteLock(self.db_name)
 		self.in_session = True
 		try:
@@ -79,10 +77,6 @@ class DDBMultiSession(object):
 
 
 	def __enter__(self):
-		for db_name in self.db_names:
-			if len(find_locks("haswrite", db_name)):
-				raise Exception("Never access the same db again during an open session!")
-
 		self.write_locks = [utils.WriteLock(x) for x in self.db_names]
 		self.in_session = True
 		try:
