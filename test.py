@@ -241,7 +241,7 @@ def make_table():
 	return incr
 
 
-# @sp.test(setup, teardown)
+@sp.test(setup, teardown)
 def test_stress_threaded(tables=4, threads=8, per_thread=16):
 	for t in range(tables):
 		DDB.create(f"incr{t}", db=make_table())
@@ -271,8 +271,8 @@ def parallel_stress(tables=4, processes=8, per_process=16):
 		DDB.create(f"incr{t}", db=make_table())
 
 	ddb_sd = DDB.config.storage_directory
-	ddb_pj = 1 if DDB.config.pretty_json_files else 0
-	ddb_uc = 1 if DDB.config.use_compression else 0
+	ddb_pj = DDB.config.pretty_json_files
+	ddb_uc = DDB.config.use_compression
 	args = f"{tables} {processes} {per_process} {ddb_sd} {ddb_pj} {ddb_uc}"
 
 	t1 = time.time()
