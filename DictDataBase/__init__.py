@@ -47,7 +47,7 @@ def find(*pattern):
 
 
 
-def exists(*pattern):
+def exists(*pattern) -> bool:
 	"""
 		Tells if a glob pattern finds a db.
 	"""
@@ -56,7 +56,7 @@ def exists(*pattern):
 
 
 
-def read(*name, as_PathDict: bool = False):
+def read(*name, as_PathDict: bool = False) -> dict | PathDict:
 	name = _to_path_if_tuple(name)
 
 	if len(find_locks("haswrite", name)) > 0:
@@ -66,6 +66,7 @@ def read(*name, as_PathDict: bool = False):
 	if as_PathDict:
 		return PathDict(db)
 	return db
+
 
 
 def multiread(*pattern, as_PathDict: bool = False):
