@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "DictDataBase"
-version = "0.4.0"
+version = "1.0.0"
 repository = "https://github.com/mkrd/DictDataBase"
 description = "Easy-to-use database using dicts"
 authors = ["Marcel Kröker <kroeker.marcel@gmail.com>"]
@@ -16,12 +16,13 @@ classifiers=[
 ]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.10"
 path-dict = "^1.0.4"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.6.0"
 flake8 = "^3.8.4"
+super-py = "^0.4.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
