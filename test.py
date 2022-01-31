@@ -2,14 +2,17 @@ import os
 import shutil
 import dictdatabase as DDB
 import super_py as sp
-import sys
 import time
+
+DDB.config.storage_directory = ".ddb_storage_testing"
+DDB.config.pretty_json_files = False
+DDB.config.use_compression = False
 
 
 def setup():
 	DDB.config.storage_directory = ".ddb_storage_testing"
-	DDB.config.pretty_json_files = True
-	DDB.config.use_compression = False
+	DDB.config.pretty_json_files = False
+	DDB.config.use_compression = True
 	os.makedirs(DDB.config.storage_directory, exist_ok=True)
 
 
@@ -230,13 +233,18 @@ def incr_db(n, tables):
 
 
 
-@sp.test(setup, teardown)
-def test_stress_threaded(tables=4, threads=20, per_thread=200):
+
+def make_table():
+	incr = {}
+	for i in range(10_000):
+		incr[f"key{i}"] = {"someval": "val", "some_list": [1,3,4,5,524,32], "some_dict": {"k1": "v1", "k2": "v2"}}
+	return incr
+
+
+# @sp.test(setup, teardown)
+def test_stress_threaded(tables=4, threads=8, per_thread=16):
 	for t in range(tables):
-		incr = {}
-		for i in range(1_000):
-			incr[f"key{i}"] = {"someval": "val", "some_list": [1,3,4,5,524,32], "some_dict": {"k1": "v1", "k2": "v2"}}
-		DDB.create(f"incr{t}", db={})
+		DDB.create(f"incr{t}", db=make_table())
 
 	tasks = []
 	for _ in range(threads):
@@ -248,7 +256,7 @@ def test_stress_threaded(tables=4, threads=20, per_thread=200):
 
 	ops = threads * per_thread * tables
 	ops_sec = int(ops / (t2 - t1))
-	print(f"{ops=}, {ops_sec=}, {tables=}, {threads=}")
+	print(f"{ops = }, {ops_sec = }, {tables = }, {threads = }")
 
 
 	assert results == [True] * threads
@@ -257,27 +265,23 @@ def test_stress_threaded(tables=4, threads=20, per_thread=200):
 
 
 
-
-
-
-
 @sp.test(setup, teardown)
-def parallel_stress(tables=4, processes=20, per_process=20):
+def parallel_stress(tables=4, processes=8, per_process=16):
 	for t in range(tables):
-		incr = {}
-		for i in range(1_000):
-			incr[f"key{i}"] = {"someval": "val", "some_list": [1,3,4,5,524,32], "some_dict": {"k1": "v1", "k2": "v2"}}
-		DDB.create(f"incr{t}", db={})
+		DDB.create(f"incr{t}", db=make_table())
 
-	file = "test_parallel_runner.py"
-	args = f"{tables} {processes} {per_process} {DDB.config.storage_directory}"
+	ddb_sd = DDB.config.storage_directory
+	ddb_pj = 1 if DDB.config.pretty_json_files else 0
+	ddb_uc = 1 if DDB.config.use_compression else 0
+	args = f"{tables} {processes} {per_process} {ddb_sd} {ddb_pj} {ddb_uc}"
+
 	t1 = time.time()
-	os.system(f"python3 {file} {args}")
+	os.system(f"python3 test_parallel_runner.py {args}")
 	t2 = time.time()
 
 	ops = processes * per_process * tables
 	ops_sec = int(ops / (t2 - t1))
-	print(f"{ops=}, {ops_sec=}, {tables=}, {processes=}")
+	print(f"{ops = }, {ops_sec = }, {tables = }, {processes = }")
 
 	for t in range(tables):
 		t_counter = DDB.read(f"incr{t}")["counter"]
