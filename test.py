@@ -4,24 +4,18 @@ import dictdatabase as DDB
 import super_py as sp
 import time
 
-DDB.config.storage_directory = ".ddb_storage_testing"
-DDB.config.pretty_json_files = False
-DDB.config.use_compression = False
-
 
 def setup():
 	DDB.config.storage_directory = ".ddb_storage_testing"
 	DDB.config.pretty_json_files = False
 	DDB.config.use_compression = True
+	shutil.rmtree(".ddb_storage_testing", ignore_errors=True)
 	os.makedirs(DDB.config.storage_directory, exist_ok=True)
 
 
 def teardown():
 	shutil.rmtree(".ddb_storage_testing")
-	# Reset defaults
-	DDB.config.storage_directory = "./ddb_storage"
-	DDB.config.use_compression = False
-	DDB.config.pretty_json_files = True
+
 
 
 
@@ -235,14 +229,14 @@ def incr_db(n, tables):
 
 
 def make_table():
-	incr = {}
-	for i in range(10_000):
-		incr[f"key{i}"] = {"someval": "val", "some_list": [1,3,4,5,524,32], "some_dict": {"k1": "v1", "k2": "v2"}}
+	incr = {"counter": 0}
+	# for i in range(10_0):
+	# 	incr[f"key{i}"] = {"someval": "val", "some_list": [1,3,4,5,524,32], "some_dict": {"k1": "v1", "k2": "v2"}}
 	return incr
 
 
 @sp.test(setup, teardown)
-def test_stress_threaded(tables=4, threads=8, per_thread=16):
+def test_stress_threaded(tables=4, threads=12, per_thread=32):
 	for t in range(tables):
 		DDB.create(f"incr{t}", db=make_table())
 
@@ -261,12 +255,14 @@ def test_stress_threaded(tables=4, threads=8, per_thread=16):
 
 	assert results == [True] * threads
 	for t in range(tables):
+		db = DDB.read(f"incr{t}")
+		print(f"✅ {db['counter'] = } == {per_thread * threads = }")
 		assert DDB.read(f"incr{t}")["counter"] == threads * per_thread
 
 
 
 @sp.test(setup, teardown)
-def parallel_stress(tables=4, processes=8, per_process=16):
+def parallel_stress(tables=4, processes=16, per_process=128):
 	for t in range(tables):
 		DDB.create(f"incr{t}", db=make_table())
 
@@ -284,8 +280,9 @@ def parallel_stress(tables=4, processes=8, per_process=16):
 	print(f"{ops = }, {ops_sec = }, {tables = }, {processes = }")
 
 	for t in range(tables):
-		t_counter = DDB.read(f"incr{t}")["counter"]
-		assert t_counter == processes * per_process
+		db = DDB.read(f"incr{t}")
+		print(f"✅ {db['counter'] = } == {per_process * processes = }")
+		assert DDB.read(f"incr{t}")["counter"] == processes * per_process
 
 
 
