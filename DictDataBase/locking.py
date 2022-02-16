@@ -5,7 +5,7 @@ import glob
 
 from . import config
 
-SLEEP_TIMEOUT = 0.01
+SLEEP_TIMEOUT = 0.001
 
 # If a process crashes and doesn't clean its locks, remove them after a timeout
 LOCK_TIMEOUT = 40.0
