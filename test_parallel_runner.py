@@ -25,9 +25,6 @@ if __name__ == "__main__":
 	ddb_pj = sys.argv[5] == "True"
 	ddb_uc = sys.argv[6] == "True"
 
-	print(sys.argv)
-	print(f"{tables = }, {processes = }, {per_process = }, {ddb_sd = }, {ddb_pj = }, {ddb_uc = }")
-
 	pool = Pool(processes=processes)
 	for _ in range(processes):
 		pool.apply_async(incr_db, args=(per_process, tables, ddb_sd, ddb_pj, ddb_uc,))
