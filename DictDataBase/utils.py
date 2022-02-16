@@ -20,24 +20,27 @@ def unprotected_read_json_as_dict(db_name: str) -> dict:
 		Read the file at db_path from the configured storage directory.
 		Make sure the file exists!
 	"""
+
 	json_path, json_exists, ddb_path, ddb_exists = db_paths(db_name)
 
-
-	read_mode, db_path = None, None
 	if json_exists and ddb_exists:
 		raise Exception(f"DB Inconsistency: \"{db_name}\" exists as .json and .ddb")
-	elif json_exists:
-		read_mode, db_path = "r", json_path
-	elif ddb_exists:
-		read_mode, db_path = "rb", ddb_path
-	else:
+
+	if not json_exists and not ddb_exists:
 		raise Exception(f"DB \"{db_name}\" does not exist.")
 
-	with open(db_path, read_mode) as f:
-		f_str = f.read()
-		if read_mode == "rb":
-			f_str = zlib.decompress(f_str).decode()
-		return json.loads(f_str)
+	# Uncompressed json
+	if json_exists:
+		with open(json_path, "r") as f:
+			data_str = f.read()
+			return json.loads(data_str)
+
+	# Compressed ddb
+	if ddb_exists:
+		with open(ddb_path, "rb") as f:
+			data_bytes = f.read()
+			data_str = zlib.decompress(data_bytes).decode()
+			return json.loads(data_str)
 
 
 
@@ -48,7 +51,7 @@ def protected_read_json_as_dict(db_name: str):
 		Otherwise, wait.
 	"""
 
-	_, json_exists, _, ddb_exists = db_paths(db_name)
+	json_path, json_exists, ddb_path, ddb_exists = db_paths(db_name)
 	if not json_exists and not ddb_exists:
 		return None
 	# Wait in any write lock case, "need" or "has".
@@ -59,35 +62,34 @@ def protected_read_json_as_dict(db_name: str):
 
 
 
-
-
 def unprotected_write_dict_as_json(db_name: str, db: dict):
 	"""
 		Write the dict db dumped as a json string
 		to the file of the db_path.
 	"""
+	json_path, json_exists, ddb_path, ddb_exists = db_paths(db_name)
+
+	# Dump db dict as string
 	db_dump = None
 	if config.pretty_json_files and not config.use_compression:
 		db_dump = json.dumps(db, indent="\t", sort_keys=True)
 	else:
 		db_dump = json.dumps(db)
 
-	json_path, json_exists, ddb_path, ddb_exists = db_paths(db_name)
-
-	write_mode, db_path = None, None
+	# Compression is used
 	if config.use_compression:
-		write_mode, db_path = "wb", ddb_path
 		if json_exists:
 			os.remove(json_path)
+		db_dump = zlib.compress(db_dump.encode(), 1)
+		with open(ddb_path, "wb") as f:
+			f.write(db_dump)
+
+	# No compression is used
 	else:
-		write_mode, db_path = "w+", json_path
 		if ddb_exists:
 			os.remove(ddb_path)
-
-	with open(db_path, write_mode) as f:
-		if config.use_compression:
-			db_dump = zlib.compress(db_dump.encode(), 1)
-		f.write(db_dump)
+		with open(json_path, "w") as f:
+			f.write(db_dump)
 
 
 
@@ -101,6 +103,7 @@ def protected_write_dict_as_json(db_name: str, db: dict):
 	write_lock = WriteLock(db_name)
 	unprotected_write_dict_as_json(db_name, db)
 	write_lock.unlock()
+
 
 
 def protected_delete(db_name: str):
