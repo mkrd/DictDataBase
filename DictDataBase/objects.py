@@ -128,7 +128,7 @@ class SubModel(PathDict):
 		if initial_value is None:
 			self.file_db = utils.protected_read_json_as_dict(self.db_name)
 			if self.file_db is None or self.key not in self.file_db:
-				self = None
+				raise Exception(f"DB {self.db_name} does not exist or does not contain key {self.key}")
 			else:
 				super().__init__(self.file_db.get(self.key, None))
 		else:
