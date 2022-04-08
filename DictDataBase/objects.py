@@ -126,7 +126,11 @@ class SubModel(PathDict):
 		self.key = key
 		self.db_name = _to_path_if_tuple(self.db_name)
 		if initial_value is None:
-			self.read()
+			self.file_db = utils.protected_read_json_as_dict(self.db_name)
+			if self.file_db is None or self.key not in self.file_db:
+				self = None
+			else:
+				super().__init__(self.file_db.get(self.key, None))
 		else:
 			if not isinstance(initial_value, dict):
 				if not isinstance(initial_value, PathDict):
