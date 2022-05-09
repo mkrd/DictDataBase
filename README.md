@@ -80,16 +80,16 @@ Also do not access ones that do not exist, this will also raise an exception.
 
 ```python
 	import DictDataBase as DDB
-	with DDB.session("user_data") as (session, d):
+	with DDB.session("user_data") as (session, user_data):
 		# You now have a handle on the dict named "user_data"
 		# Inside the with statement, the file of user_data will be locked, and no other
 		# processes will be able to interfere.
-		d["follows"].append(["Sue", "Ben"])
-		session.save_changes()
+		user_data["follows"].append(["Sue", "Ben"])
+		session.write()
 		# Now the changes to d are written to the database
 
 	print(DDB.read("user_data")["follows"])
 	# -> [["Ben", "Sue"], ["Joe", "Ben"], ["Sue", "Ben"]]
 ```
 
-If you do not call session.save_changes(), the database file will not be modified.
+If you do not call session.write(), the database file will not be modified.
