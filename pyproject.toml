@@ -18,13 +18,15 @@ classifiers=[
 [tool.poetry.dependencies]
 python = "^3.10"
 path-dict = "^1.0.4"
-pycodestyle = "^2.8.0"
 Brotli = "^1.0.9"
 
-[tool.poetry.dev-dependencies]
 
-super-py = "^0.4.0"
+
+[tool.poetry.group.dev.dependencies]
 snakeviz = "^2.1.1"
+super-py = "^0.4.1"
+pycodestyle = "^2.8.0"
+orjson = "^3.8.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

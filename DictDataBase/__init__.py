@@ -59,9 +59,7 @@ def exists(*pattern) -> bool:
 def read(*name, as_PathDict: bool = False) -> dict | PathDict:
 	name = _to_path_if_tuple(name)
 	db = utils.protected_read_json_as_dict(name)
-	if as_PathDict:
-		return PathDict(db)
-	return db
+	return PathDict(db) if as_PathDict else db
 
 
 

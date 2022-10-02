@@ -5,10 +5,10 @@ import glob
 
 from . import config
 
-SLEEP_TIMEOUT = 0.001
+SLEEP_TIMEOUT = 0.01
 
 # If a process crashes and doesn't clean its locks, remove them after a timeout
-LOCK_TIMEOUT = 40.0
+LOCK_TIMEOUT = 30.0
 
 
 
@@ -29,7 +29,7 @@ def path_str(db_name, lock_id, time_ns, lock_type):
 	path = f"{config.storage_directory}/"
 	if "/" in db_name:
 		db_name = db_name.split("/")
-		db_name[-1] = "." + db_name[-1]
+		db_name[-1] = f".{db_name[-1]}"
 		db_name = "/".join(db_name)
 	else:
 		path += "."
