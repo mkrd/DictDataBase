@@ -2,3 +2,4 @@
 .ddb_storage_testing/
 test_db/
 *.prof
+dist/
