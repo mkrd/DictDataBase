@@ -79,7 +79,7 @@ def unprotected_write_dict_as_json(db_name: str, db: dict):
 	db_dump: str | bytes = None
 
 	# Use custom encoder if provided
-	if config.custom_json_encoder is not None:
+	if config.custom_json_encoder is not None and not config.use_compression:
 		db_dump = config.custom_json_encoder(db)
 	# Only generate pretty json if compression is disabled
 	elif config.pretty_json_files and not config.use_compression:
