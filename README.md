@@ -10,7 +10,7 @@ It is also multiprocessind and multithreading safe, due to the employed locking 
 ## Import
 
 ```python
-	import DictDataBase as DDB
+import DictDataBase as DDB
 ```
 
 
@@ -20,20 +20,20 @@ There are 3 configuration options.
 Set storage_directory to the path of the directory that will contain your database files:
 
 ```python
-	DDB.config.storage_directory = "./ddb_storage" # Default value
+DDB.config.storage_directory = "./ddb_storage" # Default value
 ```
 
 If you want to use compressed files, set use_compression to True.
 This will make the db files significantly smaller and might improve performance if your disk is slow.
 However, the files will not be human readable.
 ```python
-	DDB.config.use_compression = False # Default value
+DDB.config.use_compression = False # Default value
 ```
 
 If you set pretty_json_files to True, the json db files will be indented and the keys will be sorted.
 It won't affect compressed files, since the are not human-readable anyways.
 ```python
-	DDB.config.pretty_json_files = True # Default value
+DDB.config.pretty_json_files = True # Default value
 ```
 
 
