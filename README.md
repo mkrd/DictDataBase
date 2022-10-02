@@ -37,6 +37,15 @@ DDB.config.pretty_json_files = True # Default value
 ```
 
 
+You can specify your own json encoder and decoder if you need to.
+The standard library json module is sufficient most of the time.
+However, alternatives like orjson might be more performant for your use case
+```python
+DDB.config.custom_json_encoder = None # Default value
+DDB.config.custom_json_decoder = None # Default value
+```
+
+
 
 
 ## Create dicts
@@ -46,50 +55,50 @@ Do create ones that already exist, this would raise an exception.
 Also do not access ones that do not exist, this will also raise an exception.
 
 ```python
-	user_data_dict = {
-		"users": {
-			"Ben": {
-				"age": 30,
-				"job": "Software Engineer"
-			},
-			"Sue": {
-				"age": 21:
-				"job": "Student"
-			},
-			"Joe": {
-				"age": 50,
-				"job": "Influencer"
-			}
+user_data_dict = {
+	"users": {
+		"Ben": {
+			"age": 30,
+			"job": "Software Engineer"
 		},
-		"follows": [["Ben", "Sue"], ["Joe", "Ben"]]
-	})
-	DDB.create("user_data", db=user_data_dict)
-	# There is now a file called user_data.json (or user_data.ddb if you use compression)
-	# in your specified storage directory.
+		"Sue": {
+			"age": 21:
+			"job": "Student"
+		},
+		"Joe": {
+			"age": 50,
+			"job": "Influencer"
+		}
+	},
+	"follows": [["Ben", "Sue"], ["Joe", "Ben"]]
+})
+DDB.create("user_data", db=user_data_dict)
+# There is now a file called user_data.json (or user_data.ddb if you use compression)
+# in your specified storage directory.
 ```
 
 
 ## Read dicts
 ```python
-	d = DDB.read("user_data")
-	# You now have a copy of the dict named "user_data"
-	print(d == user_data_dict) # True
+d = DDB.read("user_data")
+# You now have a copy of the dict named "user_data"
+print(d == user_data_dict) # True
 ```
 
 ## Write dicts
 
 ```python
-	import DictDataBase as DDB
-	with DDB.session("user_data") as (session, user_data):
-		# You now have a handle on the dict named "user_data"
-		# Inside the with statement, the file of user_data will be locked, and no other
-		# processes will be able to interfere.
-		user_data["follows"].append(["Sue", "Ben"])
-		session.write()
-		# Now the changes to d are written to the database
+import DictDataBase as DDB
+with DDB.session("user_data") as (session, user_data):
+	# You now have a handle on the dict named "user_data"
+	# Inside the with statement, the file of user_data will be locked, and no other
+	# processes will be able to interfere.
+	user_data["follows"].append(["Sue", "Ben"])
+	session.write()
+	# Now the changes to d are written to the database
 
-	print(DDB.read("user_data")["follows"])
-	# -> [["Ben", "Sue"], ["Joe", "Ben"], ["Sue", "Ben"]]
+print(DDB.read("user_data")["follows"])
+# -> [["Ben", "Sue"], ["Joe", "Ben"], ["Sue", "Ben"]]
 ```
 
 If you do not call session.write(), the database file will not be modified.
