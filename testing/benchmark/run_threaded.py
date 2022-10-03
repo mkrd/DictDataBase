@@ -1,7 +1,10 @@
 import dictdatabase as DDB
 import super_py as sp
 import time
-from testing import test_scenes
+import cProfile
+import subprocess
+from testing import test_scenes, utils
+
 
 
 def increment_counters(n, tables):
@@ -16,10 +19,10 @@ def increment_counters(n, tables):
 	return True
 
 
-def test_stress_threaded(tables=1, threads=8, per_thread=30):
+def test_stress_threaded(tables=1, threads=4, per_thread=3):
 	# Create tables
 	for t in range(tables):
-		DDB.create(f"incr{t}", db={})
+		DDB.create(f"incr{t}", db=utils.make_table())
 
 	# Create tasks for concurrent execution
 	tasks = [(increment_counters, (per_thread, tables)) for _ in range(threads)]
@@ -42,6 +45,17 @@ def test_stress_threaded(tables=1, threads=8, per_thread=30):
 		print(f"✅ {db['counter'] = } == {per_thread * threads = }")
 
 
-for scene, run_scene in test_scenes.items():
+
+with cProfile.Profile() as pr:
+	pr.enable()
+
+	scene = "(🔴 pretty) (🔴 compression) (🔴 orjson)"
 	print(scene)
-	run_scene(test_stress_threaded)
+	test_scenes[scene](test_stress_threaded)
+
+	pr.disable()
+	pr.dump_stats("test.prof")
+	pr.print_stats("tottime")
+
+command = "poetry run snakeviz test.prof"
+subprocess.call(command.split())
