@@ -47,11 +47,10 @@ def find_locks(lock_type: str, db_name: str):
 	return glob.glob(path_str(db_name, "*", "*", lock_type))
 
 
-
-def is_oldest_lock_candidate(lock_id, db_name):
-	write_candidates = find_locks("needwrite", db_name)
-	write_candidates = [x.split(".")[:-2][-2:] for x in write_candidates]
-	oldest_candidate = min(write_candidates, key=lambda x: int(x[1]))[0]
+def is_oldest_need_lock(lock_id, db_name):
+	lock_candidates = find_locks("need*", db_name)
+	lock_candidates = [x.split(".")[:-2][-2:] for x in lock_candidates]
+	oldest_candidate = min(lock_candidates, key=lambda x: int(x[1]))[0]
 	return oldest_candidate == lock_id
 
 
@@ -85,20 +84,40 @@ class AbstractLock(object):
 class ReadLock(AbstractLock):
 	def __init__(self, db_name):
 		super().__init__(db_name)
-		has_read_path_str = path_str(db_name, self.id, self.time_ns, "hasread")
-		self.path = Path(has_read_path_str)
+
+		# Instantly signal that we need to read
+		need_read_path_str = path_str(db_name, self.id, self.time_ns, "needread")
+		need_read_path = Path(need_read_path_str)
+		need_read_path.touch()
+
+		# Except if current thread already has a read lock
+		if check_if_lock_exists(db_name, self.id, "hasread"):
+			raise RuntimeError("Thread already has a read lock.")
+
+		# Make path of the hyptoetical hasread lock
+		self.path = Path(path_str(db_name, self.id, self.time_ns, "hasread"))
+
+		# Iterate until this is the oldest need* lock and no haswrite locks exist, or no *write locks exist
 		while True:
-			clean_dead_locks(db_name, ignore=has_read_path_str)
+			clean_dead_locks(db_name, ignore=need_read_path_str)
+			# If no writing is happening, allow unlimited reading
 			if len(find_locks("*write", db_name)) == 0:
 				self.path.touch()
+				need_read_path.unlink()
+				return
+			# A needwrite or haswrite lock exists
+			if is_oldest_need_lock(self.id, db_name) and len(find_locks("haswrite", db_name)) == 0:
+				self.path.touch()
+				need_read_path.unlink()
 				return
 			time.sleep(SLEEP_TIMEOUT)
-
 
 
 class WriteLock(AbstractLock):
 	def __init__(self, db_name):
 		super().__init__(db_name)
+
+		# Instantly signal that we need to write
 		need_write_path_str = path_str(db_name, self.id, self.time_ns, "needwrite")
 		need_write_path = Path(need_write_path_str)
 		need_write_path.touch()
@@ -107,11 +126,13 @@ class WriteLock(AbstractLock):
 		if check_if_lock_exists(db_name, self.id, "haswrite"):
 			raise RuntimeError("Thread already has a write lock. Do not open sessions while already in a session.")
 
-
+		# Make path of the hyptoetical haswrite lock
 		self.path = Path(path_str(db_name, self.id, self.time_ns, "haswrite"))
+
+		# Iterate until this is the oldest need* lock and no has* locks exist
 		while True:
 			clean_dead_locks(db_name, ignore=need_write_path_str)
-			if is_oldest_lock_candidate(self.id, db_name) and len(find_locks("has*", db_name)) == 0:
+			if is_oldest_need_lock(self.id, db_name) and len(find_locks("has*", db_name)) == 0:
 				self.path.touch()
 				need_write_path.unlink()
 				return
