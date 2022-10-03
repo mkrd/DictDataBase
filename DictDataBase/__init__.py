@@ -72,14 +72,18 @@ def multiread(*pattern, as_PathDict: bool = False):
 	res = {}
 	for db_name in pattern_paths:
 		res[db_name] = utils.protected_read_json_as_dict(db_name)
-	if as_PathDict:
-		return PathDict(res)
-	return res
+	return PathDict(res) if as_PathDict else res
 
 
 
-def create(*db_name, db={}):
+def create(*db_name, db=None, force_overwrite=False):
 	db_name = _to_path_if_tuple(db_name)
+	# Except if db exists and force_overwrite is False
+	if not force_overwrite and exists(db_name):
+		raise FileExistsError(f"Database {db_name} already exists. Pass force_overwrite=True to DDB.create() to overwrite.")
+
+	# Write db to file
+	db = db or {}
 	if isinstance(db, PathDict):
 		utils.protected_write_dict_as_json(db_name, db.dict)
 	else:
@@ -95,6 +99,7 @@ def delete(*db_name):
 def session(*db_name, as_PathDict: bool = False):
 	db_name = _to_path_if_tuple(db_name)
 	return DDBSession(db_name, as_PathDict=as_PathDict)
+
 
 def multisession(*pattern, as_PathDict: bool = False):
 	"""
