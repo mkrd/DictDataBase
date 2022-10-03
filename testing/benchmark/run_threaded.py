@@ -16,7 +16,7 @@ def increment_counters(n, tables):
 	return True
 
 
-def test_stress_threaded(tables=1, threads=8, per_thread=100):
+def test_stress_threaded(tables=1, threads=8, per_thread=30):
 	# Create tables
 	for t in range(tables):
 		DDB.create(f"incr{t}", db={})
