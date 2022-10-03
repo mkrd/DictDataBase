@@ -1,4 +1,4 @@
-from typing import Optional, Callable, Any
+from typing import Optional, Callable
 
 storage_directory = "./ddb_storage"
 use_compression = False
