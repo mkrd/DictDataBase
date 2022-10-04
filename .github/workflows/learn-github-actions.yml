@@ -26,7 +26,7 @@ jobs:
       - name: python --version in venv
         run: poetry run python --version
       - name: poetry install
-        run: poetry install --with root
+        run: poetry install --only-root
       - name: poetry show
         run: poetry show
       - name: Test
