@@ -2,13 +2,25 @@ name: learn-github-actions
 run-name: ${{ github.actor }} is learning GitHub Actions
 on: [push]
 jobs:
+
+
+
   tests-job:
+
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10"]
+
     steps:
+      - name: Set up Python ${{ matrix.python-version }}
       - uses: actions/checkout@v3
-      - run: python3 -m venv pypoetry
-      - run: pypoetry/bin/pip install -U pip setuptools
-      - run: pypoetry/bin/pip install poetry
-      - run: pypoetry/bin/poetry --version
-      - run: pypoetry/bin/poetry install
-      - run: pypoetry/bin/poetry run python3 testing/run_tests.py
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+
+      - name: Run tests
+      - run: |
+        poetry --version
+        poetry install
+        poetry run python3 testing/run_tests.py
