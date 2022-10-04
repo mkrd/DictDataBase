@@ -24,7 +24,9 @@ jobs:
 
       - name: Test
         run: |
+
           poetry --version
           poetry install --with testing
           ls -lah
-          poetry run python3 testing/run_tests.py
+          poetry shell
+          python ./testing/run_tests.py
