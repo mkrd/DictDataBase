@@ -71,19 +71,19 @@ def setup_compress_orjson():
 
 
 test_scenes = {
-	"(🔴 pretty) (🔴 compression) (🔴 orjson)": sp.test(setup, teardown),
-	"(🟢 pretty) (🔴 compression) (🔴 orjson)": sp.test(setup_pretty, teardown),
-	"(🔴 pretty) (🟢 compression) (🔴 orjson)": sp.test(setup_compress, teardown),
-	"(🔴 pretty) (🔴 compression) (🟢 orjson)": sp.test(setup_orjson, teardown),
-	"(🟢 pretty) (🔴 compression) (🟢 orjson)": sp.test(setup_pretty_orjson, teardown),
-	"(🔴 pretty) (🟢 compression) (🟢 orjson)": sp.test(setup_compress_orjson, teardown),
+	"(🔴 pretty) (🔴 compression) (🔴 orjson)": sp.test(setup, teardown, raise_assertion_errors=True),
+	"(🟢 pretty) (🔴 compression) (🔴 orjson)": sp.test(setup_pretty, teardown, raise_assertion_errors=True),
+	"(🔴 pretty) (🟢 compression) (🔴 orjson)": sp.test(setup_compress, teardown, raise_assertion_errors=True),
+	"(🔴 pretty) (🔴 compression) (🟢 orjson)": sp.test(setup_orjson, teardown, raise_assertion_errors=True),
+	"(🟢 pretty) (🔴 compression) (🟢 orjson)": sp.test(setup_pretty_orjson, teardown, raise_assertion_errors=True),
+	"(🔴 pretty) (🟢 compression) (🟢 orjson)": sp.test(setup_compress_orjson, teardown, raise_assertion_errors=True),
 }
 
 test_scenes_no_teardown = {
-	"(🔴 pretty) (🔴 compression) (🔴 orjson)": sp.test(setup),
-	"(🟢 pretty) (🔴 compression) (🔴 orjson)": sp.test(setup_pretty),
-	"(🔴 pretty) (🟢 compression) (🔴 orjson)": sp.test(setup_compress),
-	"(🔴 pretty) (🔴 compression) (🟢 orjson)": sp.test(setup_orjson),
-	"(🟢 pretty) (🔴 compression) (🟢 orjson)": sp.test(setup_pretty_orjson),
-	"(🔴 pretty) (🟢 compression) (🟢 orjson)": sp.test(setup_compress_orjson),
+	"(🔴 pretty) (🔴 compression) (🔴 orjson)": sp.test(setup, raise_assertion_errors=True),
+	"(🟢 pretty) (🔴 compression) (🔴 orjson)": sp.test(setup_pretty, raise_assertion_errors=True),
+	"(🔴 pretty) (🟢 compression) (🔴 orjson)": sp.test(setup_compress, raise_assertion_errors=True),
+	"(🔴 pretty) (🔴 compression) (🟢 orjson)": sp.test(setup_orjson, raise_assertion_errors=True),
+	"(🟢 pretty) (🔴 compression) (🟢 orjson)": sp.test(setup_pretty_orjson, raise_assertion_errors=True),
+	"(🔴 pretty) (🟢 compression) (🟢 orjson)": sp.test(setup_compress_orjson, raise_assertion_errors=True),
 }

@@ -22,9 +22,9 @@ Brotli = "^1.0.9"
 
 [tool.poetry.group.dev.dependencies]
 snakeviz = "^2.1.1"
-super-py = "^0.4.1"
 pycodestyle = "^2.9.1"
 orjson = "^3.8.0"
+super-py = "^0.4.2"
 
 [build-system]
 requires = ["poetry-core"]

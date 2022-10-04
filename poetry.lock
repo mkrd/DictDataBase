@@ -43,7 +43,7 @@ tornado = ">=2.0"
 
 [[package]]
 name = "super-py"
-version = "0.4.1"
+version = "0.4.4"
 description = "Features that Python should have in the standard library"
 category = "dev"
 optional = false
@@ -60,7 +60,7 @@ python-versions = ">= 3.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "831d84814a19f3b3ee44d6c75271c7435b90eb29b00bc5d04ddc313f039b1f76"
+content-hash = "cc30591c79e6aa3b347f5c12c42d5ad0e00989406b1312ad5e5c3ee4440d305a"
 
 [metadata.files]
 Brotli = [
@@ -184,8 +184,8 @@ snakeviz = [
     {file = "snakeviz-2.1.1.tar.gz", hash = "sha256:0d96c006304f095cb4b3fb7ed98bb866ca35a7ca4ab9020bbc27d295ee4c94d9"},
 ]
 super-py = [
-    {file = "super-py-0.4.1.tar.gz", hash = "sha256:020d95306fb06d04d2b493562225b6576e9967cdca16d4eff57481520084e4f7"},
-    {file = "super_py-0.4.1-py3-none-any.whl", hash = "sha256:c678dc713fd5d1660062c616ce7ca1aa0dea0fd958e223568b38dd201fb3d3df"},
+    {file = "super-py-0.4.4.tar.gz", hash = "sha256:25480917cd2767ac22fe1471535bb3807274ffbcb56e3998de91abb6cedb0700"},
+    {file = "super_py-0.4.4-py3-none-any.whl", hash = "sha256:76887ef89e550fc5ba2697e439ceb402478e9c1afd44f1c64040c304cd99d32a"},
 ]
 tornado = [
     {file = "tornado-6.2-cp37-abi3-macosx_10_9_universal2.whl", hash = "sha256:20f638fd8cc85f3cbae3c732326e96addff0a15e22d80f049e00121651e82e72"},
