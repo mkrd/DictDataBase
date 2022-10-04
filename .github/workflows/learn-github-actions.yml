@@ -26,7 +26,8 @@ jobs:
         run: |
 
           poetry --version
+          poetry config virtualenvs.in-project true
           poetry install --with testing
           ls -lah
-          poetry shell
+          source .venv/bin/activate
           python ./testing/run_tests.py
