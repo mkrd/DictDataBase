@@ -26,4 +26,5 @@ jobs:
         run: |
           poetry --version
           poetry install --with testing
+          ls -lah
           poetry run python3 testing/run_tests.py
