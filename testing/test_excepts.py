@@ -32,9 +32,3 @@ def except_on_session_in_session():
 				assert False
 	except RuntimeError:
 		assert True
-
-
-def REMOVE_LATER():
-	# This test is only here to make sure that the test suite
-	# is working properly.
-	assert False
