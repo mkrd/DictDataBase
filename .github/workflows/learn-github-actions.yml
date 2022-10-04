@@ -15,19 +15,46 @@ jobs:
         poetry-version: ["1.2.1"]
 
     steps:
+      #----------------------------------------------
+      #---- checkout & setup python
+      #----------------------------------------------
+
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
+
+      #----------------------------------------------
+      #---- install & configure poetry
+      #----------------------------------------------
       - name: Install Poetry
         uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      #----------------------------------------------
+      #---- show installation details
+      #----------------------------------------------
+
       - name: poetry --version
         run: poetry --version
       - name: python --version in venv
         run: poetry run python --version
+
+      #----------------------------------------------
+      #---- install dependencies
+      #----------------------------------------------
+
+
       - name: poetry install
-        run: poetry install --only-root
+        run: |
+          poetry env use ./.venv/bin/python
+          poetry install --no-interaction --no-root
+          poetry install --no-interaction
       - name: poetry show
         run: poetry show
       - name: Test
-        run: poetry run python testing/run_tests.py
+        run: |
+          source .venv/bin/activate
+          python testing/run_tests.py
