@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "DictDataBase"
+name = "dictdatabase"
 version = "1.3.0"
 repository = "https://github.com/mkrd/DictDataBase"
 description = "Easy-to-use database using dicts"
@@ -17,17 +17,15 @@ classifiers=[
 
 [tool.poetry.dependencies]
 python = "^3.10"
-path-dict = "^1.0.4"
+path-dict = "^1.2.6"
 Brotli = "^1.0.9"
-
-
 
 [tool.poetry.group.dev.dependencies]
 snakeviz = "^2.1.1"
 super-py = "^0.4.1"
-pycodestyle = "^2.8.0"
+pycodestyle = "^2.9.1"
 orjson = "^3.8.0"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
