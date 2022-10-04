@@ -25,5 +25,7 @@ jobs:
       - name: Test
         run: |
           poetry --version
-          poetry install --with testing
+          poetry config virtualenvs-create true
+          poetry config virtualenvs-in-project true
+          poetry install --with dev
           poetry run python3 testing/run_tests.py
