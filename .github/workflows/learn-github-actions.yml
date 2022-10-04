@@ -24,10 +24,6 @@ jobs:
 
       - name: Test
         run: |
-
           poetry --version
-          poetry config virtualenvs.in-project true
           poetry install --with testing
-          ls -lah
-          source .venv/bin/activate
-          python ./testing/run_tests.py
+          poetry run python3 testing/run_tests.py
