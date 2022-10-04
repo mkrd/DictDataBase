@@ -28,4 +28,5 @@ jobs:
           poetry config virtualenvs.create true
           poetry config virtualenvs.in-project true
           poetry install --with dev
-          poetry run python3 testing/run_tests.py
+          poetry use env .venv/bin/python
+          poetry run python testing/run_tests.py
