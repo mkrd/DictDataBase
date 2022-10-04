@@ -15,18 +15,21 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
       - name: Install poetry
         run: pipx install poetry
 
-      - name: Test
+      - name: Setup Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+          cache: "poetry"
+
+      - name: Install dependencies
         run: |
-          poetry --version
-          poetry config virtualenvs.create true
-          poetry config virtualenvs.in-project true
-          poetry install --with dev
-          poetry env use .venv/bin/python
-          poetry run python testing/run_tests.py
+          poetry env use "3.10"
+          poetry install --no-interaction
+
+
+
+      - name: Test
+        run: poetry run python testing/run_tests.py
