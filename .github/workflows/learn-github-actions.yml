@@ -41,6 +41,8 @@ jobs:
         run: poetry --version
       - name: python --version in venv
         run: poetry run python --version
+      - name: ls -lah
+        run: ls -lah
 
       #----------------------------------------------
       #---- install dependencies
