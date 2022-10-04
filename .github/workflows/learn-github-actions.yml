@@ -11,7 +11,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.9", "3.10"]
+        python-version: ["3.10"]
 
     steps:
       - uses: actions/checkout@v3
@@ -25,5 +25,5 @@ jobs:
       - name: Test
         run: |
           poetry --version
-          poetry install
+          poetry install --with testing
           poetry run python3 testing/run_tests.py
