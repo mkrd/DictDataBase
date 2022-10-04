@@ -1,4 +1,4 @@
-name: learn-github-actions
+name: Run tests and stress benchmark
 run-name: ${{ github.actor }} is learning GitHub Actions
 on: [push]
 jobs:
