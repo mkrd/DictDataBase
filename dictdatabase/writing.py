@@ -58,9 +58,9 @@ class DDBSession(object):
 			self.dict = io_unsafe.read(self.db_name)
 			if self.as_PathDict:
 				self.dict = PathDict(self.dict)
-		except BaseException:
+		except BaseException as e:
 			self.write_lock.unlock()
-			raise
+			raise e
 		return self, self.dict
 
 	def __exit__(self, type, value, tb):
@@ -92,10 +92,10 @@ class DDBMultiSession(object):
 			self.dicts = {n: io_unsafe.read(n) for n in self.db_names}
 			if self.as_PathDict:
 				self.dicts = PathDict(self.dicts)
-		except BaseException:
+		except BaseException as e:
 			for write_lock in self.write_locks:
 				write_lock.unlock()
-			raise
+			raise e
 		return self, self.dicts
 
 	def __exit__(self, type, value, tb):
@@ -138,9 +138,9 @@ class DDBSubSession(object):
 				self.dict = PathDict(self.partial_handle.key_value)
 			else:
 				self.dict = self.partial_handle.key_value
-		except BaseException:
+		except BaseException as e:
 			self.write_lock.unlock()
-			raise
+			raise e
 		return self, self.dict
 
 	def __exit__(self, type, value, tb):
