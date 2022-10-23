@@ -2,17 +2,15 @@ import threading
 import time
 from pathlib import Path
 import glob
-
 from . import config
 
 SLEEP_TIMEOUT = 0.01
 
-# If a process crashes and doesn't clean its locks, remove them after a timeout
+# If a process crashes and doesn't remove its locks, remove them after a timeout
 LOCK_TIMEOUT = 30.0
 
 
-
-def clean_dead_locks(db_name, ignore=None):
+def remove_dead_locks(db_name, ignore=None):
 	db_locks = glob.glob(path_str(db_name, "*", "*", "*"))
 	for lock in db_locks:
 		if lock == ignore:
@@ -22,7 +20,6 @@ def clean_dead_locks(db_name, ignore=None):
 		if time.time_ns() - int(time_ns) > LOCK_TIMEOUT * 1_000_000_000:
 			Path(lock).unlink()
 			print(f"Found dead lock ({lock}). Remove")
-
 
 
 def path_str(db_name, lock_id, time_ns, lock_type):
@@ -36,11 +33,9 @@ def path_str(db_name, lock_id, time_ns, lock_type):
 	return f"{path}{db_name}.{lock_id}.{time_ns}.{lock_type}.lock"
 
 
-
 def check_if_lock_exists(db_name: str, thread_id: str, lock_type: str):
 	locks = glob.glob(path_str(db_name, thread_id, "*", lock_type))
 	return len(locks) > 0
-
 
 
 def find_locks(lock_type: str, db_name: str):
@@ -99,7 +94,7 @@ class ReadLock(AbstractLock):
 
 		# Iterate until this is the oldest need* lock and no haswrite locks exist, or no *write locks exist
 		while True:
-			clean_dead_locks(db_name, ignore=need_read_path_str)
+			remove_dead_locks(db_name, ignore=need_read_path_str)
 			# If no writing is happening, allow unlimited reading
 			if len(find_locks("*write", db_name)) == 0:
 				self.path.touch()
@@ -111,6 +106,7 @@ class ReadLock(AbstractLock):
 				need_read_path.unlink()
 				return
 			time.sleep(SLEEP_TIMEOUT)
+
 
 
 class WriteLock(AbstractLock):
@@ -131,7 +127,7 @@ class WriteLock(AbstractLock):
 
 		# Iterate until this is the oldest need* lock and no has* locks exist
 		while True:
-			clean_dead_locks(db_name, ignore=need_write_path_str)
+			remove_dead_locks(db_name, ignore=need_write_path_str)
 			if is_oldest_need_lock(self.id, db_name) and len(find_locks("has*", db_name)) == 0:
 				self.path.touch()
 				need_write_path.unlink()
