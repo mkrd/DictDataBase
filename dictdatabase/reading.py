@@ -29,5 +29,5 @@ def subread(*name, key=None, as_PathDict: bool = False) -> dict | PathDict:
 	"""
 		Subread reads a database and returns it as a PathDict.
 	"""
-	db, _, _ = io_unsafe.partial_read(utils.to_path_str(name), key)
-	return PathDict(db) if as_PathDict else db
+	pf = io_unsafe.partial_read(utils.to_path_str(name), key)
+	return PathDict(pf.key_value) if as_PathDict else pf.key_value

@@ -17,8 +17,7 @@ def orjson_encode(data_dict):
 
 
 def config_orjson():
-	DDB.config.custom_json_encoder = orjson_encode
-	DDB.config.custom_json_decoder = orjson_decode
+	DDB.config.use_orjson = True
 
 
 
@@ -32,8 +31,7 @@ def make_test_dir():
 
 def teardown():
 	shutil.rmtree(".ddb_storage_testing")
-	DDB.config.custom_json_encoder = None
-	DDB.config.custom_json_decoder = None
+	DDB.config.use_orjson = False
 
 
 

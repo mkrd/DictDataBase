@@ -2,6 +2,6 @@ from typing import Optional, Callable
 
 storage_directory = "./ddb_storage"
 use_compression = False
-pretty_json_files = True
-custom_json_encoder: Optional[Callable[[dict], str | bytes]] = None
-custom_json_decoder: Optional[Callable[[str], dict]] = None
+use_orjson = False
+indent_with = "\t"  # eg. "\t" or (" " * 4) or None
+sort_keys = True

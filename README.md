@@ -37,14 +37,11 @@ DDB.config.pretty_json_files = True # Default value
 ```
 
 
-You can specify your own json encoder and decoder if you need to.
+You can specify the orjson encoder and decoder if you need to.
 The standard library json module is sufficient most of the time.
-However, alternatives like orjson might be more performant for your use case.
-The encoder function should take a dict and return a str or bytes.
-The decoder function should take a string and return a dict.
+However, orjson might be more performant for your use case.
 ```python
-DDB.config.custom_json_encoder = None # Default value
-DDB.config.custom_json_decoder = None # Default value
+DDB.config.use_orjson = False # Default value
 ```
 
 
