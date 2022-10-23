@@ -1,5 +1,5 @@
 from path_dict import PathDict
-from . import utils, io_safe
+from . import utils, io_safe, io_unsafe
 
 
 def exists(*name) -> bool:
@@ -23,3 +23,11 @@ def multiread(*pattern, as_PathDict: bool = False):
 	pattern_paths = utils.expand_find_path_pattern(pattern)
 	res = {db_name: io_safe.read(db_name) for db_name in pattern_paths}
 	return PathDict(res) if as_PathDict else res
+
+
+def subread(*name, key=None, as_PathDict: bool = False) -> dict | PathDict:
+	"""
+		Subread reads a database and returns it as a PathDict.
+	"""
+	db, _, _ = io_unsafe.partial_read(utils.to_path_str(name), key)
+	return PathDict(db) if as_PathDict else db

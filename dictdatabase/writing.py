@@ -121,3 +121,60 @@ def multisession(*pattern, as_PathDict: bool = False):
 		to multisession("users", user_id).
 	"""
 	return DDBMultiSession(utils.to_path_str(pattern), as_PathDict=as_PathDict)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class DDBSubSession(object):
+	def __init__(self, db_name: str, key: str, as_PathDict: bool = False):
+		self.db_name = db_name
+		self.key = key
+		self.as_PathDict = as_PathDict
+		self.in_session = False
+
+	def __enter__(self):
+		self.write_lock = WriteLock(self.db_name)
+		self.in_session = True
+		try:
+			self.dict, self.partial_start_index, self.partial_end_index = io_unsafe.partial_read(self.db_name, self.key)
+			if self.as_PathDict:
+				self.dict = PathDict(self.dict)
+		except BaseException:
+			self.write_lock.unlock()
+			raise
+		return self, self.dict
+
+	def __exit__(self, type, value, tb):
+		self.write_lock.unlock()
+		self.write_lock = None
+		self.in_session = False
+
+	def write(self):
+		if not self.in_session:
+			raise PermissionError("Only call write() inside a with statement.")
+		data = self.dict.data if self.as_PathDict else self.dict
+		io_unsafe.partial_write(self.db_name, self.key, data, self.partial_handle)
+
+
+def subsession(name, key, as_PathDict: bool = False):
+	"""
+		Open a sub-database inside a database.
+		Example:
+		>>> with subsession("users", user_id) as session, data:
+		>>>     data["name"] = "John Doe"
+		>>>     session.write()
+	"""
+	return DDBSubSession(utils.to_path_str(name, key), as_PathDict=as_PathDict)
