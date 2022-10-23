@@ -1,5 +1,3 @@
-from typing import Optional, Callable
-
 storage_directory = "./ddb_storage"
 use_compression = False
 use_orjson = False
