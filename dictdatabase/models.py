@@ -1,6 +1,19 @@
 from __future__ import annotations
+from dataclasses import dataclass
 from path_dict import PathDict
 from . import utils, io_safe, writing
+
+
+@dataclass(frozen=True)
+class PartialFileHandle:
+	db_name: str
+	key: str
+	key_value: dict
+	value_start_index: int
+	value_end_index: int
+	original_data_str: str
+	indent_level: int
+	indent_char: str
 
 
 class SubModel(PathDict):

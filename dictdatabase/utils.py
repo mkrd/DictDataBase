@@ -55,3 +55,33 @@ def expand_find_path_pattern(pattern):
 		if isinstance(item, list):
 			res = [r + [list_item] for list_item in item for r in res]
 	return [f for r in res for f in find(r)]
+
+
+def seek_index_through_value(data: str, index: int) -> int:
+	"""
+	Finds the index of the next comma or closing bracket/brace, but only if
+	it is at the same indentation level as at the start index.
+
+	:param data: The string to be parsed
+	:param index: the index of the first character of the value
+	"""
+	in_str, list_depth, dict_depth = False, 0, 0
+
+	for i in range(index, len(data)):
+		d_curr = data[i]
+		prev_backslash = data[i-1] == "\\"
+		if d_curr == '"' and not prev_backslash:
+			in_str = not in_str
+			continue
+		if in_str or d_curr == " " or prev_backslash:
+			continue
+		if d_curr == "[":
+			list_depth += 1
+		elif d_curr == "]":
+			list_depth -= 1
+		elif d_curr == "{":
+			dict_depth += 1
+		elif d_curr == "}":
+			dict_depth -= 1
+		if list_depth == 0 and dict_depth == 0:
+			return i + 1
