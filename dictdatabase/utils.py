@@ -67,9 +67,10 @@ def seek_index_through_value(data: str, index: int) -> int:
 	"""
 	in_str, list_depth, dict_depth = False, 0, 0
 
+	d_prev, d_curr = None, data[index - 1]
 	for i in range(index, len(data)):
-		d_curr = data[i]
-		prev_backslash = data[i-1] == "\\"
+		d_prev, d_curr = d_curr, data[i]
+		prev_backslash = d_prev == "\\"
 		if d_curr == '"' and not prev_backslash:
 			in_str = not in_str
 			continue

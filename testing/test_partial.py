@@ -15,7 +15,7 @@ def test_subread():
 
 
 	try:
-		DDB.subread("test_subread", key="a") == "Hello\{\}"
+		DDB.subread("test_subread", key="a") == "Hello{\}"
 	except json.decoder.JSONDecodeError:
 		pass
 

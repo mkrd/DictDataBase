@@ -14,6 +14,9 @@ from . models import PartialFileHandle
 def read_string(db_name: str) -> str:
 	"""
 		Read the content of a db as a string.
+		Reading is always possible, not matter how the config is set.
+		So a compressed ddb file can also be read if compression is disabled,
+		and vice versa.
 	"""
 	json_path, json_exists, ddb_path, ddb_exists = utils.db_paths(db_name)
 
@@ -23,12 +26,12 @@ def read_string(db_name: str) -> str:
 	if not json_exists and not ddb_exists:
 		raise FileNotFoundError(f"DB \"{db_name}\" does not exist.")
 
-	# Uncompressed json
+	# Read from json file
 	if json_exists:
 		with open(json_path, "r") as f:
 			return f.read()
-	# Compressed ddb
-	elif ddb_exists:
+	# Read from compressed ddb file
+	if ddb_exists:
 		with open(ddb_path, "rb") as f:
 			data_bytes = f.read()
 			return zlib.decompress(data_bytes).decode()
@@ -37,21 +40,48 @@ def read_string(db_name: str) -> str:
 def read(db_name: str) -> dict:
 	"""
 		Read the file at db_path from the configured storage directory.
-		Make sure the file exists!
+		Make sure the file exists. If it does notnot a FileNotFoundError is
+		raised.
 	"""
-	data_str = read_string(db_name)
-	return orjson.loads(data_str) if config.use_orjson else json.loads(data_str)
+	data = read_string(db_name)
+	return orjson.loads(data) if config.use_orjson else json.loads(data)
+
+
+
+def find_key_in_tlk(data: str, key_str: str) -> int:
+	"""
+		Find the index of the key in the data string.
+		The key MUST be unique in the entire db, otherwise the behavior is undefined.
+		If the key is not found, a `KeyError` is raised.
+	"""
+
+
+	i = 0
+	while True:
+		first_key_i = data.find('"', i)
+		if first_key_i == -1:
+			return -1
+		first_key_end_i = data.find('"', first_key_i + 1)
+		if data[first_key_i:first_key_end_i+1] == key_str:
+			return first_key_i
+		i = utils.seek_index_through_value(data, first_key_end_i + 1) + 1
+
+
 
 
 def partial_read(db_name: str, key: str) -> PartialFileHandle:
 	"""
 		Partially read a key from a db.
-		The key MUST be unique in the entire db.
+		The key MUST be unique in the entire db, otherwise the behavior is undefined.
+		This is a lot faster than reading the entire db, because it does not parse
+		the entire file, but only the part <value> part of the <key>: <value> pair.
+
+		If the key is not found, a `KeyError` is raised.
 	"""
 
-	data_str = read_string(db_name)
+	data = read_string(db_name)
 	key_str = f"\"{key}\":"
-	key_str_index = data_str.find(key_str)
+	key_str_index = data.find(key)
 
 	if key_str_index == -1:
 		raise KeyError(f"Key \"{key}\" not found in db \"{db_name}\"")
@@ -61,24 +91,24 @@ def partial_read(db_name: str, key: str) -> PartialFileHandle:
 	indentation_level = 0
 	indentation_char = None
 	for i in range(key_str_index-1, -1, -1):
-		if data_str[i] not in [" ", "\t"]:
+		if data[i] not in [" ", "\t"]:
 			break
 		indentation_level += 1
-		indentation_char = data_str[i]
+		indentation_char = data[i]
 
 	if indentation_char == " " and config.indent_with:
 		indentation_level //= len(config.indent_with)
 
 	value_start_index = key_str_index + len(key_str)
-	value_end_index = utils.seek_index_through_value(data_str, value_start_index)
+	value_end_index = utils.seek_index_through_value(data, value_start_index)
 
 	return PartialFileHandle(
 		db_name=db_name,
 		key=key,
-		key_value=json.loads(data_str[value_start_index:value_end_index]),
+		key_value=json.loads(data[value_start_index:value_end_index]),
 		value_start_index=value_start_index,
 		value_end_index=value_end_index,
-		original_data_str=data_str,
+		original_data_str=data,
 		indent_level=indentation_level,
 		indent_char=indentation_char
 	)
@@ -90,6 +120,11 @@ def partial_read(db_name: str, key: str) -> PartialFileHandle:
 
 
 def write_dump(db_name: str, dump: str | bytes):
+	"""
+		Write the dump to the file of the db_path.
+		If the db was compressed but now config.use_compression is False,
+		remove the compressed file, and vice versa.
+	"""
 	json_path, json_exists, ddb_path, ddb_exists = utils.db_paths(db_name)
 	# Write bytes or string to file
 	if config.use_compression:
@@ -100,6 +135,9 @@ def write_dump(db_name: str, dump: str | bytes):
 		write_path = json_path
 		if ddb_exists:
 			os.remove(ddb_path)
+
+	if config.use_compression:
+		dump = zlib.compress(dump if isinstance(dump, bytes) else dump.encode(), 1)
 
 	# Write bytes or string to file
 	open_mode = "wb" if isinstance(dump, bytes) else "w"
@@ -123,9 +161,6 @@ def write(db_name: str, db: dict):
 			json_indent = "\t" if config.indent_with == "\t" else len(config.indent_with)
 		db_dump = json.dumps(db, indent=json_indent, sort_keys=config.sort_keys)
 
-	if config.use_compression:
-		db_dump = zlib.compress(db_dump if isinstance(db_dump, bytes) else db_dump.encode(), 1)
-
 	write_dump(db_name, db_dump)
 
 
@@ -133,6 +168,7 @@ def partial_write(pf: PartialFileHandle):
 	"""
 		Write a partial file handle to the db.
 	"""
+
 	if config.use_orjson:
 		config.indent_with = " " * 2
 		orjson_indent = orjson.OPT_INDENT_2 if config.indent_with else 0

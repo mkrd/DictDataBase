@@ -2,6 +2,7 @@ import dictdatabase as DDB
 import json
 import os
 
+
 def incr_db(n, tables):
 	for _ in range(n):
 		for t in range(tables):
@@ -15,13 +16,10 @@ def incr_db(n, tables):
 
 
 def make_table(recursion_depth=4, keys_per_level=20):
-
-	incr = {"counter": 0}
 	d = {"key1": "val1", "key2": 2, "key3": [1, "2", [3, 3]]}
 	for i in range(recursion_depth):
 		d = {f"key{i}{j}": d for j in range(keys_per_level)}
-	incr["big"] = d
-	return incr
+	return {"counter": 0, "big": d}
 
 
 def get_tasks_json():
