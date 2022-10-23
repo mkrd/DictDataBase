@@ -1,7 +1,8 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from path_dict import PathDict
-from . import utils, io_safe, writing
+from . import utils, io_safe, reading
+from . writing import DDBSession, DDBMultiSession, DDBSubSession, create
 
 
 @dataclass(frozen=True)
@@ -37,7 +38,7 @@ class SubModel(PathDict):
 
 
 	def session(self):
-		return writing.DDBSession(self.db_name, as_PathDict=True)
+		return DDBSession(self.db_name, as_PathDict=True)
 
 
 	def read(self):
@@ -49,3 +50,46 @@ class SubModel(PathDict):
 			return None
 		self.data = self.file_db.get(self.key, None)
 		return self
+
+
+
+class DDBMethodChooser:
+	def __init__(self, *path):
+		self.path = utils.to_path_str(*path)
+
+	def exists(self) -> bool:
+		"""
+			Efficiently checks if a database exists.
+			If it contains a wildcard, it will return True if at least one exists.
+		"""
+		return len(utils.find(self.path)) > 0
+
+	def create(self, db=None, force_overwrite=False):
+		create(db, force_overwrite)
+
+	def delete(self):
+		io_safe.delete(self.path)
+
+	def read(self, key: str = None, as_PathDict: bool = False) -> dict | PathDict:
+		"""
+			Reads a database and returns it as a PathDict.
+			If a key is given, return the efficiently read key value.
+		"""
+		if key is not None and "*" in key:
+			raise ValueError("A key cannot be specified with a wildcard.")
+		if key is not None:
+			return reading.subread(self.path, key, as_PathDict=as_PathDict)
+		elif "*" in self.path:
+			return reading.multiread(self.path, as_PathDict=as_PathDict)
+		else:
+			return reading.read(self.path, as_PathDict=as_PathDict)
+
+	def session(self, key: str = None, as_PathDict: bool = False) -> DDBSession | DDBMultiSession | DDBSubSession:
+		if key is not None and "*" in key:
+			raise ValueError("A key cannot be specified with a wildcard.")
+		if key is not None:
+			return DDBSubSession(self.path, key, as_PathDict=as_PathDict)
+		elif "*" in self.path:
+			return DDBMultiSession(self.path, as_PathDict=as_PathDict)
+		else:
+			return DDBSession(self.path, as_PathDict=as_PathDict)
