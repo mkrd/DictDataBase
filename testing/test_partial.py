@@ -36,7 +36,7 @@ def test_subwrite():
 	DDB.config.storage_directory = "./test_db/production_database"
 
 	DDB.config.use_orjson = False
-	DDB.config.indent_with = "  "
+	DDB.config.indent = 4
 	DDB.config.sort_keys = False
 
 

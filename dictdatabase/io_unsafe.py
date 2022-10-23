@@ -74,8 +74,8 @@ def partial_read(db_name: str, key: str) -> PartialFileHandle:
 		indentation_level += 1
 		indentation_char = data[i]
 
-	if indentation_char == " " and config.indent_with:
-		indentation_level //= len(config.indent_with)
+	if indentation_char == " " and isinstance(config.indent, int) and config.indent > 0:
+		indentation_level //= len(config.indent)
 
 	value_start_index = key_str_index + len(key_str)
 	value_end_index = utils.seek_index_through_value(data, value_start_index)
@@ -129,15 +129,11 @@ def write(db_name: str, db: dict):
 		to the file of the db_path.
 	"""
 	if config.use_orjson:
-		orjson_indent = orjson.OPT_INDENT_2 if config.indent_with else 0
+		orjson_indent = orjson.OPT_INDENT_2 if config.indent else 0
 		orjson_sort_keys = orjson.OPT_SORT_KEYS if config.sort_keys else 0
 		db_dump = orjson.dumps(db, option=orjson_indent | orjson_sort_keys)
 	else:
-		if config.indent_with is None:
-			json_indent = None
-		else:
-			json_indent = "\t" if config.indent_with == "\t" else len(config.indent_with)
-		db_dump = json.dumps(db, indent=json_indent, sort_keys=config.sort_keys)
+		db_dump = json.dumps(db, indent=config.indent, sort_keys=config.sort_keys)
 
 	write_dump(db_name, db_dump)
 
@@ -148,21 +144,16 @@ def partial_write(pf: PartialFileHandle):
 	"""
 
 	if config.use_orjson:
-		config.indent_with = " " * 2
-		orjson_indent = orjson.OPT_INDENT_2 if config.indent_with else 0
+		orjson_indent = orjson.OPT_INDENT_2 if config.indent else 0
 		orjson_sort_keys = orjson.OPT_SORT_KEYS if config.sort_keys else 0
 		partial_dump = orjson.dumps(pf.key_value, option=orjson_indent | orjson_sort_keys)
 		partial_dump = partial_dump.decode()
 	else:
-		if config.indent_with is None:
-			json_indent = None
-		else:
-			json_indent = "\t" if config.indent_with == "\t" else len(config.indent_with)
-		partial_dump = json.dumps(pf.key_value, indent=json_indent, sort_keys=config.sort_keys)
+		partial_dump = json.dumps(pf.key_value, indent=config.indent, sort_keys=config.sort_keys)
 
-	if config.indent_with:
-		indent = pf.indent_level * config.indent_with
-		partial_dump = partial_dump.replace("\n", "\n" + indent)
+	if config.indent is not None:
+		indent_with = " " * config.indent if isinstance(config.indent, int) else config.indent
+		partial_dump = partial_dump.replace("\n", "\n" + (pf.indent_level * indent_with))
 
 	dump_start = pf.original_data_str[:pf.value_start_index]
 	dump_end = pf.original_data_str[pf.value_end_index:]
