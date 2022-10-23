@@ -1,6 +1,5 @@
 import os
-from . locking import ReadLock, WriteLock
-from . import config, utils, io_unsafe
+from . import config, utils, io_unsafe, locking
 
 
 def read(db_name: str):
@@ -14,7 +13,7 @@ def read(db_name: str):
 	if not json_exists and not ddb_exists:
 		return None
 	# Wait in any write lock case, "need" or "has".
-	lock = ReadLock(db_name)
+	lock = locking.ReadLock(db_name)
 	res = io_unsafe.read(db_name)
 	lock.unlock()
 	return res
@@ -26,8 +25,7 @@ def write(db_name: str, db: dict):
 	"""
 	dirname = os.path.dirname(f"{config.storage_directory}/{db_name}.any")
 	os.makedirs(dirname, exist_ok=True)
-
-	write_lock = WriteLock(db_name)
+	write_lock = locking.WriteLock(db_name)
 	io_unsafe.write(db_name, db)
 	write_lock.unlock()
 
@@ -39,7 +37,7 @@ def delete(db_name: str):
 	json_path, json_exists, ddb_path, ddb_exists = utils.db_paths(db_name)
 	if not json_exists and not ddb_exists:
 		return None
-	write_lock = WriteLock(db_name)
+	write_lock = locking.WriteLock(db_name)
 	if json_exists:
 		os.remove(json_path)
 	if ddb_exists:
