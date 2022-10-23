@@ -1,6 +1,5 @@
 from path_dict import PathDict
-from . import utils, io_unsafe, io_safe, reading
-from . locking import WriteLock
+from . import utils, io_unsafe, io_safe, reading, locking
 
 
 def create(*name, db=None, force_overwrite=False):
@@ -53,7 +52,7 @@ class DDBSession(object):
 			No new read tasks will be allowed. When all read tasks are done, the session aquire the write lock.
 			Now, it can savely read and write while all other tasks wait.
 		"""
-		self.write_lock = WriteLock(self.db_name)
+		self.write_lock = locking.WriteLock(self.db_name)
 		self.in_session = True
 		try:
 			self.dict = io_unsafe.read(self.db_name)
@@ -87,7 +86,7 @@ class DDBMultiSession(object):
 		self.in_session = False
 
 	def __enter__(self):
-		self.write_locks = [WriteLock(x) for x in self.db_names]
+		self.write_locks = [locking.WriteLock(x) for x in self.db_names]
 		self.in_session = True
 		try:
 			self.dicts = {n: io_unsafe.read(n) for n in self.db_names}
@@ -123,21 +122,6 @@ def multisession(*pattern, as_PathDict: bool = False):
 	return DDBMultiSession(utils.to_path_str(pattern), as_PathDict=as_PathDict)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 class DDBSubSession(object):
 	def __init__(self, db_name: str, key: str, as_PathDict: bool = False):
 		self.db_name = db_name
@@ -146,7 +130,7 @@ class DDBSubSession(object):
 		self.in_session = False
 
 	def __enter__(self):
-		self.write_lock = WriteLock(self.db_name)
+		self.write_lock = locking.WriteLock(self.db_name)
 		self.in_session = True
 		try:
 			self.partial_handle = io_unsafe.partial_read(self.db_name, self.key)

@@ -47,28 +47,6 @@ def read(db_name: str) -> dict:
 	return orjson.loads(data) if config.use_orjson else json.loads(data)
 
 
-
-def find_key_in_tlk(data: str, key_str: str) -> int:
-	"""
-		Find the index of the key in the data string.
-		The key MUST be unique in the entire db, otherwise the behavior is undefined.
-		If the key is not found, a `KeyError` is raised.
-	"""
-
-
-	i = 0
-	while True:
-		first_key_i = data.find('"', i)
-		if first_key_i == -1:
-			return -1
-		first_key_end_i = data.find('"', first_key_i + 1)
-		if data[first_key_i:first_key_end_i+1] == key_str:
-			return first_key_i
-		i = utils.seek_index_through_value(data, first_key_end_i + 1) + 1
-
-
-
-
 def partial_read(db_name: str, key: str) -> PartialFileHandle:
 	"""
 		Partially read a key from a db.
