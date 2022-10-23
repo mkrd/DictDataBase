@@ -88,32 +88,20 @@ def unprotected_write_dict_as_json(db_name: str, db: dict):
 	else:
 		db_dump = json.dumps(db)
 
-	# Compression is used
 	if config.use_compression:
+		write_path = ddb_path
 		if json_exists:
 			os.remove(json_path)
 		db_dump = zlib.compress(db_dump if isinstance(db_dump, bytes) else db_dump.encode(), 1)
-		with open(ddb_path, "wb") as f:
-			f.write(db_dump)
-		return
+	else:
+		write_path = json_path
+		if ddb_exists:
+			os.remove(ddb_path)
 
-	# No compression is used
-
-	# Remove old ddb file if it exists
-	# This is necessary when switching from compression to no compression
-	if ddb_exists:
-		os.remove(ddb_path)
-
-	# If the custom encoder returns bytes, write them directly to the file
-	if isinstance(db_dump, bytes):
-		with open(json_path, "wb") as f:
-			f.write(db_dump)
-		return
-
-	# Otherwise, write the string to the file
-	with open(json_path, "w") as f:
+	# Write bytes or string to file
+	open_mode = "wb" if isinstance(db_dump, bytes) else "w"
+	with open(write_path, open_mode) as f:
 		f.write(db_dump)
-
 
 
 def protected_write_dict_as_json(db_name: str, db: dict):
