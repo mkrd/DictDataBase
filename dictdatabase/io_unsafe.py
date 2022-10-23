@@ -77,7 +77,7 @@ def partial_read(db_name: str, key: str) -> PartialFileHandle:
 	if indentation_char == " " and isinstance(config.indent, int) and config.indent > 0:
 		indentation_level //= len(config.indent)
 
-	value_start_index = key_str_index + len(key_str)
+	value_start_index = key_str_index + len(key_str) - 1
 	value_end_index = utils.seek_index_through_value(data, value_start_index)
 
 	return PartialFileHandle(
