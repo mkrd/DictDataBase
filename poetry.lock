@@ -29,7 +29,7 @@ test = ["flake8 (==3.7.8)", "hypothesis (==3.55.3)"]
 name = "orjson"
 version = "3.8.0"
 description = "Fast, correct Python JSON library supporting dataclasses, datetimes, and numpy"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 
@@ -126,7 +126,7 @@ python-versions = ">= 3.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "0b27cdf56a389cd08f03035901599f976665ad854f1f2f812c19a16d40833dad"
+content-hash = "a445388e197ab8410b864d8d01c22de2644f9ba92712399cad5132648e250258"
 
 [metadata.files]
 Brotli = [

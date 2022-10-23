@@ -19,6 +19,7 @@ classifiers=[
 python = "^3.10"
 path-dict = "^1.2.6"
 Brotli = "^1.0.9"
+orjson = "^3.8.0"
 
 [tool.poetry.group.dev.dependencies]
 snakeviz = "^2.1.1"
