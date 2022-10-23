@@ -7,23 +7,22 @@ from path_dict import PathDict
 
 
 def get_db_names(pattern: str):
-	dbs_ddb = glob.glob(f"{config.storage_directory}/{pattern}.ddb")
-	dbs_json = glob.glob(f"{config.storage_directory}/{pattern}.json")
-	dbs_all = dbs_ddb + dbs_json
-	dbs_all = [d.replace(config.storage_directory + "/", "") for d in dbs_all]
-	dbs_all = [d.replace(".ddb", "") for d in dbs_all]
-	dbs_all = [d.replace(".json", "") for d in dbs_all]
-	return dbs_all
+	ddb_paths = glob.glob(f"{config.storage_directory}/{pattern}.ddb")
+	json_paths = glob.glob(f"{config.storage_directory}/{pattern}.json")
+	dbs_all = ddb_paths + json_paths
+	dbs_all = [d.replace(f"{config.storage_directory}/", "") for d in dbs_all]
+	return [d.replace(".ddb", "").replace(".json", "") for d in dbs_all]
 
 
 
 class DDBSession(object):
 	"""
-		Enter: "with DDBSession(db_name) as session, dict:
-		Then modify dict as required.
-		Save: session.save_changes()
-		Discard: session.discard_changes():
-		One of both need to be called
+		Enter:
+		>>> with DDBSession(db_name) as session, data:
+
+		Where `data` is the dict that was read from the filesystem. Modify
+		`data` and call session.write() to save changes. If you don't call it,
+		the changes will be lost after exiting the with statement.
 	"""
 	def __init__(self, db_name: str, as_PathDict: bool = False):
 		self.db_name = db_name
@@ -60,7 +59,7 @@ class DDBSession(object):
 
 	def write(self):
 		if not self.in_session:
-			raise Exception("Only call save_changes() inside a with statement.")
+			raise PermissionError("Only call write() inside a with statement.")
 		if self.as_PathDict:
 			utils.unprotected_write_dict_as_json(self.db_name, self.dict.data)
 		else:
@@ -98,13 +97,10 @@ class DDBMultiSession(object):
 
 	def write(self):
 		if not self.in_session:
-			raise Exception("Only call save_changes() inside a with statement.")
+			raise PermissionError("Only call write() inside a with statement.")
 		for db_name in self.db_names:
-			if self.as_PathDict:
-				utils.unprotected_write_dict_as_json(db_name, self.dicts[db_name].data)
-			else:
-				utils.unprotected_write_dict_as_json(db_name, self.dicts[db_name])
-
+			data = self.dicts[db_name].data if self.as_PathDict else self.dicts[db_name]
+			utils.unprotected_write_dict_as_json(db_name, data)
 
 
 def _to_path_if_tuple(s):
@@ -113,29 +109,24 @@ def _to_path_if_tuple(s):
 	return s
 
 
-
 class SubModel(PathDict):
 	def __init__(self, key: str, initial_value=None):
 		"""
-			Initialize with the initial_value dict or PathDict if it is given,
-			otherwise initi
+			Initialize with the initial_value dict or PathDict if it is given.
+			If it is not given, it will be read from the db.
 		"""
-		if key is None:
-			raise Exception("key can not be None")
-
-		self.key = key
-		self.db_name = _to_path_if_tuple(self.db_name)
+		self.key, self.db_name = key, _to_path_if_tuple(self.db_name)
 		if initial_value is None:
 			self.file_db = utils.protected_read_json_as_dict(self.db_name)
-			if self.file_db is None or self.key not in self.file_db:
-				raise Exception(f"DB {self.db_name} does not exist or does not contain key {self.key}")
-			else:
-				super().__init__(self.file_db.get(self.key, None))
-		else:
-			if not isinstance(initial_value, dict):
-				if not isinstance(initial_value, PathDict):
-					raise Exception("initial_value must be a dict or PathDict")
+			if self.file_db is None:
+				raise FileNotFoundError(f"DB {self.db_name} not found.")
+			if self.key not in self.file_db:
+				raise KeyError(f"DB {self.db_name} does not contain key {self.key}")
+			super().__init__(self.file_db[self.key])
+		elif isinstance(initial_value, (dict, PathDict)):
 			super().__init__(initial_value)
+		else:
+			raise ValueError("If provided, initial_value must be a dict or PathDict")
 
 
 	def session(self):
