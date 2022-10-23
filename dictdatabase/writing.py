@@ -72,10 +72,8 @@ class DDBSession(object):
 	def write(self):
 		if not self.in_session:
 			raise PermissionError("Only call write() inside a with statement.")
-		if self.as_PathDict:
-			io_unsafe.write(self.db_name, self.dict.data)
-		else:
-			io_unsafe.write(self.db_name, self.dict)
+		data = self.dict.data if self.as_PathDict else self.dict
+		io_unsafe.write(self.db_name, data)
 
 
 def session(*name, as_PathDict: bool = False):
@@ -87,7 +85,6 @@ class DDBMultiSession(object):
 		self.db_names = utils.find(pattern)
 		self.as_PathDict = as_PathDict
 		self.in_session = False
-
 
 	def __enter__(self):
 		self.write_locks = [WriteLock(x) for x in self.db_names]
@@ -105,7 +102,7 @@ class DDBMultiSession(object):
 	def __exit__(self, type, value, tb):
 		for write_lock in self.write_locks:
 			write_lock.unlock()
-		self.write_lock = None
+		self.write_locks = None
 		self.in_session = False
 
 	def write(self):

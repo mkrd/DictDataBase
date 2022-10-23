@@ -1,7 +1,6 @@
 from __future__ import annotations
 from path_dict import PathDict
-from . import utils, io_safe
-from .writing import DDBSession
+from . import utils, io_safe, writing
 
 
 class SubModel(PathDict):
@@ -25,7 +24,7 @@ class SubModel(PathDict):
 
 
 	def session(self):
-		return DDBSession(self.db_name, as_PathDict=True)
+		return writing.DDBSession(self.db_name, as_PathDict=True)
 
 
 	def read(self):
