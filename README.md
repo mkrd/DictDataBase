@@ -30,18 +30,22 @@ However, the files will not be human readable.
 DDB.config.use_compression = False # Default value
 ```
 
-If you set pretty_json_files to True, the json db files will be indented and the keys will be sorted.
-It won't affect compressed files, since the are not human-readable anyways.
+Behaves exactly like json.dumps(indent=...)
 ```python
-DDB.config.pretty_json_files = True # Default value
+DDB.config.indent = "\t" # Default value
+```
+
+Behaves exactly like json.dumps(sort_keys=...), e.g. "\t" or 4 or None
+```python
+DDB.config.sort_keys = True # Default value
 ```
 
 
 You can specify the orjson encoder and decoder if you need to.
 The standard library json module is sufficient most of the time.
-However, orjson might be more performant for your use case.
+However, orjson is a lot more performant in virtually all cases.
 ```python
-DDB.config.use_orjson = False # Default value
+DDB.config.use_orjson = True # Default value
 ```
 
 

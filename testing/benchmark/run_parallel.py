@@ -9,12 +9,13 @@ import cProfile
 import subprocess
 
 
-def incr_db(n, tables, ddb_sd, ddb_pj, ddb_uc, ddb_uo):
+def incr_db(n, tables, sd, uc, uo, id, sk):
 	print("parallel_runner incr_db")
-	DDB.config.storage_directory = ddb_sd
-	DDB.config.pretty_json_files = ddb_pj
-	DDB.config.use_compression = ddb_uc
-	DDB.config.use_orjson = ddb_uo
+	DDB.config.storage_directory = sd
+	DDB.config.use_compression = uc
+	DDB.config.use_orjson = uo
+	DDB.config.indent = id
+	DDB.config.sort_keys = sk
 	for _ in range(n):
 		for t in range(tables):
 			with DDB.session(f"incr{t}", as_PathDict=True) as (session, d):
@@ -39,9 +40,10 @@ def parallel_stress(tables=1, processes=8, per_process=8):
 			per_process,
 			tables,
 			DDB.config.storage_directory,
-			DDB.config.pretty_json_files,
 			DDB.config.use_compression,
 			DDB.config.use_orjson,
+			DDB.config.indent,
+			DDB.config.sort_keys,
 		))
 	pool.close()
 	pool.join()

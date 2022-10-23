@@ -37,13 +37,15 @@ def teardown():
 
 def setup():
 	make_test_dir()
-	DDB.config.pretty_json_files = False
+	DDB.config.indent = None
+	DDB.config.sort_keys = False
 	DDB.config.use_compression = False
 
 
 def setup_pretty():
 	setup()
-	DDB.config.pretty_json_files = True
+	DDB.config.indent = "\t"
+	DDB.config.sort_keys = True
 
 
 def setup_compress():
