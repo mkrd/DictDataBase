@@ -1,5 +1,5 @@
 #!/bin/sh
-while [[ $# -gt 0 ]]; do case $1 in
+while [ $# -gt 0 ]; do case $1 in
 
 
   --test|-t)
