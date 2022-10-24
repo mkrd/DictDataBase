@@ -1,3 +1,4 @@
+from __future__ import annotations
 from path_dict import PathDict
 from . import utils, io_safe
 
