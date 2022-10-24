@@ -50,4 +50,4 @@ jobs:
       #----------------------------------------------
 
       - name: Run tests
-        run: ./cli.sh -t
+        run: poetry run pytest --cov=dictdatabase --cov-report term-missing
