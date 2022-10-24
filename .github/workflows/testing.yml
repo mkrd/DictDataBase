@@ -50,4 +50,4 @@ jobs:
       #----------------------------------------------
 
       - name: Run tests
-        run: poetry run python testing/run_tests.py
+        run: ./cli.sh -t
