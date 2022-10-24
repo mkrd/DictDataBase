@@ -49,5 +49,5 @@ jobs:
       #---- Tests
       #----------------------------------------------
 
-      - name: Run tests
+      - name: 🚀 Run tests with code coverage report
         run: poetry run pytest --cov=dictdatabase --cov-report term-missing
