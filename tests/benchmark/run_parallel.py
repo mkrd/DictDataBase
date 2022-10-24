@@ -2,7 +2,7 @@ import dictdatabase as DDB
 import super_py as sp
 import time
 import os
-from testing import utils, test_scenes, orjson_encode, orjson_decode
+from tests import utils, test_scenes, orjson_encode, orjson_decode
 import orjson
 from multiprocessing import Pool
 import cProfile

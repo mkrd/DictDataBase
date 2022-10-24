@@ -1,6 +1,4 @@
 import dictdatabase as DDB
-import subprocess
-from scalene import scalene_profiler
 from pyinstrument import profiler
 
 
@@ -14,6 +12,3 @@ with p:
         task["jay"] = lambda x: (x or 0) + 1
         session.write()
 p.open_in_browser()
-
-# command = "poetry run snakeviz test.prof"
-# subprocess.call(command.split())

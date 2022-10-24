@@ -1,12 +1,12 @@
-import contextlib
 import dictdatabase as DDB
+import pytest
 
 
-def file_creation():
+def test_file_creation(use_compression, use_orjson, sort_keys, indent):
 	n = DDB.read("Non_existent")
 	assert n is None
 
-	DDB.create("db1")
+	DDB.create("db1", force_overwrite=True)
 	db = DDB.read("db1")
 	assert db == {}
 
@@ -17,19 +17,19 @@ def file_creation():
 	assert DDB.read("db1") == {"a": {"b": {"c": "dee"}}}
 
 
-def nested_file_creation():
+def test_nested_file_creation(use_compression, use_orjson, sort_keys, indent):
 	n = DDB.read("blobbles/bla/blub")
 	assert n is None
-	DDB.create("blobbles/osna/efforts", db={"val": [1, 2]})
+	DDB.create("blobbles/osna/efforts", db={"val": [1, 2]}, force_overwrite=True)
 	assert DDB.read("blobbles/osna/efforts") == {"val": [1, 2]}
 
 
-def create_same_file_twice():
+def test_create_same_file_twice(use_compression, use_orjson, sort_keys, indent):
 	# Check that creating the same file twice must raise an error
-	with contextlib.suppress(FileExistsError):
+	with pytest.raises(FileExistsError):
+		DDB.create("db1", force_overwrite=True)
 		DDB.create("db1")
-		DDB.create("db1")
-		assert False
+
 	# Check that creating the same file twice with force_overwrite=True works
 	DDB.create("db2", force_overwrite=True)
 	DDB.create("db2", force_overwrite=True)

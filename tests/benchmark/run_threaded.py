@@ -3,7 +3,7 @@ import super_py as sp
 import time
 import cProfile
 import subprocess
-from testing import test_scenes, utils
+from tests import test_scenes, utils
 
 
 
