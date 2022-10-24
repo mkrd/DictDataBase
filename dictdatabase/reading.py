@@ -10,6 +10,19 @@ def exists(*name) -> bool:
 	return len(utils.find(utils.to_path_str(name))) > 0
 
 
+def haskey(*name, key: str) -> bool:
+	"""
+		Checks if a key exists in a database.
+		The key can be anywhere in the database, even deeply nested.
+		As long it exists as a key in any dict, it will be found.
+	"""
+	try:
+		subread(*name, key=key)
+		return True
+	except KeyError:
+		return False
+
+
 def read(*name, as_PathDict: bool = False) -> dict | PathDict:
 	db = io_safe.read(utils.to_path_str(name))
 	return PathDict(db) if as_PathDict else db
