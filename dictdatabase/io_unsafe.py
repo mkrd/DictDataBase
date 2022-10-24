@@ -59,7 +59,7 @@ def partial_read(db_name: str, key: str) -> PartialFileHandle:
 
 	data = read_string(db_name)
 	key_str = f"\"{key}\":"
-	key_str_index = data.find(key)
+	key_str_index = data.find(key_str)
 
 	if key_str_index == -1:
 		raise KeyError(f"Key \"{key}\" not found in db \"{db_name}\"")
@@ -75,9 +75,9 @@ def partial_read(db_name: str, key: str) -> PartialFileHandle:
 		indentation_char = data[i]
 
 	if indentation_char == " " and isinstance(config.indent, int) and config.indent > 0:
-		indentation_level //= len(config.indent)
+		indentation_level //= config.indent
 
-	value_start_index = key_str_index + len(key_str) - 1
+	value_start_index = key_str_index + len(key_str)
 	value_end_index = utils.seek_index_through_value(data, value_start_index)
 
 	return PartialFileHandle(
