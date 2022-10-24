@@ -59,7 +59,7 @@ def partial_read(db_name: str, key: str) -> PartialFileHandle:
 
 	data = read_string(db_name)
 	key_str = f"\"{key}\":"
-	key_str_index = data.find(key_str)
+	key_str_index = utils.find_outermost_key_str_index(data, key_str)
 
 	if key_str_index == -1:
 		raise KeyError(f"Key \"{key}\" not found in db \"{db_name}\"")
@@ -67,14 +67,12 @@ def partial_read(db_name: str, key: str) -> PartialFileHandle:
 	# Count the amount of whitespace before the key
 	# to determine the indentation level
 	indentation_level = 0
-	indentation_char = None
 	for i in range(key_str_index-1, -1, -1):
 		if data[i] not in [" ", "\t"]:
 			break
 		indentation_level += 1
-		indentation_char = data[i]
 
-	if indentation_char == " " and isinstance(config.indent, int) and config.indent > 0:
+	if isinstance(config.indent, int) and config.indent > 0:
 		indentation_level //= config.indent
 
 	value_start_index = key_str_index + len(key_str)
@@ -88,7 +86,6 @@ def partial_read(db_name: str, key: str) -> PartialFileHandle:
 		value_end_index=value_end_index,
 		original_data_str=data,
 		indent_level=indentation_level,
-		indent_char=indentation_char
 	)
 
 

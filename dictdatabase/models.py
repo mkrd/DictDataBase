@@ -14,7 +14,6 @@ class PartialFileHandle:
 	value_end_index: int
 	original_data_str: str
 	indent_level: int
-	indent_char: str
 
 
 class SubModel(PathDict):

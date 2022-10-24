@@ -86,3 +86,51 @@ def seek_index_through_value(data: str, index: int) -> int:
 			dict_depth -= 1
 		if list_depth == 0 and dict_depth == 0:
 			return i + 1
+
+
+def count_nesting(data: str, start: int, end: int) -> int:
+	"""
+	Returns the number of nesting levels between the start and end indices.
+
+	:param data: The string to be parsed
+	"""
+	in_str, nesting = False, 0
+
+	d_prev, d_curr = None, data[start - 1]
+	for i in range(start, end):
+		d_prev, d_curr = d_curr, data[i]
+		prev_backslash = d_prev == "\\"
+		if d_curr == '"' and not prev_backslash:
+			in_str = not in_str
+			continue
+		if in_str:
+			continue
+		elif d_curr == "{":
+			nesting += 1
+		elif d_curr == "}":
+			nesting -= 1
+	return nesting
+
+
+def find_outermost_key_str_index(data: str, key_str: str):
+	"""
+		Returns the index of the key_str that is at the outermost nesting level.
+	"""
+	if (curr_i := data.find(key_str, 0)) == -1:
+		return -1
+
+	key_nest = [(curr_i, 0)]  # (key, nesting)
+
+	while (next_i := data.find(key_str, curr_i + len(key_str))) != -1:
+		nesting = count_nesting(data, curr_i + len(key_str), next_i)
+		key_nest.append((next_i, nesting))
+		curr_i = next_i
+
+	# Early exit if there is only one key
+	if len(key_nest) == 1:
+		return key_nest[0][0]
+
+	# Relative to total nesting
+	for i in range(1, len(key_nest)):
+		key_nest[i] = (key_nest[i][0], key_nest[i - 1][1] + key_nest[i][1])
+	return min(key_nest, key=lambda x: x[1])[0]

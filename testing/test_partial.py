@@ -28,6 +28,12 @@ def test_subread():
 	assert DDB.subread("test_subread", key="c") == {"d": "e"}
 
 
+
+	j2 = {"a": {"b": "c"}, "b": {"d": "e"}}
+	DDB.create("test_subread2", db=j2, force_overwrite=True)
+	assert DDB.subread("test_subread2", key="b") == {"d": "e"}
+
+
 def test_subwrite():
 	j = {
 		"b": {"0": 1},
