@@ -3,7 +3,7 @@ while [[ $# -gt 0 ]]; do case $1 in
 
 
   --test|-t)
-    poetry run python testing/run_tests.py
+    poetry run pytest --cov=dictdatabase --cov-report term-missing
     rm ./.coverage
     shift ;;
 
