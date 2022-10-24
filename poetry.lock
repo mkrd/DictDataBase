@@ -137,7 +137,7 @@ python-versions = ">= 3.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "ccb4cb2dabc47b4f886b6f8b058730f19b1619be94e7edd5c76074f5cb1dc3f9"
+content-hash = "20b41659ef27f63ff4d73ce5bec07dd54f567a4de9fbb0a56229627c47c7abcc"
 
 [metadata.files]
 Brotli = [
