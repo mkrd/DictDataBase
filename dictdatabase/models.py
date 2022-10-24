@@ -64,6 +64,9 @@ class DDBMethodChooser:
 		"""
 		return len(utils.find(self.path)) > 0
 
+	def haskey(self, key: str) -> bool:
+		return reading.haskey(self.path, key)
+
 	def create(self, db=None, force_overwrite=False):
 		create(db, force_overwrite)
 
