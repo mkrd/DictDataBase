@@ -2,7 +2,7 @@ import dictdatabase as DDB
 import pytest
 
 
-def test_except_during_open_session(use_compression, use_orjson, sort_keys, indent):
+def test_except_during_open_session(env, use_compression, use_orjson, sort_keys, indent):
 	d = {"test": "value"}
 	DDB.create("test_except_during_open_session", db=d, force_overwrite=True)
 	with pytest.raises(RuntimeError):
@@ -11,7 +11,7 @@ def test_except_during_open_session(use_compression, use_orjson, sort_keys, inde
 
 
 
-def test_except_on_save_unserializable(use_compression, use_orjson, sort_keys, indent):
+def test_except_on_save_unserializable(env, use_compression, use_orjson, sort_keys, indent):
 	with pytest.raises(TypeError):
 		d = {"test": "value"}
 		DDB.create("test_except_on_save_unserializable", db=d, force_overwrite=True)
@@ -20,7 +20,7 @@ def test_except_on_save_unserializable(use_compression, use_orjson, sort_keys, i
 			session.write()
 
 
-def test_except_on_session_in_session(use_compression, use_orjson, sort_keys, indent):
+def test_except_on_session_in_session(env, use_compression, use_orjson, sort_keys, indent):
 	d = {"test": "value"}
 	DDB.create("test_except_on_session_in_session", db=d, force_overwrite=True)
 	with pytest.raises(RuntimeError):

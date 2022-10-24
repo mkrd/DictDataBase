@@ -3,7 +3,7 @@ import json
 import pytest
 
 
-def test_subread(use_compression, use_orjson, sort_keys, indent):
+def test_subread(env, use_compression, use_orjson, sort_keys, indent):
 	j = {
 		"a": "Hello{}",
 		"b": [0, 1],
@@ -26,7 +26,7 @@ def test_subread(use_compression, use_orjson, sort_keys, indent):
 	assert DDB.subread("test_subread2", key="b") == {"d": "e"}
 
 
-def test_subwrite(use_compression, use_orjson, sort_keys, indent):
+def test_subwrite(env, use_compression, use_orjson, sort_keys, indent):
 	j = {
 		"b": {"0": 1},
 		"c": {"d": "e"},
