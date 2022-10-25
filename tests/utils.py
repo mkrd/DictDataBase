@@ -69,7 +69,7 @@ def make_complex_nested_random_dict(max_width, max_depth):
 			res[k] = v
 		return res
 
-	return random_list([
+	return random_dict([
 		random_string,
 		random_int,
 		random_float,

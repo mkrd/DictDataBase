@@ -34,7 +34,7 @@ def multiread(*pattern, as_PathDict: bool = False):
 		Mutliread reads multiple dbs and returns them as a single dict or PathDict.
 		Path components can be "*" (all), a specific name of a list (only those from list).
 	"""
-	pattern_paths = utils.expand_find_path_pattern(pattern)
+	pattern_paths = utils.expand_find_path_pattern(*pattern)
 	res = {db_name: io_safe.read(db_name) for db_name in pattern_paths}
 	return PathDict(res) if as_PathDict else res
 

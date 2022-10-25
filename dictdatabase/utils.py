@@ -43,7 +43,7 @@ def find(*pattern) -> list[str]:
 	return dbs_all
 
 
-def expand_find_path_pattern(pattern):
+def expand_find_path_pattern(*pattern):
 	"""
 		:param str pattern: The pattern to expand.
 		Fot a tuple of path items, expand it to a list of all real paths.
@@ -55,7 +55,7 @@ def expand_find_path_pattern(pattern):
 			res = [r + [item] for r in res]
 		if isinstance(item, list):
 			res = [r + [list_item] for list_item in item for r in res]
-	return [f for r in res for f in find(r)]
+	return [f for r in res for f in find(*r)]
 
 
 def seek_index_through_value(data: str, index: int) -> int:

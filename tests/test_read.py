@@ -26,3 +26,14 @@ def test_read_compression_switching(env, use_orjson, sort_keys, indent):
 	DDB.config.use_compression = False
 	dd = DDB.read("test")
 	assert d == dd
+
+
+def test_multiread(env, use_compression, use_orjson, sort_keys, indent):
+	dl = []
+	for i in range(3):
+		dl += [make_complex_nested_random_dict(12, 6)]
+		DDB.create(f"test_multiread/d{i}", db=dl[-1], force_overwrite=True)
+
+	mr = DDB.multiread("test_multiread/*")
+	mr = {k.replace("test_multiread/", ""): v for k, v in mr.items()}
+	assert mr == {f"d{i}": dl[i] for i in range(3)}
