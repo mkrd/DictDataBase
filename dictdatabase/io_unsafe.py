@@ -140,7 +140,6 @@ def partial_write(pf: PartialFileHandle):
 	"""
 		Write a partial file handle to the db.
 	"""
-
 	if config.use_orjson:
 		orjson_indent = orjson.OPT_INDENT_2 if config.indent else 0
 		orjson_sort_keys = orjson.OPT_SORT_KEYS if config.sort_keys else 0
