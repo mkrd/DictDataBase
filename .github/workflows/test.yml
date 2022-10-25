@@ -5,7 +5,6 @@ jobs:
 
 
   tests-job:
-
     runs-on: ubuntu-latest
 
     strategy:
@@ -51,3 +50,53 @@ jobs:
 
       - name: 🚀 Run tests with code coverage report
         run: poetry run pytest --cov=dictdatabase --cov-report term-missing
+
+      #----------------------------------------------
+      #---- Save coverage artifact
+      #----------------------------------------------
+      - uses: actions/upload-artifact@v3
+        with:
+          name: coverage
+          path: .coverage
+
+  # JOB
+  cov-badge:
+    needs: tests-job
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      #----------------------------------------------
+      #---- Coverage badge
+      #----------------------------------------------
+      - name: ls-lah
+        run: ls -lah
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: coverage
+
+      - name: GenerateCoverage Badge
+        uses: tj-actions/coverage-badge-py@v1.8
+        with:
+          output: assets/coverage.svg
+
+      - name: Verify Changed files
+        uses: tj-actions/verify-changed-files@v11.1
+        id: changed_files
+        with:
+          files: assets/coverage.svg
+
+      - name: Commit files
+        if: steps.changed_files.outputs.files_changed == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add assets/coverage.svg
+          git commit -m "Updated assets/coverage.svg"
+
+      - name: Push changes
+        if: steps.changed_files.outputs.files_changed == 'true'
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.github_token }}
+          branch: ${{ github.ref }}
