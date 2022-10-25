@@ -1,5 +1,6 @@
 import dictdatabase as DDB
 import pytest
+from tests.utils import make_complex_nested_random_dict
 
 
 def test_non_existent(env, use_compression, use_orjson, sort_keys, indent):
@@ -7,16 +8,16 @@ def test_non_existent(env, use_compression, use_orjson, sort_keys, indent):
 	assert d is None
 
 
-def test_cread_read(env, use_compression, use_orjson, sort_keys, indent):
-	d = {"test": "value", "test2": [0, {"test3": "value3"}]}
-	DDB.create("test", db=d, force_overwrite=True)
-	dd = DDB.read("test")
+def test_create_and_read(env, use_compression, use_orjson, sort_keys, indent):
+	d = make_complex_nested_random_dict(12, 6)
+	DDB.create("test_create_and_read", db=d, force_overwrite=True)
+	dd = DDB.read("test_create_and_read")
 	assert d == dd
 
 
 def test_read_compression_switching(env, use_orjson, sort_keys, indent):
 	DDB.config.use_compression = False
-	d = {"test": "value"}
+	d = make_complex_nested_random_dict(12, 6)
 	DDB.create("test", db=d, force_overwrite=True)
 	DDB.config.use_compression = True
 	dd = DDB.read("test")
