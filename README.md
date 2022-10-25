@@ -4,6 +4,7 @@
 [![Downloads](https://pepy.tech/badge/dictdatabase/month)](https://pepy.tech/project/dictdatabase)
 [![Downloads](https://pepy.tech/badge/dictdatabase/week)](https://pepy.tech/project/dictdatabase)
 ![Tests](https://github.com/mkrd/DictDataBase/actions/workflows/test.yml/badge.svg)
+![Coverage](https://github.com/mkrd/DictDataBase/blob/master/assets/coverage.svg?raw=1)
 
 DictDataBase is a simple but fast and secure database for handling json or compressed json as the underlying storage mechanism. Features:
 - **Multi threading and multi processing safe**. Multiple processes on the same machine can simultaneously read and write to dicts without writes getting lost.
