@@ -2,23 +2,23 @@ import dictdatabase as DDB
 import super_py as sp
 import time
 import os
-from testing import utils, test_scenes, orjson_encode, orjson_decode
+from tests import utils, test_scenes, orjson_encode, orjson_decode
 import orjson
 from multiprocessing import Pool
 import cProfile
 import subprocess
 
 
-def incr_db(n, tables, ddb_sd, ddb_pj, ddb_uc):
+def incr_db(n, tables, sd, uc, uo, id, sk):
 	print("parallel_runner incr_db")
-	DDB.config.storage_directory = ddb_sd
-	DDB.config.pretty_json_files = ddb_pj
-	DDB.config.use_compression = ddb_uc
-	DDB.config.custom_json_encoder = orjson_encode
-	DDB.config.custom_json_decoder = orjson_decode
+	DDB.config.storage_directory = sd
+	DDB.config.use_compression = uc
+	DDB.config.use_orjson = uo
+	DDB.config.indent = id
+	DDB.config.sort_keys = sk
 	for _ in range(n):
 		for t in range(tables):
-			with DDB.session(f"incr{t}", as_PathDict=True) as (session, d):
+			with DDB.at(f"incr{t}").session(as_PathDict=True) as (session, d):
 				d["counter"] = lambda x: (x or 0) + 1
 				session.write()
 	return True
@@ -27,7 +27,7 @@ def incr_db(n, tables, ddb_sd, ddb_pj, ddb_uc):
 def parallel_stress(tables=1, processes=8, per_process=8):
 	# Create Tables
 	for t in range(tables):
-		DDB.create(f"incr{t}", db=utils.get_tasks_json())
+		DDB.at(f"incr{t}").create(utils.get_tasks_json())
 
 	# Execute process pool running incr_db as the target task
 	t1 = time.time()
@@ -40,8 +40,10 @@ def parallel_stress(tables=1, processes=8, per_process=8):
 			per_process,
 			tables,
 			DDB.config.storage_directory,
-			DDB.config.pretty_json_files,
 			DDB.config.use_compression,
+			DDB.config.use_orjson,
+			DDB.config.indent,
+			DDB.config.sort_keys,
 		))
 	pool.close()
 	pool.join()
@@ -52,9 +54,9 @@ def parallel_stress(tables=1, processes=8, per_process=8):
 	print(f"{ops = }, {ops_sec = }, {tables = }, {processes = }")
 
 	for t in range(tables):
-		db = DDB.read(f"incr{t}")
+		db = DDB.at(f"incr{t}").read()
 		print(f"✅ {db['counter'] = } == {per_process * processes = }")
-		assert DDB.read(f"incr{t}")["counter"] == processes * per_process
+		assert DDB.at(f"incr{t}").read()["counter"] == processes * per_process
 
 
 if __name__ == "__main__":

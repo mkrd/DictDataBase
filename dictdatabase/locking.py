@@ -1,3 +1,4 @@
+from __future__ import annotations
 import threading
 import time
 from pathlib import Path
@@ -87,7 +88,8 @@ class ReadLock(AbstractLock):
 
 		# Except if current thread already has a read lock
 		if check_if_lock_exists(db_name, self.id, "hasread"):
-			raise RuntimeError("Thread already has a read lock.")
+			need_read_path.unlink()
+			raise RuntimeError("Thread already has a read lock. Do not try to obtain a read lock twice.")
 
 		# Make path of the hyptoetical hasread lock
 		self.path = Path(path_str(db_name, self.id, self.time_ns, "hasread"))
@@ -120,7 +122,8 @@ class WriteLock(AbstractLock):
 
 		# Except if current thread already has a write lock
 		if check_if_lock_exists(db_name, self.id, "haswrite"):
-			raise RuntimeError("Thread already has a write lock. Do not open sessions while already in a session.")
+			need_write_path.unlink()
+			raise RuntimeError("Thread already has a write lock. Do try to obtain a write lock twice.")
 
 		# Make path of the hyptoetical haswrite lock
 		self.path = Path(path_str(db_name, self.id, self.time_ns, "haswrite"))
