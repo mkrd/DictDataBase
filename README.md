@@ -161,14 +161,14 @@ If you do not call session.write(), the database file will not be modified.
 
 ## DDBMethodChooser
 
-### exists
+### exists()
 
-### haskey
+### haskey() (can also be part of exists)
 
-### create
+### create()
 
-### delete
+### delete()
 
-### read
+### read()
 
-### session
+### session()
