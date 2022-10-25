@@ -54,9 +54,9 @@ def parallel_stress(tables=1, processes=8, per_process=8):
 	print(f"{ops = }, {ops_sec = }, {tables = }, {processes = }")
 
 	for t in range(tables):
-		db = DDB.read(f"incr{t}")
+		db = DDB.at(f"incr{t}").read()
 		print(f"✅ {db['counter'] = } == {per_process * processes = }")
-		assert DDB.read(f"incr{t}")["counter"] == processes * per_process
+		assert DDB.at(f"incr{t}").read()["counter"] == processes * per_process
 
 
 if __name__ == "__main__":

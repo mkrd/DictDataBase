@@ -11,7 +11,7 @@ def a_create():
 
 
 def b_read():
-	d = DDB.read("_test_big_db")
+	d = DDB.at("_test_big_db").read()
 
 
 def c_session():

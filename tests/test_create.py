@@ -7,13 +7,13 @@ from tests.utils import make_complex_nested_random_dict
 
 def test_create(env, use_compression, use_orjson, sort_keys, indent):
 	DDB.at("test_create").create(force_overwrite=True)
-	db = DDB.read("test_create")
+	db = DDB.at("test_create").read()
 	assert db == {}
 
 	with DDB.session("test_create", as_PathDict=True) as (session, d):
 		d["a", "b", "c"] = "d"
 		session.write()
-	assert DDB.read("test_create") == {"a": {"b": {"c": "d"}}}
+	assert DDB.at("test_create").read() == {"a": {"b": {"c": "d"}}}
 
 
 def test_create_edge_cases(env, use_compression, use_orjson, sort_keys, indent):
@@ -21,18 +21,18 @@ def test_create_edge_cases(env, use_compression, use_orjson, sort_keys, indent):
 
 	for i, c in enumerate(cases):
 		DDB.at(f"tcec{i}").create(c, force_overwrite=True)
-		assert DDB.read(f"tcec{i}") == c
+		assert DDB.at(f"tcec{i}").read() == c
 
 	with pytest.raises(TypeError):
 		DDB.at("tcec99").create(object(), force_overwrite=True)
 
 
 def test_nested_file_creation(env, use_compression, use_orjson, sort_keys, indent):
-	n = DDB.read("nested/file/nonexistent")
+	n = DDB.at("nested/file/nonexistent").read()
 	assert n is None
 	db = make_complex_nested_random_dict(12, 6)
 	DDB.at("nested/file/creation/test").create(db, force_overwrite=True)
-	assert DDB.read("nested/file/creation/test") == db
+	assert DDB.at("nested/file/creation/test").read() == db
 
 
 def test_create_same_file_twice(env, use_compression, use_orjson, sort_keys, indent):

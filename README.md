@@ -113,7 +113,7 @@ DDB.at("user_data").create(user_data_dict)
 
 ```python
 
-d = DDB.read("user_data")
+d = DDB.at("user_data").read()
 # You now have a copy of the dict named "user_data"
 print(d == user_data_dict) # True
 
@@ -146,7 +146,7 @@ session.write()
 
 
 
-print(DDB.read("user_data")["follows"])
+print(DDB.at("user_data").read()["follows"])
 
 # -> [["Ben", "Sue"], ["Joe", "Ben"], ["Sue", "Ben"]]
 

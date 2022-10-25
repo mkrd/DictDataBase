@@ -26,14 +26,14 @@ def test_write_compression_switching(env, use_orjson, sort_keys, indent):
 	with DDB.session(name) as (session, dd):
 		assert d == dd
 		session.write()
-	assert DDB.read(name) == d
+	assert DDB.at(name).read() == d
 	DDB.config.use_compression = True
 	with DDB.session(name) as (session, dd):
 		assert d == dd
 		session.write()
-	assert DDB.read(name) == d
+	assert DDB.at(name).read() == d
 	DDB.config.use_compression = False
 	with DDB.session(name) as (session, dd):
 		assert d == dd
 		session.write()
-	assert DDB.read(name) == d
+	assert DDB.at(name).read() == d

@@ -3,11 +3,6 @@ from path_dict import PathDict
 from . import utils, io_safe
 
 
-def read(*name, as_PathDict: bool = False) -> dict | PathDict:
-	db = io_safe.read(utils.to_path_str(name))
-	return PathDict(db) if as_PathDict else db
-
-
 def multiread(*pattern, as_PathDict: bool = False):
 	"""
 		Mutliread reads multiple dbs and returns them as a single dict or PathDict.

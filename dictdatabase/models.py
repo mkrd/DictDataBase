@@ -112,7 +112,9 @@ class DDBMethodChooser:
 		elif "*" in self.path:
 			return reading.multiread(self.path, as_PathDict=as_PathDict)
 		else:
-			return reading.read(self.path, as_PathDict=as_PathDict)
+			# Normal read
+			db = io_safe.read(self.path)
+			return PathDict(db) if as_PathDict else db
 
 	def session(self, key: str = None, as_PathDict: bool = False) -> DDBSession | DDBMultiSession | DDBSubSession:
 		if key is not None and "*" in key:
