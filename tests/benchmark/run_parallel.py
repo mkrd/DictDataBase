@@ -18,7 +18,7 @@ def incr_db(n, tables, sd, uc, uo, id, sk):
 	DDB.config.sort_keys = sk
 	for _ in range(n):
 		for t in range(tables):
-			with DDB.session(f"incr{t}", as_PathDict=True) as (session, d):
+			with DDB.at(f"incr{t}").session(as_PathDict=True) as (session, d):
 				d["counter"] = lambda x: (x or 0) + 1
 				session.write()
 	return True

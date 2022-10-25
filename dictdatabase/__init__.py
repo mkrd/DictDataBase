@@ -1,4 +1,4 @@
-from . writing import session, multisession, subsession
+from . writing import  multisession, subsession
 from . models import SubModel, DDBMethodChooser
 
 

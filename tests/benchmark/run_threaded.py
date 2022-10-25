@@ -13,7 +13,7 @@ def increment_counters(n, tables):
 			# Perform a useless read operation
 			d = DDB.at(f"incr{t}").read()
 			# Perform a counter increment
-			with DDB.session(f"incr{t}", as_PathDict=True) as (session, d):
+			with DDB.at(f"incr{t}").session(as_PathDict=True) as (session, d):
 				d["counter"] = lambda x: (x or 0) + 1
 				session.write()
 	return True

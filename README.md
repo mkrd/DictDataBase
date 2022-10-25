@@ -130,7 +130,7 @@ print(joe == user_data_dict["Joe"])
 
 import DictDataBase as DDB
 
-with DDB.session("user_data") as (session, user_data):
+with DDB.at("user_data").session() as (session, user_data):
 
 # You now have a handle on the dict named "user_data"
 

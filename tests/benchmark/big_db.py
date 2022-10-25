@@ -15,7 +15,7 @@ def b_read():
 
 
 def c_session():
-	with DDB.session("_test_big_db") as (session, d):
+	with DDB.at("_test_big_db").session() as (session, d):
 		session.write()
 
 

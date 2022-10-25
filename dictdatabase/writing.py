@@ -51,9 +51,6 @@ class DDBSession(object):
 		io_unsafe.write(self.db_name, data)
 
 
-def session(*name, as_PathDict: bool = False):
-	return DDBSession(utils.to_path_str(name), as_PathDict=as_PathDict)
-
 
 class DDBMultiSession(object):
 	def __init__(self, pattern: str, as_PathDict: bool = False):
