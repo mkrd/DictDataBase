@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from path_dict import PathDict
 from . import utils, io_safe
-from . writing import DDBSession, DDBMultiSession, DDBSubSession
+from . sessions import DDBSession, DDBMultiSession, DDBSubSession
 
 
 
@@ -126,6 +126,13 @@ class DDBMethodChooser:
 			return PathDict(db) if as_PathDict else db
 
 	def session(self, key: str = None, as_PathDict: bool = False) -> DDBSession | DDBMultiSession | DDBSubSession:
+		"""
+
+			Open multiple files at once using a glob pattern, like "user/*".
+			Mutliple arguments are allowed to access folders,
+			so session(f"users/{user_id}") is equivalent
+			to session("users", user_id).
+		"""
 		if key is not None and "*" in key:
 			raise ValueError("A key cannot be specified with a wildcard.")
 		if key is not None:

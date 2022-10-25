@@ -8,7 +8,7 @@ DDB.config.use_orjson = True
 
 p = profiler.Profiler(interval=0.00001)
 with p:
-    with DDB.subsession("tasks", key="fM44", as_PathDict=True) as (session, task):
+    with DDB.at("tasks").session(key="fM44", as_PathDict=True) as (session, task):
         task["jay"] = lambda x: (x or 0) + 1
         session.write()
 p.open_in_browser()

@@ -2,9 +2,6 @@ from path_dict import PathDict
 from . import utils, io_unsafe, locking
 
 
-
-
-
 class DDBSession(object):
 	"""
 		Enter:
@@ -85,16 +82,6 @@ class DDBMultiSession(object):
 			io_unsafe.write(db_name, data)
 
 
-def multisession(*pattern, as_PathDict: bool = False):
-	"""
-		Open multiple files at once using a glob pattern, like "user*".
-		Mutliple arguments are allowed to access folders,
-		so multisession(f"users/{user_id}") is equivalent
-		to multisession("users", user_id).
-	"""
-	return DDBMultiSession(utils.to_path_str(pattern), as_PathDict=as_PathDict)
-
-
 class DDBSubSession(object):
 	def __init__(self, db_name: str, key: str, as_PathDict: bool = False):
 		self.db_name = db_name
@@ -125,14 +112,3 @@ class DDBSubSession(object):
 		if not self.in_session:
 			raise PermissionError("Only call write() inside a with statement.")
 		io_unsafe.partial_write(self.partial_handle)
-
-
-def subsession(name, key, as_PathDict: bool = False):
-	"""
-		Open a sub-database inside a database.
-		Example:
-		>>> with subsession("users", user_id) as session, data:
-		>>>     data["name"] = "John Doe"
-		>>>     session.write()
-	"""
-	return DDBSubSession(utils.to_path_str(name), key=key, as_PathDict=as_PathDict)
