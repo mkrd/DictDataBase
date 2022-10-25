@@ -98,7 +98,7 @@ user_data_dict = {
 	"follows": [["Ben", "Sue"], ["Joe", "Ben"]]
 })
 
-DDB.create("user_data", db=user_data_dict)
+DDB.at("user_data").create(user_data_dict)
 
 # There is now a file called user_data.json
 # (or user_data.ddb if you use compression)
@@ -113,13 +113,13 @@ DDB.create("user_data", db=user_data_dict)
 
 ```python
 
-d = DDB.read("user_data")
+d = DDB.at("user_data").read()
 # You now have a copy of the dict named "user_data"
 print(d == user_data_dict) # True
 
 
 # Only partially read Joe
-joe = DDB.subread("user_data", key="Joe")
+joe = DDB.at("user_data").read("Joe")
 print(joe == user_data_dict["Joe"])
 
 ```
@@ -130,7 +130,7 @@ print(joe == user_data_dict["Joe"])
 
 import DictDataBase as DDB
 
-with DDB.session("user_data") as (session, user_data):
+with DDB.at("user_data").session() as (session, user_data):
 
 # You now have a handle on the dict named "user_data"
 
@@ -146,7 +146,7 @@ session.write()
 
 
 
-print(DDB.read("user_data")["follows"])
+print(DDB.at("user_data").read()["follows"])
 
 # -> [["Ben", "Sue"], ["Joe", "Ben"], ["Sue", "Ben"]]
 

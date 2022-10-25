@@ -7,15 +7,15 @@ def a_create():
 	for i in range(4):
 		d = {f"key{i}{j}": d for j in range(20)}
 	# About 22MB
-	DDB.create("_test_big_db", db=d, force_overwrite=True)
+	DDB.at("_test_big_db").create(d, force_overwrite=True)
 
 
 def b_read():
-	d = DDB.read("_test_big_db")
+	d = DDB.at("_test_big_db").read()
 
 
 def c_session():
-	with DDB.session("_test_big_db") as (session, d):
+	with DDB.at("_test_big_db").session() as (session, d):
 		session.write()
 
 

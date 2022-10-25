@@ -1,10 +1,21 @@
 from __future__ import annotations
-import os
-import json
+from dataclasses import dataclass
 import orjson
+import json
 import zlib
+import os
 from . import config, utils
-from . models import PartialFileHandle
+
+
+@dataclass(frozen=True)
+class PartialFileHandle:
+	db_name: str
+	key: str
+	key_value: dict
+	value_start_index: int
+	value_end_index: int
+	original_data_str: str
+	indent_level: int
 
 
 ################################################################################

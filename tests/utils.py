@@ -9,8 +9,8 @@ import os
 def incr_db(n, tables):
 	for _ in range(n):
 		for t in range(tables):
-			d = DDB.read(f"incr{t}")
-			with DDB.session(f"incr{t}", as_PathDict=True) as (session, d):
+			d = DDB.at(f"incr{t}").read()
+			with DDB.at(f"incr{t}").session(as_PathDict=True) as (session, d):
 				d["counter"] = lambda x: (x or 0) + 1
 				session.write()
 	return True

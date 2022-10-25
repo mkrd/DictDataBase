@@ -18,7 +18,7 @@ def incr_db(n, tables, sd, uc, uo, id, sk):
 	DDB.config.sort_keys = sk
 	for _ in range(n):
 		for t in range(tables):
-			with DDB.session(f"incr{t}", as_PathDict=True) as (session, d):
+			with DDB.at(f"incr{t}").session(as_PathDict=True) as (session, d):
 				d["counter"] = lambda x: (x or 0) + 1
 				session.write()
 	return True
@@ -27,7 +27,7 @@ def incr_db(n, tables, sd, uc, uo, id, sk):
 def parallel_stress(tables=1, processes=8, per_process=8):
 	# Create Tables
 	for t in range(tables):
-		DDB.create(f"incr{t}", db=utils.get_tasks_json())
+		DDB.at(f"incr{t}").create(utils.get_tasks_json())
 
 	# Execute process pool running incr_db as the target task
 	t1 = time.time()
@@ -54,9 +54,9 @@ def parallel_stress(tables=1, processes=8, per_process=8):
 	print(f"{ops = }, {ops_sec = }, {tables = }, {processes = }")
 
 	for t in range(tables):
-		db = DDB.read(f"incr{t}")
+		db = DDB.at(f"incr{t}").read()
 		print(f"✅ {db['counter'] = } == {per_process * processes = }")
-		assert DDB.read(f"incr{t}")["counter"] == processes * per_process
+		assert DDB.at(f"incr{t}").read()["counter"] == processes * per_process
 
 
 if __name__ == "__main__":
