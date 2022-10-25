@@ -11,7 +11,7 @@ def increment_counters(n, tables):
 	for _ in range(n):
 		for t in range(tables):
 			# Perform a useless read operation
-			d = DDB.read(f"incr{t}")
+			d = DDB.at(f"incr{t}").read()
 			# Perform a counter increment
 			with DDB.session(f"incr{t}", as_PathDict=True) as (session, d):
 				d["counter"] = lambda x: (x or 0) + 1
@@ -40,7 +40,7 @@ def test_stress_threaded(tables=1, threads=4, per_thread=3):
 	# Check correctness of results
 	assert results == [True] * threads
 	for t in range(tables):
-		db = DDB.read(f"incr{t}")
+		db = DDB.at(f"incr{t}").read()
 		assert db["counter"] == threads * per_thread
 		print(f"✅ {db['counter'] = } == {per_thread * threads = }")
 
