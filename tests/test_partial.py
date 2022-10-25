@@ -10,8 +10,7 @@ def test_subread(env, use_compression, use_orjson, sort_keys, indent):
 		"c": {"d": "e"},
 	}
 
-	DDB.create("test_subread", db=j, force_overwrite=True)
-
+	DDB.at("test_subread").create(j, force_overwrite=True)
 	with pytest.raises(json.decoder.JSONDecodeError):
 		DDB.subread("test_subread", key="a") == "Hello}{"
 
@@ -22,24 +21,25 @@ def test_subread(env, use_compression, use_orjson, sort_keys, indent):
 	assert DDB.subread("test_subread", key="c") == {"d": "e"}
 
 	j2 = {"a": {"b": "c"}, "b": {"d": "e"}}
-	DDB.create("test_subread2", db=j2, force_overwrite=True)
+	DDB.at("test_subread2").create(j2, force_overwrite=True)
 	assert DDB.subread("test_subread2", key="b") == {"d": "e"}
 
 
 def test_subwrite(env, use_compression, use_orjson, sort_keys, indent):
+	name = "test_subwrite"
 	j = {
 		"b": {"0": 1},
 		"c": {"d": "e"},
 	}
 
-	DDB.create("test_subwrite", db=j, force_overwrite=True)
-	with DDB.subsession("test_subwrite", key="c", as_PathDict=True) as (session, task):
+	DDB.at(name).create(j, force_overwrite=True)
+	with DDB.subsession(name, key="c", as_PathDict=True) as (session, task):
 		task["f"] = lambda x: (x or 0) + 5
 		session.write()
-	assert DDB.subread("test_subwrite", key="c") == {"d": "e", "f": 5}
+	assert DDB.subread(name, key="c") == {"d": "e", "f": 5}
 
 
-	with DDB.subsession("test_subwrite", key="b", as_PathDict=True) as (session, task):
+	with DDB.subsession(name, key="b", as_PathDict=True) as (session, task):
 		task["f"] = lambda x: (x or 0) + 2
 		session.write()
-	assert DDB.subread("test_subwrite", key="f") == 2
+	assert DDB.subread(name, key="f") == 2

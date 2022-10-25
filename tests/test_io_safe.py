@@ -23,5 +23,6 @@ def test_write():
 
 
 def test_delete():
-    DDB.create("to_be_deleted", db={})
-    DDB.delete("to_be_deleted")
+    DDB.at("to_be_deleted").create()
+    DDB.at("to_be_deleted").delete()
+    assert DDB.read("to_be_deleted") is None

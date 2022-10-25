@@ -98,7 +98,7 @@ user_data_dict = {
 	"follows": [["Ben", "Sue"], ["Joe", "Ben"]]
 })
 
-DDB.create("user_data", db=user_data_dict)
+DDB.at("user_data").create(user_data_dict)
 
 # There is now a file called user_data.json
 # (or user_data.ddb if you use compression)

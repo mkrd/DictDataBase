@@ -22,7 +22,7 @@ def increment_counters(n, tables):
 def test_stress_threaded(tables=1, threads=4, per_thread=3):
 	# Create tables
 	for t in range(tables):
-		DDB.create(f"incr{t}", db=utils.make_table())
+		DDB.at(f"incr{t}").create(utils.make_table())
 
 	# Create tasks for concurrent execution
 	tasks = [(increment_counters, (per_thread, tables)) for _ in range(threads)]

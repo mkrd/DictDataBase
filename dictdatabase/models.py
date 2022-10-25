@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from path_dict import PathDict
 from . import utils, io_safe, reading
-from . writing import DDBSession, DDBMultiSession, DDBSubSession, create
+from . writing import DDBSession, DDBMultiSession, DDBSubSession
 
 
 @dataclass(frozen=True)
@@ -67,9 +67,28 @@ class DDBMethodChooser:
 		return reading.haskey(self.path, key)
 
 	def create(self, db=None, force_overwrite=False):
-		create(db, force_overwrite)
+		"""
+		It creates a database file at the given path, and writes the given database to
+		it
+
+		:param db: The database to create. If not specified, an empty database is
+		created.
+		:param force_overwrite: If True, will overwrite the database if it already
+		exists, defaults to False (optional).
+		"""
+		# Except if db exists and force_overwrite is False
+		if not force_overwrite and self.exists():
+			raise FileExistsError(f"Database {self.path} already exists. Pass force_overwrite=True to overwrite.")
+		# Write db to file
+		if db is None:
+			db = {}
+		data = db.dict if isinstance(db, PathDict) else db
+		io_safe.write(self.path, data)
 
 	def delete(self):
+		"""
+			Delete the database at the selected path.
+		"""
 		io_safe.delete(self.path)
 
 	def read(self, key: str = None, as_PathDict: bool = False) -> dict | PathDict:

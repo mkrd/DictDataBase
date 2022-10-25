@@ -2,32 +2,7 @@ from path_dict import PathDict
 from . import utils, io_unsafe, io_safe, reading, locking
 
 
-def create(*name, db=None, force_overwrite=False):
-	"""
-	It creates a database file at the given path, and writes the given database to
-	it
 
-	:param db: The database to create. If not specified, an empty database is
-	created.
-	:param force_overwrite: If True, will overwrite the database if it already
-	exists, defaults to False (optional).
-	"""
-	db_name = utils.to_path_str(name)
-	# Except if db exists and force_overwrite is False
-	if not force_overwrite and reading.exists(db_name):
-		raise FileExistsError(f"Database {db_name} already exists. Pass force_overwrite=True to DDB.create() to overwrite.")
-	# Write db to file
-	if db is None:
-		db = {}
-	data = db.dict if isinstance(db, PathDict) else db
-	io_safe.write(db_name, data)
-
-
-def delete(*name):
-	"""
-		Delete the database with the given name.
-	"""
-	io_safe.delete(utils.to_path_str(name))
 
 
 class DDBSession(object):

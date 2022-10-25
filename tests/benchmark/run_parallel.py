@@ -27,7 +27,7 @@ def incr_db(n, tables, sd, uc, uo, id, sk):
 def parallel_stress(tables=1, processes=8, per_process=8):
 	# Create Tables
 	for t in range(tables):
-		DDB.create(f"incr{t}", db=utils.get_tasks_json())
+		DDB.at(f"incr{t}").create(utils.get_tasks_json())
 
 	# Execute process pool running incr_db as the target task
 	t1 = time.time()
