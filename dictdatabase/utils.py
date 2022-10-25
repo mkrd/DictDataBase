@@ -1,7 +1,7 @@
 from __future__ import annotations
+from typing import Tuple
 import os
 import glob
-from typing import Tuple
 from . import config
 
 

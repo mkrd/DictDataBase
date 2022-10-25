@@ -1,11 +1,7 @@
 from __future__ import annotations
-
 from path_dict import PathDict
 from . import utils, io_safe
 from . sessions import DDBSession, DDBMultiSession, DDBSubSession
-
-
-
 
 
 class SubModel(PathDict):
@@ -27,10 +23,8 @@ class SubModel(PathDict):
 		else:
 			raise ValueError("If provided, initial_value must be a dict or PathDict")
 
-
 	def session(self):
 		return DDBSession(self.db_name, as_PathDict=True)
-
 
 	def read(self):
 		"""
@@ -42,6 +36,9 @@ class SubModel(PathDict):
 		self.data = self.file_db.get(self.key, None)
 		return self
 
+
+def at(*path):
+	return DDBMethodChooser(*path)
 
 
 class DDBMethodChooser:

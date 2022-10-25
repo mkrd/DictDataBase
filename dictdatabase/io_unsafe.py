@@ -1,9 +1,9 @@
 from __future__ import annotations
-import os
-import json
-import orjson
-import zlib
 from dataclasses import dataclass
+import orjson
+import json
+import zlib
+import os
 from . import config, utils
 
 
