@@ -1,9 +1,11 @@
 from __future__ import annotations
-from typing import Any
+from typing import Any, TypeVar
 from path_dict import PathDict
 from path_dict import PathDict as pd
 from . import utils, io_safe
 from . sessions import DDBSession, DDBMultiSession, DDBSubSession
+
+T = TypeVar("T")
 
 
 class SubModel(PathDict):
@@ -96,7 +98,7 @@ class DDBMethodChooser:
 		"""
 		io_safe.delete(self.path)
 
-	def read(self, key: str = None, as_type=None) -> dict | Any:
+	def read(self, key: str = None, as_type: T = None) -> dict | T:
 		"""
 			Reads a database and returns it. If a key is given, return the value at that key, more info in Args.
 
