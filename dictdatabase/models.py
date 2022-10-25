@@ -27,7 +27,7 @@ class SubModel(PathDict):
 		else:
 			raise ValueError("If provided, initial_value must be a dict or PathDict")
 
-	def session(self):
+	def session(self) -> DDBSession:
 		return DDBSession(self.db_name, as_type=pd)
 
 	def read(self):
@@ -41,16 +41,14 @@ class SubModel(PathDict):
 		return self
 
 
-def at(*path):
-	return DDBMethodChooser(*path)
+def at(*path) -> DDBMethodChooser:
+	return DDBMethodChooser(path)
 
 
 class DDBMethodChooser:
-	def __init__(self, *path):
-		if len(path) > 1:
-			self.path = utils.to_path_str("/".join(path))
-		else:
-			self.path = utils.to_path_str(*path)
+	def __init__(self, path: tuple):
+		self.path = utils.to_path_str("/".join(path))
+
 
 	def exists(self, key=None) -> bool:
 		"""
