@@ -119,7 +119,7 @@ print(d == user_data_dict) # True
 
 
 # Only partially read Joe
-joe = DDB.subread("user_data", key="Joe")
+joe = DDB.at("user_data").read("Joe")
 print(joe == user_data_dict["Joe"])
 
 ```

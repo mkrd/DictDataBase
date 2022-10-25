@@ -1,5 +1,5 @@
 from path_dict import PathDict
-from . import utils, io_unsafe, io_safe, reading, locking
+from . import utils, io_unsafe, locking
 
 
 

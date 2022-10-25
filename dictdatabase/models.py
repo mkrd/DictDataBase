@@ -1,19 +1,11 @@
 from __future__ import annotations
-from dataclasses import dataclass
+
 from path_dict import PathDict
-from . import utils, io_safe, reading
+from . import utils, io_safe
 from . writing import DDBSession, DDBMultiSession, DDBSubSession
 
 
-@dataclass(frozen=True)
-class PartialFileHandle:
-	db_name: str
-	key: str
-	key_value: dict
-	value_start_index: int
-	value_end_index: int
-	original_data_str: str
-	indent_level: int
+
 
 
 class SubModel(PathDict):
@@ -110,13 +102,21 @@ class DDBMethodChooser:
 
 			Mutliread reads multiple dbs and returns them as a single dict or PathDict.
 			Path components can be "*" (all), a specific name of a list (only those from list).
+
+			Subread reads a database and returns the partial value.
 		"""
-		if key is not None and "*" in key:
-			raise ValueError("A key cannot be specified with a wildcard.")
 		if key is not None:
-			return reading.subread(self.path, key, as_PathDict=as_PathDict)
-		elif "*" in self.path:
-			# Multiread
+			if "*" in key:
+				raise ValueError("A key cannot be specified with a wildcard.")
+			# subread
+			_, json_exists, _, ddb_exists = utils.db_paths(self.path)
+			if not json_exists and not ddb_exists:
+				return None
+			# Wait in any write lock case, "need" or "has".
+			data = io_safe.partial_read(self.path, key)
+			return PathDict(data) if as_PathDict else data
+		if "*" in self.path:
+			# multiread
 			pattern_paths = utils.expand_find_path_pattern(self.path)
 			res = {db_name: io_safe.read(db_name) for db_name in pattern_paths}
 			return PathDict(res) if as_PathDict else res
