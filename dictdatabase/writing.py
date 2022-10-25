@@ -17,7 +17,8 @@ def create(*name, db=None, force_overwrite=False):
 	if not force_overwrite and reading.exists(db_name):
 		raise FileExistsError(f"Database {db_name} already exists. Pass force_overwrite=True to DDB.create() to overwrite.")
 	# Write db to file
-	db = db or {}
+	if db is None:
+		db = {}
 	data = db.dict if isinstance(db, PathDict) else db
 	io_safe.write(db_name, data)
 
