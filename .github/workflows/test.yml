@@ -68,14 +68,16 @@ jobs:
       #----------------------------------------------
       #---- Coverage badge
       #----------------------------------------------
-      - name: ls-lah
-        run: ls -lah
+
 
       - uses: actions/download-artifact@v3
         with:
           name: coverage
 
-      - name: GenerateCoverage Badge
+      - name: ls-lah
+        run: ls -lah
+
+      - name: Generate Coverage Badge
         uses: tj-actions/coverage-badge-py@v1.8
         with:
           output: assets/coverage.svg
