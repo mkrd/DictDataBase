@@ -64,7 +64,16 @@ class DDBMethodChooser:
 		return len(utils.find(self.path)) > 0
 
 	def haskey(self, key: str) -> bool:
-		return reading.haskey(self.path, key)
+		"""
+			Checks if a key exists in a database.
+			The key can be anywhere in the database, even deeply nested.
+			As long it exists as a key in any dict, it will be found.
+		"""
+		try:
+			io_safe.subread(self.path, key=key)
+			return True
+		except KeyError:
+			return False
 
 	def create(self, db=None, force_overwrite=False):
 		"""

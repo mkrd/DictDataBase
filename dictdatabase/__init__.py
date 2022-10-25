@@ -1,4 +1,4 @@
-from . reading import exists, read, multiread, subread, haskey
+from . reading import exists, read, multiread, subread
 from . writing import session, multisession, subsession
 from . models import SubModel, DDBMethodChooser
 
