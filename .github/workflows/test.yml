@@ -2,8 +2,7 @@ name: Tests
 on: [push, pull_request]
 jobs:
 
-
-
+  # JOB
   tests-job:
     runs-on: ubuntu-latest
 
@@ -60,24 +59,22 @@ jobs:
           path: .coverage
 
   # JOB
-  cov-badge:
-    needs: tests-job
+  cov-badge-job:
+    needs: test-cov
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       #----------------------------------------------
       #---- Coverage badge
       #----------------------------------------------
-
+      - name: ls-lah
+        run: ls -lah
 
       - uses: actions/download-artifact@v3
         with:
           name: coverage
 
-      - name: ls-lah
-        run: ls -lah
-
-      - name: Generate Coverage Badge
+      - name: GenerateCoverage Badge
         uses: tj-actions/coverage-badge-py@v1.8
         with:
           output: assets/coverage.svg
