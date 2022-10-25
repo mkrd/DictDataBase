@@ -157,7 +157,7 @@ If you do not call session.write(), the database file will not be modified.
 
 # API Reference
 
-### at()
+### at(pattern) -> DDBMethodChooser
 
 ## DDBMethodChooser
 
