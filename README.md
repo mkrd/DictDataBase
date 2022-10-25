@@ -157,18 +157,40 @@ If you do not call session.write(), the database file will not be modified.
 
 # API Reference
 
-### at(pattern) -> DDBMethodChooser
+### `at(pattern) -> DDBMethodChooser`
+`pattern` can be multiple parameters, which will be joined with a "`/"` to a path.
+The file at the given path is then selected, and further operations can be performed using the `DDBMethodChooser`
 
 ## DDBMethodChooser
 
-### exists()
+### `exists(key: str = None) -> bool`
+Efficiently checks if a database exists.
+If it contains a wildcard, it will return True if at least one exists.
+If the key is passed, check if it exists in a database.
+The key can be anywhere in the database, even deeply nested.
+As long it exists as a key in any dict, it will be found.
 
-### haskey() (can also be part of exists)
+### `create(db=None, force_overwrite=False)`
+It creates a database file at the given path, and writes the given database to
+it
+:param db: The database to create. If not specified, an empty database is
+created.
+:param force_overwrite: If True, will overwrite the database if it already
+exists, defaults to False (optional).
 
-### create()
+### `delete()`
+Delete the database at the selected path.
 
-### delete()
+### `read(key: str = None, as_PathDict=True) -> dict | PathDict`
+Reads a database and returns it as a PathDict.
+If a key is given, return the efficiently read key value.
+Mutliread reads multiple dbs and returns them as a single dict or PathDict.
+Path components can be "*" (all), a specific name of a list (only those from list).
 
-### read()
+Subread reads a database and returns the partial value.
 
-### session()
+### `session(key: str = None, as_PathDict=False) -> DDBSession | DDBMultiSession | DDBSubSession`
+Open multiple files at once using a glob pattern, like "user/*".
+Mutliple arguments are allowed to access folders,
+so session(f"users/{user_id}") is equivalent
+to session("users", user_id).
