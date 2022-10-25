@@ -54,7 +54,10 @@ class SubModel(PathDict):
 
 class DDBMethodChooser:
 	def __init__(self, *path):
-		self.path = utils.to_path_str(*path)
+		if len(path) > 1:
+			self.path = utils.to_path_str("/".join(path))
+		else:
+			self.path = utils.to_path_str(*path)
 
 	def exists(self) -> bool:
 		"""
@@ -104,13 +107,19 @@ class DDBMethodChooser:
 		"""
 			Reads a database and returns it as a PathDict.
 			If a key is given, return the efficiently read key value.
+
+			Mutliread reads multiple dbs and returns them as a single dict or PathDict.
+			Path components can be "*" (all), a specific name of a list (only those from list).
 		"""
 		if key is not None and "*" in key:
 			raise ValueError("A key cannot be specified with a wildcard.")
 		if key is not None:
 			return reading.subread(self.path, key, as_PathDict=as_PathDict)
 		elif "*" in self.path:
-			return reading.multiread(self.path, as_PathDict=as_PathDict)
+			# Multiread
+			pattern_paths = utils.expand_find_path_pattern(self.path)
+			res = {db_name: io_safe.read(db_name) for db_name in pattern_paths}
+			return PathDict(res) if as_PathDict else res
 		else:
 			# Normal read
 			db = io_safe.read(self.path)

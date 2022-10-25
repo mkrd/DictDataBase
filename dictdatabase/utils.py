@@ -43,14 +43,14 @@ def find(*pattern) -> list[str]:
 	return dbs_all
 
 
-def expand_find_path_pattern(*pattern):
+def expand_find_path_pattern(path):
 	"""
 		:param str pattern: The pattern to expand.
 		Fot a tuple of path items, expand it to a list of all real paths.
 		An item can be some string, a wildcard "*" or a list to select specific paths.
 	"""
 	res = [[]]
-	for item in pattern:
+	for item in path.split("/"):
 		if isinstance(item, str):
 			res = [r + [item] for r in res]
 		if isinstance(item, list):
