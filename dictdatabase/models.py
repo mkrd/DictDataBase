@@ -48,26 +48,28 @@ class DDBMethodChooser:
 		else:
 			self.path = utils.to_path_str(*path)
 
-	def exists(self) -> bool:
+	def exists(self, key=None) -> bool:
 		"""
 			Efficiently checks if a database exists.
 			If it contains a wildcard, it will return True if at least one exists.
-		"""
-		return len(utils.find(self.path)) > 0
 
-	def haskey(self, key: str) -> bool:
-		"""
-			Checks if a key exists in a database.
+			If the key is passed, check if it exists in a database.
 			The key can be anywhere in the database, even deeply nested.
 			As long it exists as a key in any dict, it will be found.
 		"""
+		occurs = len(utils.find(self.path)) > 0
+		if not occurs:
+			return False
+		if key is None:
+			return True
+		# Key is passed and occurs is True
 		try:
 			io_safe.subread(self.path, key=key)
 			return True
 		except KeyError:
 			return False
 
-	def create(self, db=None, force_overwrite=False):
+	def create(self, db=None, force_overwrite: bool = False):
 		"""
 		It creates a database file at the given path, and writes the given database to
 		it
