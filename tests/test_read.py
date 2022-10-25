@@ -35,5 +35,7 @@ def test_multiread(env, use_compression, use_orjson, sort_keys, indent):
 		DDB.create(f"test_multiread/d{i}", db=dl[-1], force_overwrite=True)
 
 	mr = DDB.multiread("test_multiread/*")
+	mr2 = DDB.multiread("test_multiread", "*")
+	assert mr == mr2
 	mr = {k.replace("test_multiread/", ""): v for k, v in mr.items()}
 	assert mr == {f"d{i}": dl[i] for i in range(3)}
