@@ -60,7 +60,7 @@ jobs:
 
   # JOB
   cov-badge-job:
-    needs: test-cov
+    needs: tests-job
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
