@@ -1,3 +1,5 @@
+from __future__ import annotations
+from typing import Tuple
 from path_dict import PathDict
 from . import utils, io_unsafe, locking
 
@@ -16,7 +18,7 @@ class DDBSession(object):
 		self.as_PathDict = as_PathDict
 		self.in_session = False
 
-	def __enter__(self):
+	def __enter__(self) -> Tuple("DDBSession", dict | PathDict):
 		"""
 			Any number of read tasks can be carried out in parallel.
 			Each read task creates a read lock while reading, to signal that it is reading.
@@ -55,7 +57,7 @@ class DDBMultiSession(object):
 		self.as_PathDict = as_PathDict
 		self.in_session = False
 
-	def __enter__(self):
+	def __enter__(self) -> Tuple("DDBMultiSession", dict | PathDict):
 		self.write_locks = [locking.WriteLock(x) for x in self.db_names]
 		self.in_session = True
 		try:
@@ -89,7 +91,7 @@ class DDBSubSession(object):
 		self.as_PathDict = as_PathDict
 		self.in_session = False
 
-	def __enter__(self):
+	def __enter__(self) -> Tuple("DDBSubSession", dict | PathDict):
 		self.write_lock = locking.WriteLock(self.db_name)
 		self.in_session = True
 		try:
