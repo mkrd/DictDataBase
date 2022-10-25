@@ -1,4 +1,5 @@
 import dictdatabase as DDB
+from path_dict import PathDict as pd
 import super_py as sp
 import time
 import cProfile
@@ -13,7 +14,7 @@ def increment_counters(n, tables):
 			# Perform a useless read operation
 			d = DDB.at(f"incr{t}").read()
 			# Perform a counter increment
-			with DDB.at(f"incr{t}").session(as_PathDict=True) as (session, d):
+			with DDB.at(f"incr{t}").session(as_type=pd) as (session, d):
 				d["counter"] = lambda x: (x or 0) + 1
 				session.write()
 	return True

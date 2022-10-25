@@ -1,4 +1,5 @@
 import dictdatabase as DDB
+from path_dict import PathDict as pd
 import json
 import pytest
 
@@ -34,12 +35,12 @@ def test_subwrite(env, use_compression, use_orjson, sort_keys, indent):
 	}
 
 	DDB.at(name).create(j, force_overwrite=True)
-	with DDB.at(name).session("c", as_PathDict=True) as (session, task):
+	with DDB.at(name).session("c", as_type=pd) as (session, task):
 		task["f"] = lambda x: (x or 0) + 5
 		session.write()
 	assert DDB.at(name).read("c") == {"d": "e", "f": 5}
 
-	with DDB.at(name).session("b", as_PathDict=True) as (session, task):
+	with DDB.at(name).session("b", as_type=pd) as (session, task):
 		task["f"] = lambda x: (x or 0) + 2
 		session.write()
 	assert DDB.at(name).read("f") == 2

@@ -153,15 +153,18 @@ exists, defaults to False (optional).
 ### `delete()`
 Delete the database at the selected path.
 
-### `read(key: str = None, as_PathDict=True) -> dict | PathDict`
-Reads a database and returns it as a PathDict.
-If a key is given, return the efficiently read key value.
-Mutliread reads multiple dbs and returns them as a single dict or PathDict.
-Path components can be "*" (all), a specific name of a list (only those from list).
+### `read(key: str = None, as_type=None) -> dict | Any`
+Reads a database and returns it. If a key is given, return the value at that key, more info in Args.
 
-Subread reads a database and returns the partial value.
+Args:
+- `key`: If provided, only return the value of the given key. The key
+	can be anywhere in the database, even deeply nested. If multiple
+	identical keys exist, the one at the outermost indentation will
+	be returned. This is very fast, as it does not read the entire
+	database, but only the key - value pair.
+- `as_type`: If provided, return the value as the given type. Eg. as=str will return str(value).
 
-### `session(key: str = None, as_PathDict=False) -> DDBSession | DDBMultiSession | DDBSubSession`
+### `session(key: str = None, as_type=None) -> DDBSession | DDBMultiSession | DDBSubSession`
 Open multiple files at once using a glob pattern, like "user/*".
 Mutliple arguments are allowed to access folders,
 so session(f"users/{user_id}") is equivalent

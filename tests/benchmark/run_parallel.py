@@ -1,4 +1,5 @@
 import dictdatabase as DDB
+from path_dict import PathDict as pd
 import super_py as sp
 import time
 import os
@@ -18,7 +19,7 @@ def incr_db(n, tables, sd, uc, uo, id, sk):
 	DDB.config.sort_keys = sk
 	for _ in range(n):
 		for t in range(tables):
-			with DDB.at(f"incr{t}").session(as_PathDict=True) as (session, d):
+			with DDB.at(f"incr{t}").session(as_type=pd) as (session, d):
 				d["counter"] = lambda x: (x or 0) + 1
 				session.write()
 	return True

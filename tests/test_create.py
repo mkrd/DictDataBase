@@ -1,4 +1,5 @@
 import dictdatabase as DDB
+from path_dict import PathDict as pd
 import pytest
 import json
 
@@ -10,7 +11,7 @@ def test_create(env, use_compression, use_orjson, sort_keys, indent):
 	db = DDB.at("test_create").read()
 	assert db == {}
 
-	with DDB.at("test_create").session(as_PathDict=True) as (session, d):
+	with DDB.at("test_create").session(as_type=pd) as (session, d):
 		d["a", "b", "c"] = "d"
 		session.write()
 	assert DDB.at("test_create").read() == {"a": {"b": {"c": "d"}}}
