@@ -5,7 +5,7 @@
 [![Downloads](https://pepy.tech/badge/dictdatabase/week)](https://pepy.tech/project/dictdatabase)
 ![Tests](https://github.com/mkrd/DictDataBase/actions/workflows/test.yml/badge.svg)
 
-DictDataBase is a simple but fast and secure database for handling dicts (or PathDicts for more advanced features), that uses json or compressed json as the underlying storage mechanism. It is:
+DictDataBase is a simple but fast and secure database for handling json or compressed json as the underlying storage mechanism. Features:
 - **Multi threading and multi processing safe**. Multiple processes on the same machine can simultaneously read and write to dicts without writes getting lost.
 - **No database server** required. Simply import DictDataBase in your project and use it.
 - **ACID** compliant. Unlike TinyDB, it is suited for concurrent environments.
