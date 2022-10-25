@@ -1,4 +1,4 @@
-# DictDataBase
+![Logo](https://github.com/mkrd/DictDataBase/blob/master/assets/logo.png?raw=true)
 
 [![Downloads](https://pepy.tech/badge/dictdatabase)](https://pepy.tech/project/dictdatabase)
 [![Downloads](https://pepy.tech/badge/dictdatabase/month)](https://pepy.tech/project/dictdatabase)
