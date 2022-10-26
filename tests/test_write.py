@@ -1,5 +1,5 @@
-from unicodedata import name
 import dictdatabase as DDB
+from path_dict import PathDict as pd
 import pytest
 from tests.utils import make_complex_nested_random_dict
 
@@ -30,8 +30,8 @@ def test_write_compression_switching(env, use_orjson, sort_keys, indent):
 		session.write()
 	assert DDB.at(name).read() == d
 	DDB.config.use_compression = True
-	with DDB.at(name).session() as (session, dd):
-		assert d == dd
+	with DDB.at(name).session(as_type=pd) as (session, dd):
+		assert d == dd.dict
 		session.write()
 	assert DDB.at(name).read() == d
 	DDB.config.use_compression = False
