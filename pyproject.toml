@@ -16,7 +16,7 @@ classifiers=[
 ]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 Brotli = "^1.0.9"
 orjson = "^3.8.0"
 
@@ -26,7 +26,7 @@ pycodestyle = "^2.9.1"
 super-py = "^0.4.2"
 pyinstrument = "^4.3.0"
 pytest-cov = "^4.0.0"
-path-dict = "^2.0.1"
+path-dict = "^3.0.0"
 
 [build-system]
 requires = ["poetry-core"]
