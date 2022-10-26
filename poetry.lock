@@ -82,7 +82,7 @@ pyparsing = ">=2.0.2,<3.0.5 || >3.0.5"
 
 [[package]]
 name = "path-dict"
-version = "3.0.0"
+version = "3.0.1"
 description = "Extends Python's dict with useful extras"
 category = "dev"
 optional = false
@@ -203,7 +203,7 @@ python-versions = ">= 3.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "e592a22f87597db50acd38acf1e5ee1328c102a2036a662ec02c24ae2741f209"
+content-hash = "dd0af4f7578f214c314fdfa67270990eb99953d8d974294db6e606e76f9285e5"
 
 [metadata.files]
 attrs = [
@@ -394,8 +394,8 @@ packaging = [
     {file = "packaging-21.3.tar.gz", hash = "sha256:dd47c42927d89ab911e606518907cc2d3a1f38bbd026385970643f9c5b8ecfeb"},
 ]
 path-dict = [
-    {file = "path_dict-3.0.0-py3-none-any.whl", hash = "sha256:41eb0bfa981e778a83cb6d61e42da72a432800b43998ddfd7568003e2c004a3f"},
-    {file = "path_dict-3.0.0.tar.gz", hash = "sha256:7d60669f44e87f18346b857fb75a51e3a6306859d95e549db916b60b7439a36e"},
+    {file = "path_dict-3.0.1-py3-none-any.whl", hash = "sha256:06f30611bd573fefa81c38b606dee154ab91238e06f79459e161d9fbdc199df6"},
+    {file = "path_dict-3.0.1.tar.gz", hash = "sha256:6f8493bd2d1a84423c23db71ce89cd14712603dd5afc761f0eba7673bfc47ef9"},
 ]
 pluggy = [
     {file = "pluggy-1.0.0-py2.py3-none-any.whl", hash = "sha256:74134bbf457f031a36d68416e1509f34bd5ccc019f0bcc952c7b909d06b37bd3"},
