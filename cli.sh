@@ -8,6 +8,11 @@ while [ $# -gt 0 ]; do case $1 in
     shift ;;
 
 
+    --profiler|-p)
+    poetry run python profiler.py
+    shift ;;
+
+
 
   *|-*|--*)
     echo "Unknown option $1"
