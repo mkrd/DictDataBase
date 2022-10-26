@@ -1,5 +1,5 @@
 import dictdatabase as DDB
-from path_dict import PathDict as pd
+from path_dict import pd
 import random
 import string
 import json
