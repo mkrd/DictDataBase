@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TypeVar
 from . import utils, io_safe
-from . sessions import DDBSession
+from . session import DDBSession
 
 T = TypeVar("T")
 
