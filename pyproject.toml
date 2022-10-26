@@ -16,7 +16,7 @@ classifiers=[
 ]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.7"
 Brotli = "^1.0.9"
 orjson = "^3.8.0"
 
