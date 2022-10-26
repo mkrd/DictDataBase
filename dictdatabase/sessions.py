@@ -29,7 +29,7 @@ class DDBSession(AbstractDDBSession):
 		the changes will be lost after exiting the with statement.
 	"""
 
-	def __enter__(self) -> Tuple("DDBSession", dict | T):
+	def __enter__(self) -> Tuple["DDBSession", dict | T]:
 		"""
 			Any number of read tasks can be carried out in parallel.
 			Each read task creates a read lock while reading, to signal that it is reading.
@@ -62,7 +62,7 @@ class DDBMultiSession(AbstractDDBSession):
 	def __init__(self, pattern: str, as_type: T = None):
 		super().__init__(utils.find(pattern), as_type)
 
-	def __enter__(self) -> Tuple("DDBMultiSession", dict | T):
+	def __enter__(self) -> Tuple["DDBMultiSession", dict | T]:
 		self.write_locks = [locking.WriteLock(x) for x in self.db_name]
 		self.in_session = True
 		try:
@@ -91,7 +91,7 @@ class DDBSubSession(AbstractDDBSession):
 		super().__init__(db_name, as_type)
 		self.key = key
 
-	def __enter__(self) -> Tuple("DDBSubSession", dict | T):
+	def __enter__(self) -> Tuple["DDBSubSession", dict | T]:
 		self.write_lock = locking.WriteLock(self.db_name)
 		self.in_session = True
 		try:
