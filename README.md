@@ -145,8 +145,8 @@ This is several orders of magnitude faster than the naive approach when working 
 In preliminary testing, DictDataBase showed promising performance.
 
 ### SQLite vs DictDataBase
-In each case, 16 parallel processes were spawned to perform 128 increments of a counter in 4 tables/files.
-SQLite achieves 2435 operations/s while DictDataBase managed to achieve 3143 operations/s.
+In each case, `16` parallel processes were spawned to perform `128` increments of a counter in `4` tables/files.
+SQLite achieves `2435 operations/s` while DictDataBase managed to achieve `3143 operations/s`.
 
 ### More tests
 In remains to be tested how DictDatabase performs in different scenarios, for example when multiple processes want to perform full writes to one big file.
