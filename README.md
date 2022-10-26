@@ -125,6 +125,22 @@ print(DDB.at("user_data").read()["follows"])
 If you do not call session.write(), changes will not be written to disk!
 
 
+## Partial reading and writing
+Imaging you have a huge json file with many transactions.
+The json file looks like this: `{<id>: <transaction>, <id>: <transaction>, ...}`.
+Normally, you would have to read and parse the entire file to get a specific key.
+After modifying the transaction, you would also have to serialize and wirte the entire file again.
+With DDB, you can do it more efficiently:
+```python
+with DDB.at("transactions").session(key="134425") as (session, transaction):
+	transaction["status"] = "cancelled"
+	session.write()
+```
+Afterwards, the status is updated in the json file.
+However, DDB did only efficiently gather the one transaction with id 134425, parsed only its value, and only serialized that value before writing again.
+This is several orders of magnitude faster than the naive approach when working with big files.
+
+
 # API Reference
 
 ### `at(pattern) -> DDBMethodChooser`
