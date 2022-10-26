@@ -141,6 +141,17 @@ However, DDB did only efficiently gather the one transaction with id 134425, par
 This is several orders of magnitude faster than the naive approach when working with big files.
 
 
+# Performance
+In preliminary testing, DictDataBase showed promising performance.
+
+### SQLite vs DictDataBase
+In each case, 16 parallel processes were spawned to perform 128 increments of a counter in 4 tables/files.
+SQLite achieves 2435 operations/s while DictDataBase managed to achieve 3143 operations/s.
+
+### More tests
+In remains to be tested how DictDatabase performs in different scenarios, for example when multiple processes want to perform full writes to one big file.
+
+
 # API Reference
 
 ### `at(pattern) -> DDBMethodChooser`

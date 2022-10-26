@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import TypeVar
-from . import utils, io_safe
+from . import utils, io_safe, config
 from . session import DDBSession
 
 T = TypeVar("T")
@@ -48,7 +48,7 @@ class DDBMethodChooser:
 		"""
 		# Except if db exists and force_overwrite is False
 		if not force_overwrite and self.exists():
-			raise FileExistsError(f"Database {self.path} already exists. Pass force_overwrite=True to overwrite.")
+			raise FileExistsError(f"Database {self.path} already exists in {config.storage_directory}. Pass force_overwrite=True to overwrite.")
 		# Write db to file
 		if db is None:
 			db = {}

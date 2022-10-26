@@ -1,22 +1,20 @@
 import dictdatabase as DDB
 from path_dict import pd
-import super_py as sp
 import time
-import os
-from tests import utils, test_scenes, orjson_encode, orjson_decode
-import orjson
 from multiprocessing import Pool
-import cProfile
-import subprocess
+from pyinstrument import profiler
+import shutil
+import os
+
 
 
 def incr_db(n, tables, sd, uc, uo, id, sk):
-	print("parallel_runner incr_db")
 	DDB.config.storage_directory = sd
 	DDB.config.use_compression = uc
 	DDB.config.use_orjson = uo
 	DDB.config.indent = id
 	DDB.config.sort_keys = sk
+	DDB.locking.SLEEP_TIMEOUT = 0.001
 	for _ in range(n):
 		for t in range(tables):
 			with DDB.at(f"incr{t}").session(as_type=pd) as (session, d):
@@ -25,10 +23,11 @@ def incr_db(n, tables, sd, uc, uo, id, sk):
 	return True
 
 
-def parallel_stress(tables=1, processes=8, per_process=8):
+def parallel_stress(tables=4, processes=16, per_process=128):
 	# Create Tables
 	for t in range(tables):
-		DDB.at(f"incr{t}").create(utils.get_tasks_json())
+		# DDB.at(f"incr{t}").create(utils.get_tasks_json())
+		DDB.at(f"incr{t}").create({"counter": 0}, force_overwrite=True)
 
 	# Execute process pool running incr_db as the target task
 	t1 = time.time()
@@ -60,17 +59,15 @@ def parallel_stress(tables=1, processes=8, per_process=8):
 		assert DDB.at(f"incr{t}").read()["counter"] == processes * per_process
 
 
+
+
 if __name__ == "__main__":
-	with cProfile.Profile() as pr:
-		pr.enable()
-
-		scene = "(🔴 pretty) (🔴 compression) (🟢 orjson)"
-		print(scene)
-		test_scenes[scene](parallel_stress)
-
-		pr.disable()
-		pr.dump_stats("test.prof")
-		pr.print_stats("tottime")
-
-	command = "poetry run snakeviz test.prof"
-	subprocess.call(command.split())
+	DDB.config.storage_directory = "ddb_parallel_benchmark_storage"
+	shutil.rmtree("ddb_parallel_benchmark_storage", ignore_errors=True)
+	os.mkdir("ddb_parallel_benchmark_storage")
+	p = profiler.Profiler(interval=0.001)
+	p.start()
+	parallel_stress()
+	p.stop()
+	p.open_in_browser(timeline=True)
+	shutil.rmtree("ddb_parallel_benchmark_storage", ignore_errors=True)
