@@ -1,8 +1,10 @@
 from __future__ import annotations
-from typing import Tuple, Any, TypeVar
+from typing import Tuple, TypeVar, Generic
 from . import utils, io_unsafe, locking
 
+
 T = TypeVar("T")
+JSONSerializable = TypeVar("JSONSerializable", str, int, float, bool, None, list, dict)
 
 
 class AbstractDDBSession:
@@ -19,7 +21,7 @@ class AbstractDDBSession:
 
 
 
-class DDBSession(AbstractDDBSession):
+class DDBSession(AbstractDDBSession, Generic[T]):
 	"""
 		Enter:
 		>>> with DDBSession(db_name) as session, data:
@@ -29,7 +31,7 @@ class DDBSession(AbstractDDBSession):
 		the changes will be lost after exiting the with statement.
 	"""
 
-	def __enter__(self) -> Tuple["DDBSession", dict | T]:
+	def __enter__(self) -> Tuple["DDBSession", JSONSerializable | T]:
 		"""
 			Any number of read tasks can be carried out in parallel.
 			Each read task creates a read lock while reading, to signal that it is reading.
@@ -58,11 +60,11 @@ class DDBSession(AbstractDDBSession):
 		io_unsafe.write(self.db_name, self.data_handle)
 
 
-class DDBMultiSession(AbstractDDBSession):
+class DDBMultiSession(AbstractDDBSession, Generic[T]):
 	def __init__(self, pattern: str, as_type: T = None):
 		super().__init__(utils.find(pattern), as_type)
 
-	def __enter__(self) -> Tuple["DDBMultiSession", dict | T]:
+	def __enter__(self) -> Tuple["DDBMultiSession", JSONSerializable | T]:
 		self.write_locks = [locking.WriteLock(x) for x in self.db_name]
 		self.in_session = True
 		try:
@@ -86,12 +88,12 @@ class DDBMultiSession(AbstractDDBSession):
 			io_unsafe.write(name, self.data_handle[name])
 
 
-class DDBSubSession(AbstractDDBSession):
+class DDBSubSession(AbstractDDBSession, Generic[T]):
 	def __init__(self, db_name: str, key: str, as_type: T = None):
 		super().__init__(db_name, as_type)
 		self.key = key
 
-	def __enter__(self) -> Tuple["DDBSubSession", dict | T]:
+	def __enter__(self) -> Tuple["DDBSubSession", JSONSerializable | T]:
 		self.write_lock = locking.WriteLock(self.db_name)
 		self.in_session = True
 		try:

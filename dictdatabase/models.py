@@ -90,9 +90,8 @@ class DDBMethodChooser:
 			data = io_safe.read(self.path)
 		return as_type(data) if as_type is not None else data
 
-	def session(self, key: str = None, as_type=None) -> DDBSession | DDBMultiSession | DDBSubSession:
+	def session(self, key: str = None, as_type: T = None) -> DDBSession[T] | DDBMultiSession[T] | DDBSubSession[T]:
 		"""
-
 			Open multiple files at once using a glob pattern, like "user/*".
 			Mutliple arguments are allowed to access folders,
 			so session(f"users/{user_id}") is equivalent
