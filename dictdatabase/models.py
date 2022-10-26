@@ -1,7 +1,7 @@
 from __future__ import annotations
-from typing import Any, TypeVar
+from typing import TypeVar
 from . import utils, io_safe
-from . sessions import DDBSession, DDBMultiSession, DDBSubSession
+from . sessions import DDBSession
 
 T = TypeVar("T")
 
@@ -90,18 +90,11 @@ class DDBMethodChooser:
 			data = io_safe.read(self.path)
 		return as_type(data) if as_type is not None else data
 
-	def session(self, key: str = None, as_type: T = None) -> DDBSession[T] | DDBMultiSession[T] | DDBSubSession[T]:
+	def session(self, key: str = None, as_type: T = None) -> DDBSession[T]:
 		"""
 			Open multiple files at once using a glob pattern, like "user/*".
 			Mutliple arguments are allowed to access folders,
 			so session(f"users/{user_id}") is equivalent
 			to session("users", user_id).
 		"""
-		if key is not None and "*" in key:
-			raise ValueError("A key cannot be specified with a wildcard.")
-		if key is not None:
-			return DDBSubSession(self.path, key, as_type)
-		elif "*" in self.path:
-			return DDBMultiSession(self.path, as_type)
-		else:
-			return DDBSession(self.path, as_type)
+		return DDBSession(self.path, key, as_type)
