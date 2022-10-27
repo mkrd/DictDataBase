@@ -17,7 +17,7 @@ DictDataBase is a simple and fast database for handling json or compressed json 
 ### Why use DictDataBase
 - For example have a webserver dispatches database read and writes concurrently.
 - If spinning up a database server is overkill for your application.
-	- But you need [ACID](https://en.wikipedia.org/wiki/ACID) guarantees.
+    - But you need [ACID](https://en.wikipedia.org/wiki/ACID) guarantees.
 - You have a big database, only want to access single key-value pairs repeatedly. DictDataBase can do this efficiently and quickly.
 - Your use case is suited for working with json data, or you have to work with a lot of json data.
 
@@ -78,12 +78,12 @@ import dictdatabase as DDB
 This library is called DictDataBase, but you can actually use any json serializable object.
 ```python
 user_data_dict = {
-	"users": {
-		"Ben": { "age": 30, "job": "Software Engineer" },
-		"Sue": { "age": 21, "job": "Architect" },
-		"Joe": { "age": 50, "job": "Manager" }
-	},
-	"follows": [["Ben", "Sue"], ["Joe", "Ben"]]
+    "users": {
+        "Ben": { "age": 30, "job": "Software Engineer" },
+        "Sue": { "age": 21, "job": "Architect" },
+        "Joe": { "age": 50, "job": "Manager" }
+    },
+    "follows": [["Ben", "Sue"], ["Joe", "Ben"]]
 }
 DDB.at("users").create(user_data_dict)
 
@@ -91,7 +91,7 @@ DDB.at("users").create(user_data_dict)
 # in your specified storage directory.
 ```
 
-## Check file or sub-key exists
+## Check if file or sub-key exists
 ```python
 DDB.at("users").exists()  # True
 DDB.at("users").exists("Ben")  # True
@@ -102,24 +102,24 @@ DDB.at("users").exists("Sam")  # False
 ```python
 d = DDB.at("users").read()
 # You now have a copy of the json file named "users"
-print(d == user_data_dict) # True
+d == user_data_dict # True
 
 # Only partially read Joe
 joe = DDB.at("users").read("Joe")
-print(joe == user_data_dict["Joe"])
+joe == user_data_dict["Joe"] # True
 ```
 
 ## Write dicts
 ```python
 with DDB.at("users").session() as (session, users):
-	# You now have a copy of the json file users as the variable users
-	# Inside the with statement, the file of user_data will be locked, and no other
-	# processes will be able to interfere.
-	users["follows"].append(["Sue", "Ben"])
-	session.write()
-	# session.write() must be called to save the changes!
+    # You now have a copy of the json file users as the variable users
+    # Inside the with statement, the file of user_data will be locked, and no other
+    # processes will be able to interfere.
+    users["follows"].append(["Sue", "Ben"])
+    session.write()
+    # session.write() must be called to save the changes!
 print(DDB.at("user_data").read()["follows"])
-# -> [["Ben", "Sue"], ["Joe", "Ben"], ["Sue", "Ben"]]
+>>> [["Ben", "Sue"], ["Joe", "Ben"], ["Sue", "Ben"]]
 ```
 
 If you do not call session.write(), changes will not be written to disk!
@@ -133,8 +133,8 @@ After modifying the transaction, you would also have to serialize and wirte the 
 With DDB, you can do it more efficiently:
 ```python
 with DDB.at("transactions").session(key="134425") as (session, transaction):
-	transaction["status"] = "cancelled"
-	session.write()
+    transaction["status"] = "cancelled"
+    session.write()
 ```
 Afterwards, the status is updated in the json file.
 However, DDB did only efficiently gather the one transaction with id 134425, parsed only its value, and only serialized that value before writing again.
@@ -183,10 +183,10 @@ Reads a database and returns it. If a key is given, return the value at that key
 
 Args:
 - `key`: If provided, only return the value of the given key. The key
-	can be anywhere in the database, even deeply nested. If multiple
-	identical keys exist, the one at the outermost indentation will
-	be returned. This is very fast, as it does not read the entire
-	database, but only the key - value pair.
+    can be anywhere in the database, even deeply nested. If multiple
+    identical keys exist, the one at the outermost indentation will
+    be returned. This is very fast, as it does not read the entire
+    database, but only the key - value pair.
 - `as_type`: If provided, return the value as the given type. Eg. as=str will return str(value).
 
 ### `session(key: str = None, as_type=None) -> DDBSession | DDBMultiSession | DDBSubSession`
