@@ -79,10 +79,3 @@ def make_complex_nested_random_dict(max_width, max_depth):
 		random_list,
 		random_dict
 	], max_depth)
-
-
-import json
-
-d = make_complex_nested_random_dict(10, 5)
-
-print(json.dumps(d, indent=2))
