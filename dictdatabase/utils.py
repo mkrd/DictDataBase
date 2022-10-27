@@ -45,9 +45,11 @@ def find(*pattern) -> list[str]:
 
 def expand_find_path_pattern(path):
 	"""
-		:param str pattern: The pattern to expand.
-		Fot a tuple of path items, expand it to a list of all real paths.
+		For a tuple of path items, expand it to a list of all real paths.
 		An item can be some string, a wildcard "*" or a list to select specific paths.
+
+		Args:
+		- `path`: A tuple of path items
 	"""
 	res = [[]]
 	for item in path.split("/"):
@@ -63,8 +65,12 @@ def seek_index_through_value(data: str, index: int) -> int:
 	Finds the index of the next comma or closing bracket/brace, but only if
 	it is at the same indentation level as at the start index.
 
-	:param data: The string to be parsed
-	:param index: the index of the first character of the value
+	Args:
+	- `data`: A vaild JSON string
+	- `index`: The start index in data
+
+	Returns:
+	- The end index of the value.
 	"""
 
 	# See https://www.json.org/json-en.html for the JSON syntax
@@ -103,20 +109,23 @@ def count_nesting(data: str, start: int, end: int) -> int:
 
 	:param data: The string to be parsed
 	"""
-	in_str, nesting = False, 0
+	skip_next, in_str, nesting = False, False, 0
 
-	d_prev, d_curr = None, data[start - 1]
 	for i in range(start, end):
-		d_prev, d_curr = d_curr, data[i]
-		prev_backslash = d_prev == "\\"
-		if d_curr == '"' and not prev_backslash:
+		if skip_next:
+			skip_next = False
+			continue
+		current = data[i]
+		if current == "\\":
+			skip_next = True
+			continue
+		if current == '"':
 			in_str = not in_str
+		if in_str or current == " ":
 			continue
-		if in_str:
-			continue
-		elif d_curr == "{":
+		elif current == "{":
 			nesting += 1
-		elif d_curr == "}":
+		elif current == "}":
 			nesting -= 1
 	return nesting
 
