@@ -44,11 +44,14 @@ def find_locks(lock_type: str, db_name: str):
 
 
 def is_oldest_need_lock(lock_id, db_name):
-	lock_candidates = find_locks("need*", db_name)
-	lock_candidates = [x.split(".")[:-2][-2:] for x in lock_candidates]
-	oldest_candidate = min(lock_candidates, key=lambda x: int(x[1]))[0]
-	return oldest_candidate == lock_id
-
+	need_locks = find_locks("need*", db_name)
+	if len(need_locks) == 0:
+		return True
+	need_locks = [x.split(".")[:-2][-2:] for x in need_locks]  # Get the lock_id and time_ns
+	need_locks = sorted(need_locks, key=lambda x: int(x[0]))  # Sort by lock_id
+	need_locks = sorted(need_locks, key=lambda x: int(x[1]))  # Sort by time_ns
+	oldest_need_lock = need_locks[-1][0]
+	return oldest_need_lock == lock_id
 
 
 class AbstractLock(object):
