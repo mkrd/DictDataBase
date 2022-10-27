@@ -39,3 +39,22 @@ def test_write_compression_switching(env, use_orjson, sort_keys, indent):
 		assert d == dd
 		session.write()
 	assert DDB.at(name).read() == d
+
+
+def test_multi_session(env):
+	a = {"a": 1}
+	b = {"b": 2}
+
+	DDB.at("test_multi_session/d1").create(a, force_overwrite=True)
+	DDB.at("test_multi_session/d2").create(b, force_overwrite=True)
+
+	with DDB.at("test_multi_session/*").session() as (session, d):
+		assert d == {"d1": a, "d2": b}
+		session.write()
+	assert DDB.at("test_multi_session/*").read() == {"d1": a, "d2": b}
+
+
+def test_write_wildcard_key_except(env):
+	with pytest.raises(ValueError):
+		with DDB.at("test/*").session(key="any") as (session, d):
+			pass

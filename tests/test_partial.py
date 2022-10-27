@@ -26,6 +26,8 @@ def test_subread(env, use_compression, use_orjson, sort_keys, indent):
 	DDB.at("test_subread2").create(j2, force_overwrite=True)
 	assert DDB.at("test_subread2").read("b") == {"d": "e"}
 
+	assert DDB.at("none").read("none") is None
+
 
 def test_subwrite(env, use_compression, use_orjson, sort_keys, indent):
 	name = "test_subwrite"

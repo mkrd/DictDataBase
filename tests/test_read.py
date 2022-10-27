@@ -10,6 +10,27 @@ def test_non_existent(env, use_compression, use_orjson, sort_keys, indent):
 	assert d is None
 
 
+def test_file_exists_error(env):
+	with open(f"{DDB.config.storage_directory}/test_file_exists_error.json", "w") as f:
+		f.write("")
+	with open(f"{DDB.config.storage_directory}/test_file_exists_error.ddb", "w") as f:
+		f.write("")
+	with pytest.raises(FileExistsError):
+		DDB.at("test_file_exists_error").read()
+
+
+def test_exists(env):
+	DDB.at("test_exists").create({"a": 1}, force_overwrite=True)
+	assert DDB.at("test_exists").exists()
+	assert not DDB.at("test_exists/nonexistent").exists()
+	assert DDB.at("test_exists").exists("a")
+	assert not DDB.at("test_exists").exists("b")
+
+
+
+
+
+
 def test_read_integrity():
 	cases = [
 		r'{"a": "\\", "b": 2}',

@@ -30,7 +30,7 @@ class DDBSession(Generic[T]):
 		self.db_name = db_name
 		self.as_type = as_type
 		if key is not None:
-			if "*" in key:
+			if "*" in db_name:
 				raise ValueError("A key cannot be specified with a wildcard.")
 			self.key = key
 			self.session_type = SessionType.SUB
@@ -64,7 +64,8 @@ class DDBSession(Generic[T]):
 				dh = self.partial_handle.key_value
 				self.data_handle = dh
 			elif self.session_type == SessionType.MULTI:
-				self.data_handle = {n: io_unsafe.read(n) for n in self.db_name}
+				dh = {n.split("/")[-1]: io_unsafe.read(n) for n in self.db_name}
+				self.data_handle = dh
 			return self, self.as_type(dh) if self.as_type is not None else dh
 		except BaseException as e:
 			if self.session_type == SessionType.MULTI:
@@ -93,4 +94,4 @@ class DDBSession(Generic[T]):
 			io_unsafe.partial_write(self.partial_handle)
 		elif self.session_type == SessionType.MULTI:
 			for name in self.db_name:
-				io_unsafe.write(name, self.data_handle[name])
+				io_unsafe.write(name, self.data_handle[name.split("/")[-1]])

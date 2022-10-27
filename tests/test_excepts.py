@@ -31,3 +31,8 @@ def test_except_on_session_in_session(env, use_compression, use_orjson, sort_key
 		with DDB.at(name).session(as_type=pd) as (session, test):
 			with DDB.at(name).session(as_type=pd) as (session2, test2):
 				pass
+
+
+def test_wildcard_and_subkey_except():
+	with pytest.raises(ValueError):
+		DDB.at("test_wildcard_and_subkey_except/*").read(key="key")

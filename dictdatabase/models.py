@@ -31,7 +31,7 @@ class DDBMethodChooser:
 			return True
 		# Key is passed and occurs is True
 		try:
-			io_safe.subread(self.path, key=key)
+			io_safe.partial_read(self.path, key=key)
 			return True
 		except KeyError:
 			return False
@@ -73,7 +73,7 @@ class DDBMethodChooser:
 			- `as_type`: If provided, return the value as the given type. Eg. as=str will return str(value).
 		"""
 		if key is not None:
-			if "*" in key:
+			if "*" in self.path:
 				raise ValueError("A key cannot be specified with a wildcard.")
 			# Subread
 			_, json_exists, _, ddb_exists = utils.db_paths(self.path)
@@ -84,7 +84,7 @@ class DDBMethodChooser:
 		elif "*" in self.path:
 			# Multiread
 			pattern_paths = utils.expand_find_path_pattern(self.path)
-			data = {db_name: io_safe.read(db_name) for db_name in pattern_paths}
+			data = {n.split("/")[-1]: io_safe.read(n) for n in pattern_paths}
 		else:
 			# Normal read
 			data = io_safe.read(self.path)
