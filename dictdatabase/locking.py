@@ -18,7 +18,7 @@ def remove_dead_locks(db_name, ignore=None):
 			continue
 		lock_parts = lock.split(".")
 		time_ns = lock_parts[-3]
-		if time.time_ns() - int(time_ns) > LOCK_TIMEOUT * 1_000_000_000:
+		if time.monotonic_ns() - int(time_ns) > LOCK_TIMEOUT * 1_000_000_000:
 			Path(lock).unlink()
 			print(f"Found dead lock ({lock}). Remove")
 
@@ -70,7 +70,7 @@ class AbstractLock(object):
 			and the current time in nanoseconds as the time.
 		"""
 		self.id = str(threading.get_native_id())
-		self.time_ns = time.time_ns()
+		self.time_ns = time.monotonic_ns()
 		self.db_name = db_name
 		self.path = None
 
