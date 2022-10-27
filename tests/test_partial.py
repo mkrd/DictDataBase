@@ -13,8 +13,8 @@ def test_subread(env, use_compression, use_orjson, sort_keys, indent):
 	}
 
 	DDB.at(name).create(j, force_overwrite=True)
-	with pytest.raises(json.decoder.JSONDecodeError):
-		DDB.at(name).read("a") == "Hello}{"
+
+	assert DDB.at(name).read("a") == "Hello{}"
 
 	with pytest.raises(KeyError):
 		DDB.at(name).read("f")

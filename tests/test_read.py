@@ -1,12 +1,38 @@
-from unicodedata import name
+
 import dictdatabase as DDB
 import pytest
+import json
 from tests.utils import make_complex_nested_random_dict
 
 
 def test_non_existent(env, use_compression, use_orjson, sort_keys, indent):
 	d = DDB.at("nonexistent").read()
 	assert d is None
+
+
+def test_read_integrity():
+	cases = [
+		r'{"a": "\\", "b": 2}',
+		r'{"a": "\\\\", "b": 2}',
+		r'{"a": "\\\\\"", "b": 2}',
+		r'{"a": "\\\"\\", "b": 2}',
+		r'{"a": "\"\\\\", "b": 2}',
+		r'{"a": "\"", "b": 2}',
+		r'{"a": "\"\"", "b": 2}',
+		r'{"a": "\"\"\\", "b": 2}',
+		r'{"a": "\"\\\"", "b": 2}',
+		r'{"a": "\\\"\"", "b": 2}',
+	]
+
+	for case in cases:
+		with open(f"{DDB.config.storage_directory}/test_read_integrity.json", "w") as f:
+			f.write(case)
+		dd = DDB.at("test_read_integrity").read(key="a")
+		assert dd == json.loads(case)["a"]
+
+
+
+
 
 
 def test_create_and_read(env, use_compression, use_orjson, sort_keys, indent):

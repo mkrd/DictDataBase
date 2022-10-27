@@ -66,27 +66,35 @@ def seek_index_through_value(data: str, index: int) -> int:
 	:param data: The string to be parsed
 	:param index: the index of the first character of the value
 	"""
-	in_str, list_depth, dict_depth = False, 0, 0
 
-	d_prev, d_curr = None, data[index - 1]
+	# See https://www.json.org/json-en.html for the JSON syntax
+
+	skip_next, in_str, list_depth, dict_depth = False, False, 0, 0
+
 	for i in range(index, len(data)):
-		d_prev, d_curr = d_curr, data[i]
-		prev_backslash = d_prev == "\\"
-		if d_curr == '"' and not prev_backslash:
+		if skip_next:
+			skip_next = False
+			continue
+		current = data[i]
+		if current == "\\":
+			skip_next = True
+			continue
+		if current == '"':
 			in_str = not in_str
+		if in_str or current == " ":
 			continue
-		if in_str or d_curr == " " or prev_backslash:
-			continue
-		if d_curr == "[":
+		if current == "[":
 			list_depth += 1
-		elif d_curr == "]":
+		elif current == "]":
 			list_depth -= 1
-		elif d_curr == "{":
+		elif current == "{":
 			dict_depth += 1
-		elif d_curr == "}":
+		elif current == "}":
 			dict_depth -= 1
 		if list_depth == 0 and dict_depth == 0:
 			return i + 1
+
+	raise TypeError("Invalid JSON syntax")
 
 
 def count_nesting(data: str, start: int, end: int) -> int:
