@@ -7,7 +7,7 @@
 ![Coverage](https://github.com/mkrd/DictDataBase/blob/master/assets/coverage.svg?raw=1)
 
 DictDataBase is a simple and fast database for handling json or compressed json as the underlying storage mechanism. Features:
-- **Multi threading and multi processing safe**. Multiple processes on the same machine can simultaneously read and write to dicts without data getting lost.
+- **Multi threading and multi processing safe**. Multiple processes on the same machine can simultaneously read and write to dicts without losing data.
 - **ACID** compliant. Unlike TinyDB, it is suited for concurrent environments.
 - **No database server** required. Simply import DictDataBase in your project and use it.
 - **Compression**. Configure if the files should be stored as raw json or as json compressed with zlib.
@@ -15,15 +15,15 @@ DictDataBase is a simple and fast database for handling json or compressed json 
 - **Tested** with over 400 test cases.
 
 ### Why use DictDataBase
-- For example have a webserver dispatches database read and writes concurrently.
-- If spinning up a database server is overkill for your application.
+- For example, have a webserver dispatch database reads and writes concurrently.
+- If spinning up a database server is an overkill for your application.
     - But you need [ACID](https://en.wikipedia.org/wiki/ACID) guarantees.
-- You have a big database, only want to access single key-value pairs repeatedly. DictDataBase can do this efficiently and quickly.
+- You have a big database but only want to access single key-value pairs repeatedly. DictDataBase can do this efficiently and quickly.
 - Your use case is suited for working with json data, or you have to work with a lot of json data.
 
 ### Why not DictDataBase
 - If you need document indexes.
-- If your use case is better suited for a SQL database.
+- If a relational database is better suited for your use case.
 
 ## Install
 
@@ -57,13 +57,13 @@ DDB.config.indent = "\t" # Default value
 ```
 
 ### Sort keys
-Specify if you want the dict keys to be sorted when writing to a file.Behaves exactly like `json.dumps(sort_keys=...)`.
+Specify if you want the dict keys to be sorted when writing to a file. Behaves exactly like `json.dumps(sort_keys=...)`.
 ```python
 DDB.config.sort_keys = True # Default value
 ```
 
 ### Use orjson
-You can specify the orjson encoder and decoder if you need to.
+You can use the orjson encoder and decoder if you need to.
 The standard library json module is sufficient most of the time.
 However, orjson is a lot more performant in virtually all cases.
 ```python
@@ -132,10 +132,10 @@ If you do not call session.write(), changes will not be written to disk!
 
 
 ## Partial reading and writing
-Imaging you have a huge json file with many transactions.
+Imagine you have a huge json file with many transactions.
 The json file looks like this: `{<id>: <transaction>, <id>: <transaction>, ...}`.
 Normally, you would have to read and parse the entire file to get a specific key.
-After modifying the transaction, you would also have to serialize and wirte the entire file again.
+After modifying the transaction, you would also have to serialize and write the entire file again.
 With DDB, you can do it more efficiently:
 ```python
 with DDB.at("transactions").session(key="134425") as (session, transaction):
@@ -143,7 +143,7 @@ with DDB.at("transactions").session(key="134425") as (session, transaction):
     session.write()
 ```
 Afterwards, the status is updated in the json file.
-However, DDB did only efficiently gather the one transaction with id 134425, parsed only its value, and only serialized that value before writing again.
+However, DDB did only efficiently gather the one transaction with id 134425, parsed its value, and serialized that value alone before writing again.
 This is several orders of magnitude faster than the naive approach when working with big files.
 
 
@@ -155,7 +155,7 @@ In each case, `16` parallel processes were spawned to perform `128` increments o
 SQLite achieves `2435 operations/s` while DictDataBase managed to achieve `3143 operations/s`.
 
 ### More tests
-In remains to be tested how DictDatabase performs in different scenarios, for example when multiple processes want to perform full writes to one big file.
+It remains to be tested how DictDatabase performs in different scenarios, for example when multiple processes want to perform full writes to one big file.
 
 
 # API Reference
@@ -197,6 +197,6 @@ Args:
 
 ### `session(key: str = None, as_type=None) -> DDBSession | DDBMultiSession | DDBSubSession`
 Open multiple files at once using a glob pattern, like "user/*".
-Mutliple arguments are allowed to access folders,
+Multiple arguments are allowed to access folders,
 so session(f"users/{user_id}") is equivalent
 to session("users", user_id).
