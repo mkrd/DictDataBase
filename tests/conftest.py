@@ -6,7 +6,7 @@ import shutil
 def env(request):
 	dir = "./.ddb_pytest_storage"
 	DDB.config.storage_directory = dir
-	#request.addfinalizer(lambda: shutil.rmtree(dir))
+	request.addfinalizer(lambda: shutil.rmtree(dir))
 
 
 
