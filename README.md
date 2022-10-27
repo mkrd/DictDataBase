@@ -25,6 +25,12 @@ DictDataBase is a simple and fast database for handling json or compressed json 
 - If you need document indexes.
 - If your use case is better suited for a SQL database.
 
+## Install
+
+```sh
+pip install dictdatabase
+```
+
 
 # Configuration
 There are 5 configuration options:
