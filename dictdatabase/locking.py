@@ -50,7 +50,7 @@ def is_oldest_need_lock(lock_id, db_name):
 	need_locks = [x.split(".")[:-2][-2:] for x in need_locks]  # Get the lock_id and time_ns
 	need_locks = sorted(need_locks, key=lambda x: int(x[0]))  # Sort by lock_id
 	need_locks = sorted(need_locks, key=lambda x: int(x[1]))  # Sort by time_ns
-	oldest_need_lock = need_locks[-1][0]
+	oldest_need_lock = need_locks[0][0]
 	return oldest_need_lock == lock_id
 
 
