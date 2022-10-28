@@ -12,6 +12,18 @@ while [ $# -gt 0 ]; do case $1 in
     poetry run python profiler.py
     shift ;;
 
+    --benchmark-parallel|-bp)
+    poetry run python tests/benchmark/run_parallel.py
+    shift ;;
+
+  --benchmark-threaded|-bt)
+      poetry run python tests/benchmark/run_threaded.py
+      shift ;;
+
+  --benchmark-async|-ba)
+     poetry run python tests/benchmark/run_async.py
+     shift ;;
+
 
 
   *|-*|--*)
