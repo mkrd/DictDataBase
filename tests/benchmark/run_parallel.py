@@ -1,4 +1,5 @@
 from calendar import c
+import json
 import dictdatabase as DDB
 from multiprocessing import Pool
 import shutil
@@ -47,9 +48,14 @@ def parallel_stress(tables=2, proc_count=8, per_process=512):
 
 def parallel_stressor(file_count, readers, writers, operations_per_process, big_file, compression):
 	# Create Tables
-
 	for t in range(file_count):
-		db = make_table(2, 400) if big_file else {"counter": {"counter": 0}}
+		if big_file:
+			with open(os.path.join(os.getcwd(), "test_db/production_database/tasks.json"), "r") as f:
+				db = json.loads(f.read())
+				db["counter"] = {"counter": 0}
+		else:
+			db = {"counter": {"counter": 0}}
+
 		DDB.at(f"incr{t}").create(db, force_overwrite=True)
 
 	# Execute process pool running incrementor as the target task
@@ -76,7 +82,7 @@ if __name__ == "__main__":
 	operations_per_process = 4
 	for file_count, readers, writers in [(1, 4, 4), (1, 8, 1), (1, 1, 8), (4, 8, 8)]:
 		print("")
-		print(f"✨Scenario: {file_count} files, {readers} readers, {writers} writers, {operations_per_process} operations per process")
+		print(f"✨ Scenario: {file_count} files, {readers} readers, {writers} writers, {operations_per_process} operations per process")
 		for big_file, compression in [(False, False), (False, True), (True, False), (True, True)]:
 			try:
 				shutil.rmtree(".ddb_bench_parallel", ignore_errors=True)
