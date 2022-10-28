@@ -16,8 +16,6 @@ def read(db_name: str):
 	lock = locking.ReadLock(db_name)
 	try:
 		return io_unsafe.read(db_name)
-	except BaseException as e:
-		raise e
 	finally:
 		lock.unlock()
 
@@ -30,8 +28,6 @@ def partial_read(db_name: str, key: str):
 	lock = locking.ReadLock(db_name)
 	try:
 		return io_unsafe.partial_read(db_name, key).key_value
-	except BaseException as e:
-		raise e
 	finally:
 		lock.unlock()
 
@@ -45,8 +41,6 @@ def write(db_name: str, db: dict):
 	write_lock = locking.WriteLock(db_name)
 	try:
 		io_unsafe.write(db_name, db)
-	except BaseException as e:
-		raise e
 	finally:
 		write_lock.unlock()
 
@@ -64,7 +58,5 @@ def delete(db_name: str):
 			os.remove(json_path)
 		if ddb_exists:
 			os.remove(ddb_path)
-	except BaseException as e:
-		raise e
 	finally:
 		write_lock.unlock()
