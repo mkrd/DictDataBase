@@ -21,7 +21,7 @@ def proc_job(mode, n, tables, sd, uc, uo, id, sk):
 def parallel_stress(tables=2, proc_count=8, per_process=512):
 	# Create Tables
 	for t in range(tables):
-		DDB.at(f"incr{t}").create({"counter": 0}, force_overwrite=True)
+		DDB.at(f"incr{t}").create({"counter": {"counter": 0}}, force_overwrite=True)
 
 	# Execute process pool running incrementor as the target task
 	t1 = time.monotonic()
@@ -49,7 +49,7 @@ def parallel_stressor(file_count, readers, writers, operations_per_process, big_
 	# Create Tables
 
 	for t in range(file_count):
-		db = make_table(2, 400) if big_file else {"counter": 0}
+		db = make_table(2, 400) if big_file else {"counter": {"counter": 0}}
 		DDB.at(f"incr{t}").create(db, force_overwrite=True)
 
 	# Execute process pool running incrementor as the target task
@@ -66,7 +66,7 @@ def parallel_stressor(file_count, readers, writers, operations_per_process, big_
 	pool.close()
 	pool.join()
 	t2 = time.monotonic()
-	print_and_assert_results(readers, writers, operations_per_process, file_count, t1, t2)
+	print_and_assert_results(readers, writers, operations_per_process, file_count, big_file, compression, t1, t2)
 
 
 
@@ -78,10 +78,6 @@ if __name__ == "__main__":
 		print("")
 		print(f"✨Scenario: {file_count} files, {readers} readers, {writers} writers, {operations_per_process} operations per process")
 		for big_file, compression in [(False, False), (False, True), (True, False), (True, True)]:
-
-
-			print(f"🟡 Parallel Stressor: big_file={big_file}, compression={compression}")
-
 			try:
 				shutil.rmtree(".ddb_bench_parallel", ignore_errors=True)
 				os.mkdir(".ddb_bench_parallel")
