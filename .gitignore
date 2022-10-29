@@ -1,6 +1,7 @@
 .venv/
 .ddb_storage_testing/
 .ddb_pytest_storage
+.ddb/
 ddb_storage
 test_db/
 *.prof

@@ -1,12 +1,13 @@
 import dictdatabase as DDB
+from tests import TEST_DIR
 import pytest
 import shutil
 
+
 @pytest.fixture(scope="session")
 def env(request):
-	dir = "./.ddb_pytest_storage"
-	DDB.config.storage_directory = dir
-	request.addfinalizer(lambda: shutil.rmtree(dir))
+	DDB.config.storage_directory = TEST_DIR
+	request.addfinalizer(lambda: shutil.rmtree(TEST_DIR))
 
 
 

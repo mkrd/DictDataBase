@@ -1,3 +1,4 @@
+from distutils.command.config import config
 import dictdatabase as DDB
 from path_dict import PathDict
 from pyinstrument import profiler
@@ -6,8 +7,10 @@ from pyinstrument import profiler
 
 DDB.config.storage_directory = "./test_db/production_database"
 DDB.config.use_orjson = True
+DDB.config.indent = 2
 
-p = profiler.Profiler(interval=0.00001)
+
+p = profiler.Profiler(interval=0.0001)
 with p:
     # fM44 is small
     # a2lU has many annotations
