@@ -19,5 +19,4 @@ with p:
         with DDB.at("tasks").session(key="a2lU", as_type=PathDict) as (session, task):
             task["jay"] = lambda x: (x or 0) + 1
             session.write()
-        DDB.at("tasks").read()
 p.open_in_browser(timeline=True)
