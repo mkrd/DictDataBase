@@ -4,6 +4,8 @@ import orjson
 import json
 import zlib
 import os
+import hashlib
+from pathlib import Path
 from . import config, utils
 
 
@@ -16,6 +18,7 @@ class PartialFileHandle:
 	value_end_index: int
 	original_data_str: str
 	indent_level: int
+	indent_with: str
 
 
 ################################################################################
@@ -59,6 +62,26 @@ def read(db_name: str) -> dict:
 	return orjson.loads(data) if config.use_orjson else json.loads(data)
 
 
+
+def read_index_file(db_name: str):
+	path = f"{config.storage_directory}/.ddb/{db_name.replace('/', '___')}.index"
+	Path(path).parent.mkdir(parents=True, exist_ok=True)
+	if not os.path.exists(path):
+		return {}
+	with open(path, "r") as f:
+		return json.load(f)
+
+
+def write_index_file(db_name: str, key, start_index, end_index, indent_level, indent_with, value_hash):
+	path = f"{config.storage_directory}/.ddb/{db_name.replace('/', '___')}.index"
+	Path(path).parent.mkdir(parents=True, exist_ok=True)
+	indices = read_index_file(db_name)
+	indices[key] = [start_index, end_index, indent_level, indent_with, value_hash]
+	with open(path, "w") as f:
+		json.dump(indices, f)
+
+
+
 def partial_read(db_name: str, key: str) -> PartialFileHandle:
 	"""
 		Partially read a key from a db.
@@ -70,25 +93,54 @@ def partial_read(db_name: str, key: str) -> PartialFileHandle:
 	"""
 
 	data = read_string(db_name)
+	index = read_index_file(db_name).get(key, None)
+	if index is not None:
+		partial_str = data[index[0]:index[1]]
+		if index[4] == hashlib.sha256(partial_str.encode()).hexdigest():
+			return PartialFileHandle(
+				db_name=db_name,
+				key=key,
+				key_value=json.loads(partial_str),
+				value_start_index=index[0],
+				value_end_index=index[1],
+				indent_level=index[2],
+				indent_with=index[3],
+				original_data_str=data,
+			)
+
 	key_str = f"\"{key}\":"
 	key_str_index = utils.find_outermost_key_str_index(data, key_str)
 
 	if key_str_index == -1:
 		raise KeyError(f"Key \"{key}\" not found in db \"{db_name}\"")
 
+	space_after_semicolon = 1 if data[key_str_index + len(key_str)] == " " else 0
+
 	# Count the amount of whitespace before the key
 	# to determine the indentation level
-	indentation_level = 0
+	indentation_str = ""
 	for i in range(key_str_index-1, -1, -1):
 		if data[i] not in [" ", "\t"]:
 			break
-		indentation_level += 1
+		indentation_str += data[i]
 
-	if isinstance(config.indent, int) and config.indent > 0:
-		indentation_level //= config.indent
+	if "\t" in indentation_str:
+		indent_with = "\t"
+		indent_level = len(indentation_str)
+	elif isinstance(config.indent, int) and config.indent > 0:
+		indent_with = " " * (len(indentation_str) // config.indent)
+		indent_level = len(indentation_str) // config.indent
+	elif isinstance(config.indent, str):
+		indent_with = "  "
+		indent_level = len(indentation_str) // 2
+	else:
+		indent_with, indent_level = "", 0
 
-	value_start_index = key_str_index + len(key_str)
+
+	value_start_index = key_str_index + len(key_str) + space_after_semicolon
 	value_end_index = utils.seek_index_through_value(data, value_start_index)
+
+	write_index_file(db_name, key, value_start_index, value_end_index, indent_level, indent_with, hashlib.sha256(data[value_start_index:value_end_index].encode()).hexdigest())
 
 	return PartialFileHandle(
 		db_name=db_name,
@@ -97,7 +149,8 @@ def partial_read(db_name: str, key: str) -> PartialFileHandle:
 		value_start_index=value_start_index,
 		value_end_index=value_end_index,
 		original_data_str=data,
-		indent_level=indentation_level,
+		indent_level=indent_level,
+		indent_with=indent_with,
 	)
 
 
@@ -159,10 +212,10 @@ def partial_write(pf: PartialFileHandle):
 	else:
 		partial_dump = json.dumps(pf.key_value, indent=config.indent, sort_keys=config.sort_keys)
 
-	if config.indent is not None:
-		indent_with = " " * config.indent if isinstance(config.indent, int) else config.indent
-		partial_dump = partial_dump.replace("\n", "\n" + (pf.indent_level * indent_with))
+	if pf.indent_level > 0 and pf.indent_with:
+		partial_dump = partial_dump.replace("\n", "\n" + (pf.indent_level * pf.indent_with))
 
 	dump_start = pf.original_data_str[:pf.value_start_index]
 	dump_end = pf.original_data_str[pf.value_end_index:]
-	write_dump(pf.db_name, f"{dump_start} {partial_dump}{dump_end}")
+	write_index_file(pf.db_name, pf.key, len(dump_start), len(dump_start) + len(partial_dump), pf.indent_level, pf.indent_with, hashlib.sha256(partial_dump.encode()).hexdigest())
+	write_dump(pf.db_name, f"{dump_start}{partial_dump}{dump_end}")
