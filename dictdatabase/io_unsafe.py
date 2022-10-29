@@ -73,7 +73,7 @@ def read_index_file(db_name: str):
 
 
 def write_index_file(db_name: str, key, start_index, end_index, indent_level, indent_with, value_hash):
-	path = f"{config.storage_directory}/.ddb/{db_name.replace('/', '___')}.index"
+	path = f"{config.storage_directory}/.ddb/{db_name}.index"
 	Path(path).parent.mkdir(parents=True, exist_ok=True)
 	indices = read_index_file(db_name)
 	indices[key] = [start_index, end_index, indent_level, indent_with, value_hash]
