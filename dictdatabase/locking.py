@@ -25,12 +25,6 @@ def remove_dead_locks(db_name, ignore=None):
 
 def path_str(db_name, lock_id, time_ns, lock_type):
 	path = f"{config.storage_directory}/.ddb/"
-	if "/" in db_name:
-		db_name = db_name.split("/")
-		db_name[-1] = f".{db_name[-1]}"
-		db_name = "/".join(db_name)
-	else:
-		path += "."
 	path = f"{path}{db_name}.{lock_id}.{time_ns}.{lock_type}.lock"
 	Path(path).parent.mkdir(parents=True, exist_ok=True)
 	return path
