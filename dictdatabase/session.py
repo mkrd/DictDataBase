@@ -51,8 +51,11 @@ class DDBSession(Generic[T]):
 		"""
 		if self.session_type in (SessionType.SINGLE, SessionType.SUB):
 			self.write_lock = locking.WriteLock(self.db_name)
+			self.write_lock._lock()
 		else:
 			self.write_lock = [locking.WriteLock(x) for x in self.db_name]
+			for lock in self.write_lock:
+				lock._lock()
 		self.in_session = True
 
 		try:
@@ -70,18 +73,18 @@ class DDBSession(Generic[T]):
 		except BaseException as e:
 			if self.session_type == SessionType.MULTI:
 				for lock in self.write_lock:
-					lock.unlock()
+					lock._unlock()
 			else:
-				self.write_lock.unlock()
+				self.write_lock._unlock()
 			raise e
 
 
 	def __exit__(self, type, value, tb):
 		if self.session_type == SessionType.MULTI:
 			for lock in self.write_lock:
-				lock.unlock()
+				lock._unlock()
 		else:
-			self.write_lock.unlock()
+			self.write_lock._unlock()
 		self.write_lock, self.in_session = None, False
 
 
