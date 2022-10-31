@@ -11,9 +11,10 @@ SLEEP_TIMEOUT = 0.005
 LOCK_TIMEOUT = 30.0
 
 
-def get_locks(db_name: str, *, id=None, time_ns=None, stage=None, mode=None):
+def get_lock_file_names(db_name: str, *, id: str = None, time_ns: int = None, stage: str = None, mode: str = None) -> list[str]:
 	"""
-		Get locks in the database directory.
+		Returns a list of lock file names in the configured storage directory as
+		strings. The directory is not include, only the file names are returned.
 		If any of the arguments are None, they are treated as a wildcard.
 
 		Do not use glob, because it is slow. Compiling the regex pattern
@@ -36,38 +37,59 @@ def get_locks(db_name: str, *, id=None, time_ns=None, stage=None, mode=None):
 	return res
 
 
-def remove_orphaned_locks(db_name, ignore=None):
-	for lock in get_locks(db_name):
-		if lock == ignore:
+def count_lock_files(db_name: str, *, id: str = None, time_ns: int = None, stage: str = None, mode: str = None) -> int:
+	"""
+		Like get_lock_file_names, but returns the number of lock files.
+	"""
+	res = 0
+	for x in os.listdir(os.path.join(config.storage_directory, ".ddb")):
+		if not x.startswith(db_name) or not x.endswith(".lock"):
 			continue
-		_, _, time_ns, _, _, _ = lock.split(".")
+		_, f_id, f_time_ns, f_stage, f_mode, _ = x.split(".")
+		if id is not None and f_id != id:
+			continue
+		if time_ns is not None and f_time_ns != time_ns:
+			continue
+		if stage is not None and f_stage != stage:
+			continue
+		if mode is not None and f_mode != mode:
+			continue
+		res += 1
+	return res
+
+
+def make_lock_path(db_name: str, id: str, time_ns: int, stage: str, mode: str) -> Path:
+	name = f"{db_name}.{id}.{time_ns}.{stage}.{mode}.lock"
+	path = Path(os.path.join(config.storage_directory, ".ddb", name))
+	path.parent.mkdir(parents=True, exist_ok=True)
+	return path
+
+
+def remove_orphaned_locks(db_name: str, ignore: Path = None):
+	for lock_name in get_lock_file_names(db_name):
+		lock_path = Path(os.path.join(config.storage_directory, ".ddb", lock_name))
+		if ignore == lock_path:
+			continue
+		_, _, time_ns, _, _, _ = lock_name.split(".")
 		if time.monotonic_ns() - int(time_ns) > LOCK_TIMEOUT * 1_000_000_000:
-			Path(lock).unlink()
-			print(f"Found orphaned lock ({lock}). Remove")
+			lock_path.unlink()
+			print(f"Found orphaned lock ({lock_name}). Remove")
 
 
-
-def path_str(db_name, *, id, time_ns, stage, mode):
-	l_name = f"{db_name}.{id}.{time_ns}.{stage}.{mode}.lock"
-	l_path = os.path.join(config.storage_directory, ".ddb", l_name)
-	Path(l_path).parent.mkdir(parents=True, exist_ok=True)
-	return l_path
-
-
-def is_oldest_need_lock(lock_id, db_name):
-	need_locks = get_locks(db_name, stage="need")
+def is_oldest_need_lock(lock_id: str, db_name: str):
+	need_locks = get_lock_file_names(db_name, stage="need")
+	# Is oldest if the number of need locks is 0
 	if len(need_locks) == 0:
 		return True
-
+	# Get need locks id and time_ns
 	need_locks_id_time = []
 	for lock in need_locks:
 		_, l_id, l_time_ns, _, _, _ = lock.split(".")
 		need_locks_id_time.append((l_id, l_time_ns))
+	# Sort by time_ns. If multiple, the the one with the smaller id is first
 	need_locks_id_time = sorted(need_locks_id_time, key=lambda x: int(x[0]))  # Sort by id
 	need_locks_id_time = sorted(need_locks_id_time, key=lambda x: int(x[1]))  # Sort by time_ns
-
 	return need_locks_id_time[0][0] == lock_id
-
 
 
 class AbstractLock:
@@ -78,7 +100,8 @@ class AbstractLock:
 	id: str
 	time_ns: int
 	db_name: str
-	path: Path | None
+	need_path: Path = None
+	path: Path = None
 
 	def __init__(self, db_name: str):
 		"""
@@ -93,8 +116,16 @@ class AbstractLock:
 		raise NotImplementedError
 
 	def _unlock(self):
-		self.path.unlink()
-		self.path = None
+		for p in ("need_path", "path"):
+			try:
+				path: Path = getattr(self, p, None)
+				if path:
+					path.unlink()
+			except FileNotFoundError:
+				pass
+			finally:
+				setattr(self, p, None)
+
 
 	def __enter__(self):
 		self._lock()
@@ -103,34 +134,32 @@ class AbstractLock:
 		self._unlock()
 
 
-
 class ReadLock(AbstractLock):
 	def _lock(self):
 		# Instantly signal that we need to read
-		need_read_path_str = path_str(self.db_name, id=self.id, time_ns=self.time_ns, stage="need", mode="read")
-		need_read_path = Path(need_read_path_str)
-		need_read_path.touch()
+		self.need_path = make_lock_path(self.db_name, self.id, self.time_ns, "need", "read")
+		self.need_path.touch()
 
 		# Except if current thread already has a read lock
-		if len(get_locks(self.db_name, id=self.id, stage="has", mode="read")) > 0:
-			need_read_path.unlink()
+		if count_lock_files(self.db_name, id=self.id, stage="has", mode="read") > 0:
+			self.need_path.unlink()
 			raise RuntimeError("Thread already has a read lock. Do not try to obtain a read lock twice.")
 
 		# Make path of the hyptoetical hasread lock
-		self.path = Path(path_str(self.db_name, id=self.id, time_ns=self.time_ns, stage="has", mode="read"))
+		self.path = make_lock_path(self.db_name, self.id, self.time_ns, "has", "read")
 
 		# Iterate until this is the oldest need* lock and no haswrite locks exist, or no *write locks exist
 		while True:
-			remove_orphaned_locks(self.db_name, ignore=need_read_path_str)
+			remove_orphaned_locks(self.db_name, ignore=self.need_path)
 			# If no writing is happening, allow unlimited reading
-			if len(get_locks(self.db_name, mode="write")) == 0:
+			if count_lock_files(self.db_name, mode="write") == 0:
 				self.path.touch()
-				need_read_path.unlink()
+				self.need_path.unlink()
 				return
 			# A needwrite or haswrite lock exists
-			if is_oldest_need_lock(self.id, self.db_name) and len(get_locks(self.db_name, stage="has", mode="write")) == 0:
+			if is_oldest_need_lock(self.id, self.db_name) and count_lock_files(self.db_name, stage="has", mode="write") == 0:
 				self.path.touch()
-				need_read_path.unlink()
+				self.need_path.unlink()
 				return
 			time.sleep(SLEEP_TIMEOUT)
 
@@ -138,25 +167,23 @@ class ReadLock(AbstractLock):
 
 class WriteLock(AbstractLock):
 	def _lock(self):
-
 		# Instantly signal that we need to write
-		need_write_path_str = path_str(self.db_name, id=self.id, time_ns=self.time_ns, stage="need", mode="write")
-		need_write_path = Path(need_write_path_str)
-		need_write_path.touch()
+		self.need_path = make_lock_path(self.db_name, self.id, self.time_ns, "need", "write")
+		self.need_path.touch()
 
 		# Except if current thread already has a write lock
-		if len(get_locks(self.db_name, id=self.id, stage="has", mode="write")) > 0:
-			need_write_path.unlink()
+		if count_lock_files(self.db_name, id=self.id, stage="has", mode="write") > 0:
+			self.need_path.unlink()
 			raise RuntimeError("Thread already has a write lock. Do try to obtain a write lock twice.")
 
 		# Make path of the hyptoetical haswrite lock
-		self.path = Path(path_str(self.db_name, id=self.id, time_ns=self.time_ns, stage="has", mode="write"))
+		self.path = make_lock_path(self.db_name, self.id, self.time_ns, "has", "write")
 
 		# Iterate until this is the oldest need* lock and no has* locks exist
 		while True:
-			remove_orphaned_locks(self.db_name, ignore=need_write_path_str)
-			if is_oldest_need_lock(self.id, self.db_name) and len(get_locks(self.db_name, stage="has")) == 0:
+			remove_orphaned_locks(self.db_name, ignore=self.need_path)
+			if is_oldest_need_lock(self.id, self.db_name) and count_lock_files(self.db_name, stage="has") == 0:
 				self.path.touch()
-				need_write_path.unlink()
+				self.need_path.unlink()
 				return
 			time.sleep(SLEEP_TIMEOUT)

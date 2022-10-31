@@ -49,16 +49,16 @@ class DDBSession(Generic[T]):
 			No new read tasks will be allowed. When all read tasks are done, the session aquire the write lock.
 			Now, it can savely read and write while all other tasks wait.
 		"""
-		if self.session_type in (SessionType.SINGLE, SessionType.SUB):
-			self.write_lock = locking.WriteLock(self.db_name)
-			self.write_lock._lock()
-		else:
-			self.write_lock = [locking.WriteLock(x) for x in self.db_name]
-			for lock in self.write_lock:
-				lock._lock()
-		self.in_session = True
-
 		try:
+			if self.session_type in (SessionType.SINGLE, SessionType.SUB):
+				self.write_lock = locking.WriteLock(self.db_name)
+				self.write_lock._lock()
+			else:
+				self.write_lock = [locking.WriteLock(x) for x in self.db_name]
+				for lock in self.write_lock:
+					lock._lock()
+			self.in_session = True
+
 			if self.session_type == SessionType.SINGLE:
 				dh = io_unsafe.read(self.db_name)
 				self.data_handle = dh
@@ -76,16 +76,21 @@ class DDBSession(Generic[T]):
 					lock._unlock()
 			else:
 				self.write_lock._unlock()
+			self.write_lock, self.in_session = None, False
+			self.__exit__(type(e), e, e.__traceback__)
 			raise e
 
 
 	def __exit__(self, type, value, tb):
 		if self.session_type == SessionType.MULTI:
-			for lock in self.write_lock:
+			# Use getattr in case the attr doesn't exist
+			for lock in getattr(self, "write_lock", []):
 				lock._unlock()
 		else:
-			self.write_lock._unlock()
+			if getattr(self, "write_lock", None) is not None:
+				self.write_lock._unlock()
 		self.write_lock, self.in_session = None, False
+
 
 
 	def write(self):

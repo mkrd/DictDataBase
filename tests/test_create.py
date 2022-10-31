@@ -7,14 +7,14 @@ from tests.utils import make_complex_nested_random_dict
 
 
 def test_create(env, use_compression, use_orjson, sort_keys, indent):
-	DDB.at("test_create").create(force_overwrite=True)
-	db = DDB.at("test_create").read()
+	DDB.at("create").create(force_overwrite=True)
+	db = DDB.at("create").read()
 	assert db == {}
 
-	with DDB.at("test_create").session(as_type=pd) as (session, d):
-		d["a", "b", "c"] = "d"
+	with DDB.at("create").session(as_type=pd) as (session, d):
+		d["a", "b", "c"] = "😁"
 		session.write()
-	assert DDB.at("test_create").read() == {"a": {"b": {"c": "d"}}}
+	assert DDB.at("create").read() == {"a": {"b": {"c": "😁"}}}
 
 
 def test_create_edge_cases(env, use_compression, use_orjson, sort_keys, indent):

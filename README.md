@@ -100,6 +100,8 @@ DDB.at("users").create(user_data_dict)
 ## Check if file or sub-key exists
 ```python
 DDB.at("users").exists()  # True
+DDB.at("users").exists("none")  # False
+# Also works on nested keys
 DDB.at("users").exists("Ben")  # True
 DDB.at("users").exists("Sam")  # False
 ```
@@ -132,20 +134,35 @@ If you do not call session.write(), changes will not be written to disk!
 
 
 ## Partial reading and writing
-Imagine you have a huge json file with many transactions.
-The json file looks like this: `{<id>: <transaction>, <id>: <transaction>, ...}`.
+Imagine you have a huge json file with many purchases.
+The json file looks like this: `{<id>: <purchase>, <id>: <purchase>, ...}`.
 Normally, you would have to read and parse the entire file to get a specific key.
-After modifying the transaction, you would also have to serialize and write the entire file again.
+After modifying the purchase, you would also have to serialize and write the entire file again.
 With DDB, you can do it more efficiently:
 ```python
-with DDB.at("transactions").session(key="134425") as (session, transaction):
-    transaction["status"] = "cancelled"
+with DDB.at("purchases").session(key="134425") as (session, purchase):
+    purchase["status"] = "cancelled"
     session.write()
 ```
 Afterwards, the status is updated in the json file.
-However, DDB did only efficiently gather the one transaction with id 134425, parsed its value, and serialized that value alone before writing again.
+However, DDB did only efficiently gather the one purchase with id 134425, parsed its value, and serialized that value alone before writing again.
 This is several orders of magnitude faster than the naive approach when working with big files.
 
+
+## Folders
+You can also read and write to folders of files. Consider the same example as before, but now we have a folder called `purchases` that contains many files `<id>.json`. If you want to open a session or read a specific one, you can do
+```python
+DDB.at("purchases/<id>").read()
+# Or equivalently:
+DDB.at("purchases", "<id>").read()
+```
+
+To open a session or read all, do the following:
+```python
+DDB.at("purchases/*").read()
+# Or equivalently:
+DDB.at("purchases", "*").read()
+```
 
 # Performance
 In preliminary testing, DictDataBase showed promising performance.

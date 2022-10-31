@@ -1,1 +1,1 @@
-TEST_DIR = ".ddb_pytest_storage"
+TEST_DIR = "./.ddb_pytest_storage"

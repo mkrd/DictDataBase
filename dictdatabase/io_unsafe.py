@@ -26,12 +26,11 @@ class PartialFileHandle:
 ################################################################################
 
 
-def read_string(db_name: str) -> str:
+def read_file(db_name: str, as_bytes=False) -> str | bytes:
 	"""
-		Read the content of a db as a string.
-		Reading is always possible, not matter how the config is set.
-		So a compressed ddb file can also be read if compression is disabled,
-		and vice versa.
+		Read the content of a db as a string, or as bytes if as_bytes=True.
+		Reading works even when the config changes, so a compressed ddb file can
+		also be read if compression is disabled, and vice versa.
 	"""
 	json_path, json_exists, ddb_path, ddb_exists = utils.db_paths(db_name)
 
@@ -43,13 +42,14 @@ def read_string(db_name: str) -> str:
 
 	# Read from json file
 	if json_exists:
-		with open(json_path, "r") as f:
+		mode = "rb" if as_bytes else "r"
+		with open(json_path, mode) as f:
 			return f.read()
 	# Read from compressed ddb file
 	if ddb_exists:
 		with open(ddb_path, "rb") as f:
-			data_bytes = f.read()
-			return zlib.decompress(data_bytes).decode()
+			data_bytes = zlib.decompress(f.read())
+			return data_bytes if as_bytes else data_bytes.decode()
 
 
 def read(db_name: str) -> dict:
@@ -58,8 +58,9 @@ def read(db_name: str) -> dict:
 		Make sure the file exists. If it does notnot a FileNotFoundError is
 		raised.
 	"""
-	data = read_string(db_name)
-	return orjson.loads(data) if config.use_orjson else json.loads(data)
+	if config.use_orjson:
+		return orjson.loads(read_file(db_name, as_bytes=True))
+	return json.loads(read_file(db_name))
 
 
 
@@ -92,7 +93,7 @@ def partial_read(db_name: str, key: str) -> PartialFileHandle:
 		If the key is not found, a `KeyError` is raised.
 	"""
 
-	data = read_string(db_name)
+	data = read_file(db_name)
 	index = read_index_file(db_name).get(key, None)
 	if index is not None:
 		partial_str = data[index[0]:index[1]]
