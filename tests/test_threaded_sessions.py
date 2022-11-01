@@ -36,7 +36,7 @@ def run_threaded(fns_args: list, max_threads=None):
 
 
 def test_stress_threaded(env):
-	per_thread = 8
+	per_thread = 12
 	tables = 2
 	threads = 4
 	# Create tables

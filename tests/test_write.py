@@ -4,7 +4,7 @@ import pytest
 from tests.utils import make_complex_nested_random_dict
 
 
-def test_non_existent_session(env):
+def test_non_existent_session(env, use_compression, use_orjson, sort_keys, indent):
 	name = "test_non_existent_session"
 	with pytest.raises(FileNotFoundError):
 		with DDB.at(name).session() as (session, d):
@@ -41,7 +41,7 @@ def test_write_compression_switching(env, use_orjson, sort_keys, indent):
 	assert DDB.at(name).read() == d
 
 
-def test_multi_session(env):
+def test_multi_session(env, use_compression, use_orjson, sort_keys, indent):
 	a = {"a": 1}
 	b = {"b": 2}
 
@@ -54,7 +54,7 @@ def test_multi_session(env):
 	assert DDB.at("test_multi_session/*").read() == {"d1": a, "d2": b}
 
 
-def test_write_wildcard_key_except(env):
+def test_write_wildcard_key_except(env, use_compression, use_orjson, sort_keys, indent):
 	with pytest.raises(ValueError):
 		with DDB.at("test/*").session(key="any") as (session, d):
 			pass

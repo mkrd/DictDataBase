@@ -71,12 +71,6 @@ class DDBSession(Generic[T]):
 				self.data_handle = dh
 			return self, self.as_type(dh) if self.as_type is not None else dh
 		except BaseException as e:
-			if self.session_type == SessionType.MULTI:
-				for lock in self.write_lock:
-					lock._unlock()
-			else:
-				self.write_lock._unlock()
-			self.write_lock, self.in_session = None, False
 			self.__exit__(type(e), e, e.__traceback__)
 			raise e
 
@@ -86,9 +80,8 @@ class DDBSession(Generic[T]):
 			# Use getattr in case the attr doesn't exist
 			for lock in getattr(self, "write_lock", []):
 				lock._unlock()
-		else:
-			if getattr(self, "write_lock", None) is not None:
-				self.write_lock._unlock()
+		elif getattr(self, "write_lock", None) is not None:
+			self.write_lock._unlock()
 		self.write_lock, self.in_session = None, False
 
 

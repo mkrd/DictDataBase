@@ -27,7 +27,7 @@ def get_lock_file_names(db_name: str, *, id: str = None, time_ns: int = None, st
 		_, f_id, f_time_ns, f_stage, f_mode, _ = x.split(".")
 		if id is not None and f_id != id:
 			continue
-		if time_ns is not None and f_time_ns != time_ns:
+		if time_ns is not None and f_time_ns != str(time_ns):
 			continue
 		if stage is not None and f_stage != stage:
 			continue
@@ -48,7 +48,7 @@ def count_lock_files(db_name: str, *, id: str = None, time_ns: int = None, stage
 		_, f_id, f_time_ns, f_stage, f_mode, _ = x.split(".")
 		if id is not None and f_id != id:
 			continue
-		if time_ns is not None and f_time_ns != time_ns:
+		if time_ns is not None and f_time_ns != str(time_ns):
 			continue
 		if stage is not None and f_stage != stage:
 			continue
@@ -77,10 +77,9 @@ def remove_orphaned_locks(db_name: str, ignore: Path = None):
 
 
 def is_oldest_need_lock(lock_id: str, db_name: str):
+	# len(need_locks) is at least 1 since this function is only called if
+	# there is a need_lock
 	need_locks = get_lock_file_names(db_name, stage="need")
-	# Is oldest if the number of need locks is 0
-	if len(need_locks) == 0:
-		return True
 	# Get need locks id and time_ns
 	need_locks_id_time = []
 	for lock in need_locks:

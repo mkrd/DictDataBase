@@ -55,8 +55,6 @@ def expand_find_path_pattern(path):
 	for item in path.split("/"):
 		if isinstance(item, str):
 			res = [r + [item] for r in res]
-		if isinstance(item, list):
-			res = [r + [list_item] for list_item in item for r in res]
 	return [f for r in res for f in find(*r)]
 
 

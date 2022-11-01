@@ -28,6 +28,10 @@ def test_subread(env, use_compression, use_orjson, sort_keys, indent):
 
 	assert DDB.at("none").read("none") is None
 
+	j3 = {"a": {"b": {"\\c\\": {"a": "a"}}}}
+	DDB.at("test_subread3").create(j3, force_overwrite=True)
+	assert DDB.at("test_subread3").read("a") == {"b": {"\\c\\": {"a": "a"}}}
+
 
 def test_subwrite(env, use_compression, use_orjson, sort_keys, indent):
 	name = "test_subwrite"

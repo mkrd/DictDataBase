@@ -10,7 +10,7 @@ def test_non_existent(env, use_compression, use_orjson, sort_keys, indent):
 	assert d is None
 
 
-def test_file_exists_error(env):
+def test_file_exists_error(env, use_compression, use_orjson, sort_keys, indent):
 	with open(f"{DDB.config.storage_directory}/test_file_exists_error.json", "w") as f:
 		f.write("")
 	with open(f"{DDB.config.storage_directory}/test_file_exists_error.ddb", "w") as f:
@@ -19,7 +19,7 @@ def test_file_exists_error(env):
 		DDB.at("test_file_exists_error").read()
 
 
-def test_exists(env):
+def test_exists(env, use_compression, use_orjson, sort_keys, indent):
 	DDB.at("test_exists").create({"a": 1}, force_overwrite=True)
 	assert DDB.at("test_exists").exists()
 	assert not DDB.at("test_exists/nonexistent").exists()
