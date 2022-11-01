@@ -60,14 +60,14 @@ def count_lock_files(db_name: str, *, id: str = None, time_ns: int = None, stage
 
 def make_lock_path(db_name: str, id: str, time_ns: int, stage: str, mode: str) -> Path:
 	name = f"{db_name}.{id}.{time_ns}.{stage}.{mode}.lock"
-	path = Path(os.path.join(config.storage_directory, ".ddb", name))
+	path = Path(config.storage_directory, ".ddb", name)
 	path.parent.mkdir(parents=True, exist_ok=True)
 	return path
 
 
 def remove_orphaned_locks(db_name: str, ignore: Path = None):
 	for lock_name in get_lock_file_names(db_name):
-		lock_path = Path(os.path.join(config.storage_directory, ".ddb", lock_name))
+		lock_path = Path(config.storage_directory, ".ddb", lock_name)
 		if ignore == lock_path:
 			continue
 		_, _, time_ns, _, _, _ = lock_name.split(".")
