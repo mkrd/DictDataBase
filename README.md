@@ -22,7 +22,7 @@ DictDataBase is a simple and fast database for handling json or compressed json 
 - Your use case is suited for working with json data, or you have to work with a lot of json data.
 
 ### Why not DictDataBase
-- If you need document indexes.
+- If your storage is slow.
 - If a relational database is better suited for your use case.
 
 ## Install
