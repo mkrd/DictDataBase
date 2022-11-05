@@ -1,4 +1,5 @@
 import dictdatabase as DDB
+from path_dict import PathDict
 import pytest
 
 
@@ -12,3 +13,5 @@ def test_select(env, use_compression, use_orjson, sort_keys, indent):
 
     with pytest.raises(ValueError):
         DDB.at("test_select").select(lambda x: x["a"] > 5)
+
+    s = DDB.at("test_select/*").select(lambda x: x.at("a").get(), as_type=PathDict)

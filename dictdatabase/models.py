@@ -73,7 +73,7 @@ class DDBMethodChooser:
 		data = {}
 		for db_name in utils.expand_find_path_pattern(self.path):
 			db = io_safe.read(db_name)
-			if fn(db):
+			if fn(as_type(db) if as_type is not None else db):
 				data[db_name.split("/")[-1]] = db
 
 		return as_type(data) if as_type is not None else data
