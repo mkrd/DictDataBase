@@ -70,26 +70,6 @@ def count_lock_files(ddb_dir: str, db_name: str, *, id: str = None, time_ns: int
 	return res
 
 
-def make_lock_path(ddb_dir: str, db_name: str, id: str, time_ns: int, stage: str, mode: str) -> str:
-	if not os.path.isdir(ddb_dir):
-		os.mkdir(ddb_dir)
-	return os.path.join(ddb_dir, f"{db_name}.{id}.{time_ns}.{stage}.{mode}.lock")
-
-
-def remove_orphaned_locks(ddb_dir: str, db_name: str, ignore: str = None):
-	for lock_name in get_lock_file_names(ddb_dir, db_name):
-		lock_path = os.path.join(ddb_dir, lock_name)
-		if ignore == lock_path:
-			continue
-		_, _, time_ns, _, _, _ = lock_name.split(".")
-		if time.monotonic_ns() - int(time_ns) > LOCK_TIMEOUT * 1_000_000_000:
-			os.unlink(lock_path)
-			print(f"Found orphaned lock ({lock_name}). Remove")
-
-
-
-
-
 class AbstractLock:
 	"""
 		An abstract lock doesn't do anything by itself. A subclass of it needs to
@@ -125,15 +105,18 @@ class AbstractLock:
 			finally:
 				setattr(self, p, None)
 
-
 	def __enter__(self):
 		self._lock()
 
 	def __exit__(self, exc_type, exc_val, exc_tb):
 		self._unlock()
 
+	def make_lock_path(self, stage: str, mode: str) -> str:
+		if not os.path.isdir(self.ddb_dir):
+			os.mkdir(self.ddb_dir)
+		return os.path.join(self.ddb_dir, f"{self.db_name}.{self.id}.{self.time_ns}.{stage}.{mode}.lock")
 
-	def is_oldest_need_lock(self):
+	def is_oldest_need_lock(self) -> bool:
 		# len(need_locks) is at least 1 since this function is only called if
 		# there is a need_lock
 		need_locks = get_lock_file_names(self.ddb_dir, self.db_name, stage="need")
@@ -147,13 +130,24 @@ class AbstractLock:
 		need_locks_id_time = sorted(need_locks_id_time, key=lambda x: int(x[1]))  # Sort by time_ns
 		return need_locks_id_time[0][0] == self.id
 
+	def remove_orphaned_locks(self):
+		for lock_name in get_lock_file_names(self.ddb_dir, self.db_name):
+			lock_path = os.path.join(self.ddb_dir, lock_name)
+			if self.need_path == lock_path:
+				continue
+			_, _, time_ns, _, _, _ = lock_name.split(".")
+			if time.monotonic_ns() - int(time_ns) > LOCK_TIMEOUT * 1_000_000_000:
+				os.unlink(lock_path)
+				print(f"Found orphaned lock ({lock_name}). Remove")
+
+
+
 
 class ReadLock(AbstractLock):
 	def _lock(self):
 		# Instantly signal that we need to read
-		self.need_path = make_lock_path(self.ddb_dir, self.db_name, self.id, self.time_ns, "need", "read")
+		self.need_path = self.make_lock_path("need", "read")
 		os_touch(self.need_path)
-
 
 		# Except if current thread already has a read lock
 		if count_lock_files(self.ddb_dir, self.db_name, id=self.id, stage="has", mode="read") > 0:
@@ -161,11 +155,11 @@ class ReadLock(AbstractLock):
 			raise RuntimeError("Thread already has a read lock. Do not try to obtain a read lock twice.")
 
 		# Make path of the hyptoetical hasread lock
-		self.path = make_lock_path(self.ddb_dir, self.db_name, self.id, self.time_ns, "has", "read")
+		self.path = self.make_lock_path("has", "read")
 
 		# Iterate until this is the oldest need* lock and no haswrite locks exist, or no *write locks exist
 		while True:
-			remove_orphaned_locks(self.ddb_dir, self.db_name, ignore=self.need_path)
+			self.remove_orphaned_locks()
 			# If no writing is happening, allow unlimited reading
 			if count_lock_files(self.ddb_dir, self.db_name, mode="write") == 0:
 				os_touch(self.path)
@@ -183,7 +177,7 @@ class ReadLock(AbstractLock):
 class WriteLock(AbstractLock):
 	def _lock(self):
 		# Instantly signal that we need to write
-		self.need_path = make_lock_path(self.ddb_dir, self.db_name, self.id, self.time_ns, "need", "write")
+		self.need_path = self.make_lock_path("need", "write")
 		os_touch(self.need_path)
 
 		# Except if current thread already has a write lock
@@ -192,11 +186,11 @@ class WriteLock(AbstractLock):
 			raise RuntimeError("Thread already has a write lock. Do try to obtain a write lock twice.")
 
 		# Make path of the hyptoetical haswrite lock
-		self.path = make_lock_path(self.ddb_dir, self.db_name, self.id, self.time_ns, "has", "write")
+		self.path = self.make_lock_path("has", "write")
 
 		# Iterate until this is the oldest need* lock and no has* locks exist
 		while True:
-			remove_orphaned_locks(self.ddb_dir, self.db_name, ignore=self.need_path)
+			self.remove_orphaned_locks()
 			if self.is_oldest_need_lock() and count_lock_files(self.ddb_dir, self.db_name, stage="has") == 0:
 				os_touch(self.path)
 				os.unlink(self.need_path)

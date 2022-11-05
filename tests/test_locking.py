@@ -5,12 +5,6 @@ import time
 from tests import TEST_DIR
 
 
-def test_make_lock_path(env, use_compression):
-	# Testing the function path_str.
-	assert str(locking.make_lock_path(TEST_DIR, "db", "1", 2, "3", "4")) == f"{TEST_DIR}/db.1.2.3.4.lock"
-	assert str(locking.make_lock_path(TEST_DIR, "db/nest", "1", 2, "3", "4")) == f"{TEST_DIR}/db/nest.1.2.3.4.lock"
-
-
 def test_double_lock_exception(env, use_compression):
 	with pytest.raises(RuntimeError):
 		with locking.ReadLock("db"):
@@ -57,7 +51,7 @@ def test_remove_orphaned_locks(env):
 	lock._lock()
 	time.sleep(0.2)
 	assert locking.count_lock_files(lock.ddb_dir, "db") == 1
-	locking.remove_orphaned_locks(lock.ddb_dir, "db")
+	lock.remove_orphaned_locks()
 	assert locking.count_lock_files(lock.ddb_dir, "db") == 0
 	locking.LOCK_TIMEOUT = prev_config
 
