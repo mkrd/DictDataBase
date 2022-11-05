@@ -12,7 +12,8 @@ def at(*path) -> DDBMethodChooser:
 
 class DDBMethodChooser:
 	def __init__(self, path: tuple):
-		self.path = utils.to_path_str("/".join(path))
+		path_components = [str(p) for p in path]
+		self.path = utils.to_path_str("/".join(path_components))
 
 
 	def exists(self, key=None) -> bool:
@@ -59,6 +60,23 @@ class DDBMethodChooser:
 			Delete the database at the selected path.
 		"""
 		io_safe.delete(self.path)
+
+	def select(self, fn: callable, as_type: T = None) -> dict | T:
+		"""
+			Selects a subset of the database based on a function.
+			The function should take a key and value as arguments and return True or False.
+			All keys and values where the function returns True will be returned in a new dict.
+		"""
+		if "*" not in self.path:
+			raise ValueError("A wildcard is required to select a subset of a folder")
+
+		data = {}
+		for db_name in utils.expand_find_path_pattern(self.path):
+			db = io_safe.read(db_name)
+			if fn(db):
+				data[db_name.split("/")[-1]] = db
+
+		return as_type(data) if as_type is not None else data
 
 	def read(self, key: str = None, as_type: T = None) -> dict | T:
 		"""

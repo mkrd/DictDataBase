@@ -53,7 +53,7 @@ def proc_read_job(id, n):
 
 if __name__ == "__main__":
 	proc_count = 2
-	per_proc = 1000
+	per_proc = 100
 	DDB.config.storage_directory = "./.ddb_bench_parallel"
 	# Create Tables
 	DDB.at("append_here").create([], force_overwrite=True)
@@ -62,7 +62,7 @@ if __name__ == "__main__":
 	pool = Pool(processes=proc_count * 2)
 	for i in range(proc_count):
 		pool.apply_async(proc_job, args=(i, per_proc,))
-		pool.apply_async(proc_read_job, args=(i, per_proc * 10,))
+		pool.apply_async(proc_read_job, args=(i, per_proc,))
 	pool.close()
 	pool.join()
 	print(f"⏱️ {time.monotonic() - t1} seconds")

@@ -164,6 +164,21 @@ DDB.at("purchases/*").read()
 DDB.at("purchases", "*").read()
 ```
 
+## Select from folder
+If you have a folder containing many json files, you can read them selectively based on a function.
+The file is included if the provided function returns true when it get the file dict as input:
+
+To open a session or read all, do the following:
+```python
+for i in range(10):
+    DDB.at("folder", i).create({"a": i})
+# Now in the directory "folder", 10 files exist
+res = DDB.at("folder/*").select(lambda x: x["a"] > 7)
+assert ress == {"8": {"a": 8}, "9": {"a": 9}} # True
+```
+
+
+
 # Performance
 In preliminary testing, DictDataBase showed promising performance.
 
