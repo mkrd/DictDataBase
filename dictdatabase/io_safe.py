@@ -34,7 +34,6 @@ def write(db_name: str, data: dict):
 		io_unsafe.write(db_name, data)
 
 
-
 def delete(db_name: str):
 	"""
 		Ensures that deleting only starts if there is no reading or writing in progress.
