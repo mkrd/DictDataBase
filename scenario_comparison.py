@@ -12,7 +12,7 @@ from pathlib import Path
 import random
 import time
 
-DDB.config.storage_directory = "./.scenario_comparison"
+DDB.config.storage_directory = ".ddb_scenario_comparison"
 Path(DDB.config.storage_directory).mkdir(exist_ok=True)
 
 
@@ -26,15 +26,13 @@ def make_fake_user():
     }
 
 
-# all_users = {}
-# for i in range(10000):
-#     print(i)
-#     user = make_fake_user()
-#     all_users[user["id"]] = user
-#     DDB.at("users_dir", user["id"]).create(user)
-
-
-# DDB.at("users").create(all_users)
+all_users = {}
+for i in range(10000):
+    print(i)
+    user = make_fake_user()
+    all_users[user["id"]] = user
+    DDB.at("users_dir", user["id"]).create(user)
+DDB.at("users").create(all_users)
 
 
 t1 = time.monotonic()

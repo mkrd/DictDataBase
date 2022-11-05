@@ -32,15 +32,15 @@ def test_count_lock_files(env, use_compression):
 	lock = locking.ReadLock("db")
 	lock._lock()
 	assert locking.get_lock_file_names(lock.ddb_dir, "none") == []
-	assert locking.count_lock_files(lock.ddb_dir, "db") == 1
-	assert locking.count_lock_files(lock.ddb_dir, "db", id=str(threading.get_native_id())) == 1
-	assert locking.count_lock_files(lock.ddb_dir, "db", id="none") == 0
-	assert locking.count_lock_files(lock.ddb_dir, "db", time_ns=lock.time_ns) == 1
-	assert locking.count_lock_files(lock.ddb_dir, "db", time_ns="none") == 0
-	assert locking.count_lock_files(lock.ddb_dir, "db", stage="has") == 1
-	assert locking.count_lock_files(lock.ddb_dir, "db", stage="none") == 0
-	assert locking.count_lock_files(lock.ddb_dir, "db", mode="read") == 1
-	assert locking.count_lock_files(lock.ddb_dir, "db", mode="none") == 0
+	assert locking.any_lock_files(lock.ddb_dir, "db")
+	assert locking.any_lock_files(lock.ddb_dir, "db", id=str(threading.get_native_id()))
+	assert not locking.any_lock_files(lock.ddb_dir, "db", id="none")
+	assert locking.any_lock_files(lock.ddb_dir, "db", time_ns=lock.time_ns)
+	assert not locking.any_lock_files(lock.ddb_dir, "db", time_ns="none")
+	assert locking.any_lock_files(lock.ddb_dir, "db", stage="has")
+	assert not locking.any_lock_files(lock.ddb_dir, "db", stage="none")
+	assert locking.any_lock_files(lock.ddb_dir, "db", mode="read")
+	assert not locking.any_lock_files(lock.ddb_dir, "db", mode="none")
 	lock._unlock()
 
 
@@ -50,9 +50,9 @@ def test_remove_orphaned_locks(env):
 	lock = locking.ReadLock("db")
 	lock._lock()
 	time.sleep(0.2)
-	assert locking.count_lock_files(lock.ddb_dir, "db") == 1
+	assert locking.any_lock_files(lock.ddb_dir, "db")
 	lock.remove_orphaned_locks()
-	assert locking.count_lock_files(lock.ddb_dir, "db") == 0
+	assert not locking.any_lock_files(lock.ddb_dir, "db")
 	locking.LOCK_TIMEOUT = prev_config
 
 

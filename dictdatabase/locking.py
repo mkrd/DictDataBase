@@ -49,11 +49,11 @@ def get_lock_file_names(ddb_dir: str, db_name: str, *, id: str = None, time_ns: 
 	return res
 
 
-def count_lock_files(ddb_dir: str, db_name: str, *, id: str = None, time_ns: int = None, stage: str = None, mode: str = None) -> int:
+def any_lock_files(ddb_dir: str, db_name: str, *, id: str = None, time_ns: int = None, stage: str = None, mode: str = None) -> bool:
 	"""
-		Like get_lock_file_names, but returns the number of lock files.
+		Like get_lock_file_names, but returns True if there is at least one
+		lock file with the given arguments.
 	"""
-	res = 0
 	for x in os.listdir(ddb_dir):
 		if not x.startswith(db_name) or not x.endswith(".lock"):
 			continue
@@ -66,8 +66,8 @@ def count_lock_files(ddb_dir: str, db_name: str, *, id: str = None, time_ns: int
 			continue
 		if mode is not None and f_mode != mode:
 			continue
-		res += 1
-	return res
+		return True
+	return False
 
 
 class AbstractLock:
@@ -150,7 +150,7 @@ class ReadLock(AbstractLock):
 		os_touch(self.need_path)
 
 		# Except if current thread already has a read lock
-		if count_lock_files(self.ddb_dir, self.db_name, id=self.id, stage="has", mode="read") > 0:
+		if any_lock_files(self.ddb_dir, self.db_name, id=self.id, stage="has", mode="read"):
 			os.unlink(self.need_path)
 			raise RuntimeError("Thread already has a read lock. Do not try to obtain a read lock twice.")
 
@@ -161,12 +161,12 @@ class ReadLock(AbstractLock):
 		while True:
 			self.remove_orphaned_locks()
 			# If no writing is happening, allow unlimited reading
-			if count_lock_files(self.ddb_dir, self.db_name, mode="write") == 0:
+			if not any_lock_files(self.ddb_dir, self.db_name, mode="write"):
 				os_touch(self.path)
 				os.unlink(self.need_path)
 				return
 			# A needwrite or haswrite lock exists
-			if self.is_oldest_need_lock() and count_lock_files(self.ddb_dir, self.db_name, stage="has", mode="write") == 0:
+			if self.is_oldest_need_lock() and not any_lock_files(self.ddb_dir, self.db_name, stage="has", mode="write"):
 				os_touch(self.path)
 				os.unlink(self.need_path)
 				return
@@ -181,7 +181,7 @@ class WriteLock(AbstractLock):
 		os_touch(self.need_path)
 
 		# Except if current thread already has a write lock
-		if count_lock_files(self.ddb_dir, self.db_name, id=self.id, stage="has", mode="write") > 0:
+		if any_lock_files(self.ddb_dir, self.db_name, id=self.id, stage="has", mode="write"):
 			os.unlink(self.need_path)
 			raise RuntimeError("Thread already has a write lock. Do try to obtain a write lock twice.")
 
@@ -191,7 +191,7 @@ class WriteLock(AbstractLock):
 		# Iterate until this is the oldest need* lock and no has* locks exist
 		while True:
 			self.remove_orphaned_locks()
-			if self.is_oldest_need_lock() and count_lock_files(self.ddb_dir, self.db_name, stage="has") == 0:
+			if self.is_oldest_need_lock() and not any_lock_files(self.ddb_dir, self.db_name, stage="has"):
 				os_touch(self.path)
 				os.unlink(self.need_path)
 				return
