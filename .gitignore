@@ -2,6 +2,7 @@
 .ddb_storage_testing/
 .ddb_pytest_storage
 .ddb*
+.coverage*
 ddb_storage
 test_db/
 *.prof
