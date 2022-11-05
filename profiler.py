@@ -1,5 +1,6 @@
 from distutils.command.config import config
 import dictdatabase as DDB
+from dictdatabase import io_unsafe
 from path_dict import PathDict
 from pyinstrument import profiler
 
@@ -19,7 +20,8 @@ with p:
     #     with DDB.at("tasks").session(key="a2lU", as_type=PathDict) as (session, task):
     #         task["jay"] = lambda x: (x or 0) + 1
     #         session.write()
-
     DDB.at("tasks_as_dir/*").read()
+    io_unsafe.partial_read("tasks", "a2lU")
+
 
 p.open_in_browser(timeline=False)
