@@ -7,8 +7,8 @@ from tests import TEST_DIR
 
 def test_make_lock_path(env, use_compression):
 	# Testing the function path_str.
-	assert "./" + str(locking.make_lock_path("db", "1", 2, "3", "4")) == f"{TEST_DIR}/.ddb/db.1.2.3.4.lock"
-	assert "./" + str(locking.make_lock_path("db/nest", "1", 2, "3", "4")) == f"{TEST_DIR}/.ddb/db/nest.1.2.3.4.lock"
+	assert str(locking.make_lock_path("db", "1", 2, "3", "4")) == f"{TEST_DIR}/.ddb/db.1.2.3.4.lock"
+	assert str(locking.make_lock_path("db/nest", "1", 2, "3", "4")) == f"{TEST_DIR}/.ddb/db/nest.1.2.3.4.lock"
 
 
 def test_double_lock_exception(env, use_compression):

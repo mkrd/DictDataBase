@@ -12,3 +12,10 @@ with profiler.Profiler() as p:
         l._lock()
         l._unlock()
 p.open_in_browser()
+
+with profiler.Profiler() as p:
+    for _ in range(10_000):
+        l = locking.WriteLock("db")
+        l._lock()
+        l._unlock()
+p.open_in_browser()

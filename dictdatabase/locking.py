@@ -1,7 +1,6 @@
 from __future__ import annotations
 import threading
 import time
-from pathlib import Path
 import os
 from . import config
 
@@ -9,6 +8,16 @@ SLEEP_TIMEOUT = 0.005
 
 # If a process crashes and doesn't remove its locks, remove them after a timeout
 LOCK_TIMEOUT = 30.0
+
+
+def os_touch(path: str):
+	"""
+		Like touch, but works on Windows.
+	"""
+	mode = 0o666
+	flags = os.O_CREAT | os.O_WRONLY | os.O_EXCL
+	fd = os.open(path, flags, mode)
+	os.close(fd)
 
 
 def get_lock_file_names(db_name: str, *, id: str = None, time_ns: int = None, stage: str = None, mode: str = None) -> list[str]:
@@ -58,21 +67,22 @@ def count_lock_files(db_name: str, *, id: str = None, time_ns: int = None, stage
 	return res
 
 
-def make_lock_path(db_name: str, id: str, time_ns: int, stage: str, mode: str) -> Path:
-	name = f"{db_name}.{id}.{time_ns}.{stage}.{mode}.lock"
-	path = Path(config.storage_directory, ".ddb", name)
-	path.parent.mkdir(parents=True, exist_ok=True)
-	return path
+def make_lock_path(db_name: str, id: str, time_ns: int, stage: str, mode: str) -> str:
+	ddb_dir_path = os.path.join(config.storage_directory, ".ddb")
+	if not os.path.isdir(ddb_dir_path):
+		os.mkdir(ddb_dir_path)
+	return os.path.join(ddb_dir_path, f"{db_name}.{id}.{time_ns}.{stage}.{mode}.lock")
 
 
-def remove_orphaned_locks(db_name: str, ignore: Path = None):
+def remove_orphaned_locks(db_name: str, ignore: str = None):
+	ddb_dir = os.path.join(config.storage_directory, ".ddb")
 	for lock_name in get_lock_file_names(db_name):
-		lock_path = Path(config.storage_directory, ".ddb", lock_name)
+		lock_path = os.path.join(ddb_dir, lock_name)
 		if ignore == lock_path:
 			continue
 		_, _, time_ns, _, _, _ = lock_name.split(".")
 		if time.monotonic_ns() - int(time_ns) > LOCK_TIMEOUT * 1_000_000_000:
-			lock_path.unlink()
+			os.unlink(lock_path)
 			print(f"Found orphaned lock ({lock_name}). Remove")
 
 
@@ -99,8 +109,8 @@ class AbstractLock:
 	id: str
 	time_ns: int
 	db_name: str
-	need_path: Path = None
-	path: Path = None
+	need_path: str = None
+	path: str = None
 
 	def __init__(self, db_name: str):
 		"""
@@ -119,7 +129,7 @@ class AbstractLock:
 			try:
 				path: Path = getattr(self, p, None)
 				if path:
-					path.unlink()
+					os.unlink(path)
 			except FileNotFoundError:
 				pass
 			finally:
@@ -137,11 +147,12 @@ class ReadLock(AbstractLock):
 	def _lock(self):
 		# Instantly signal that we need to read
 		self.need_path = make_lock_path(self.db_name, self.id, self.time_ns, "need", "read")
-		self.need_path.touch()
+		os_touch(self.need_path)
+
 
 		# Except if current thread already has a read lock
 		if count_lock_files(self.db_name, id=self.id, stage="has", mode="read") > 0:
-			self.need_path.unlink()
+			os.unlink(self.need_path)
 			raise RuntimeError("Thread already has a read lock. Do not try to obtain a read lock twice.")
 
 		# Make path of the hyptoetical hasread lock
@@ -152,13 +163,13 @@ class ReadLock(AbstractLock):
 			remove_orphaned_locks(self.db_name, ignore=self.need_path)
 			# If no writing is happening, allow unlimited reading
 			if count_lock_files(self.db_name, mode="write") == 0:
-				self.path.touch()
-				self.need_path.unlink()
+				os_touch(self.path)
+				os.unlink(self.need_path)
 				return
 			# A needwrite or haswrite lock exists
 			if is_oldest_need_lock(self.id, self.db_name) and count_lock_files(self.db_name, stage="has", mode="write") == 0:
-				self.path.touch()
-				self.need_path.unlink()
+				os_touch(self.path)
+				os.unlink(self.need_path)
 				return
 			time.sleep(SLEEP_TIMEOUT)
 
@@ -168,11 +179,11 @@ class WriteLock(AbstractLock):
 	def _lock(self):
 		# Instantly signal that we need to write
 		self.need_path = make_lock_path(self.db_name, self.id, self.time_ns, "need", "write")
-		self.need_path.touch()
+		os_touch(self.need_path)
 
 		# Except if current thread already has a write lock
 		if count_lock_files(self.db_name, id=self.id, stage="has", mode="write") > 0:
-			self.need_path.unlink()
+			os.unlink(self.need_path)
 			raise RuntimeError("Thread already has a write lock. Do try to obtain a write lock twice.")
 
 		# Make path of the hyptoetical haswrite lock
@@ -182,7 +193,7 @@ class WriteLock(AbstractLock):
 		while True:
 			remove_orphaned_locks(self.db_name, ignore=self.need_path)
 			if is_oldest_need_lock(self.id, self.db_name) and count_lock_files(self.db_name, stage="has") == 0:
-				self.path.touch()
-				self.need_path.unlink()
+				os_touch(self.path)
+				os.unlink(self.need_path)
 				return
 			time.sleep(SLEEP_TIMEOUT)
