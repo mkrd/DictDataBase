@@ -232,3 +232,13 @@ Open multiple files at once using a glob pattern, like "user/*".
 Multiple arguments are allowed to access folders,
 so session(f"users/{user_id}") is equivalent
 to session("users", user_id).
+
+### `select(fn: callable, as_type: T = None) -> dict | T:`
+Selects a subset of the database based on a function.
+The function should take a key and value as arguments and return True or False.
+All keys and values where the function returns True will be returned in a new dict.
+If as_type is specified, the dict will be returned as the given type, and the value passed to the function will be converted to that type.
+
+Args:
+- `fn`: The function to use to select the subset.
+- `as_type`: If provided, return the value as the given type. Eg. as=str will return str(value).
