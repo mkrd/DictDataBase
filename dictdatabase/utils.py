@@ -128,17 +128,23 @@ def count_nesting(data: str, start: int, end: int) -> int:
 	return nesting
 
 
-def find_outermost_key_str_index(data: str, key_str: str):
+def find_outermost_key_str_index(data: str, key: str):
 	"""
-		Returns the index of the key_str that is at the outermost nesting level.
+		Returns the index of the key that is at the outermost nesting level.
+		If the key is not found, return -1.
+		If the key you are looking for is `some_key`, then you should pass
+		`"some_key":` as the `key` argument to this function.
+		Args:
+		- `data`: Correct JSON as a string
+		- `key`: The key of an object in `data` to search for
 	"""
-	if (curr_i := data.find(key_str, 0)) == -1:
+	if (curr_i := data.find(key, 0)) == -1:
 		return -1
 
 	key_nest = [(curr_i, 0)]  # (key, nesting)
 
-	while (next_i := data.find(key_str, curr_i + len(key_str))) != -1:
-		nesting = count_nesting(data, curr_i + len(key_str), next_i)
+	while (next_i := data.find(key, curr_i + len(key))) != -1:
+		nesting = count_nesting(data, curr_i + len(key), next_i)
 		key_nest.append((next_i, nesting))
 		curr_i = next_i
 
