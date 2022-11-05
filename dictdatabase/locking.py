@@ -4,6 +4,9 @@ import time
 import os
 from . import config
 
+# Design decisions:
+# - Do not use pathlib, because it is slower than os
+
 SLEEP_TIMEOUT = 0.005
 
 # If a process crashes and doesn't remove its locks, remove them after a timeout
@@ -127,7 +130,7 @@ class AbstractLock:
 	def _unlock(self):
 		for p in ("need_path", "path"):
 			try:
-				path: Path = getattr(self, p, None)
+				path = getattr(self, p, None)
 				if path:
 					os.unlink(path)
 			except FileNotFoundError:
