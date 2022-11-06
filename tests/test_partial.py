@@ -15,6 +15,7 @@ def test_subread(env, use_compression, use_orjson, sort_keys, indent):
 	DDB.at(name).create(j, force_overwrite=True)
 
 	assert DDB.at(name, key="a").read() == "Hello{}"
+	assert DDB.at(name, where=lambda k, v: isinstance(v, list)).read() == {"b": [0, 1]}
 
 	with pytest.raises(KeyError):
 		DDB.at(name, key="f").read()
@@ -50,3 +51,44 @@ def test_subwrite(env, use_compression, use_orjson, sort_keys, indent):
 		task["f"] = lambda x: (x or 0) + 2
 		session.write()
 	assert DDB.at(name, key="f").read() == 2
+
+
+def test_write_file_where(env, use_compression, use_orjson, sort_keys, indent):
+	name = "test_write_file_where"
+	j = {
+		"a": 1,
+		"b": 20,
+		"c": 3,
+		"d": 40,
+	}
+
+	DDB.at(name).create(j, force_overwrite=True)
+
+	with DDB.at(name, where=lambda k, v: v > 10).session() as (session, vals):
+		vals |= {"b": 30, "d": 50, "e": 60}
+		session.write()
+	assert DDB.at(name).read() == {
+		"a": 1,
+		"b": 30,
+		"c": 3,
+		"d": 50,
+		"e": 60,
+	}
+
+
+def test_dir_where(env, use_compression, use_orjson, sort_keys, indent):
+	name = "test_dir_where"
+	for i in range(5):
+		DDB.at(name, i).create({"k": i}, force_overwrite=True)
+
+	with DDB.at(name, "*", where=lambda k, v: v["k"] > 2).session() as (session, vals):
+		for k, v in vals.items():
+			v["k"] += 1
+		session.write()
+	assert DDB.at(name, "*").read() == {
+		"0": {"k": 0},
+		"1": {"k": 1},
+		"2": {"k": 2},
+		"3": {"k": 4},
+		"4": {"k": 5},
+	}

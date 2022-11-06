@@ -16,6 +16,12 @@ def test_create(env, use_compression, use_orjson, sort_keys, indent):
 		session.write()
 	assert DDB.at("create").read() == {"a": {"b": {"c": "😁"}}}
 
+	with pytest.raises(RuntimeError):
+		DDB.at("create", where=lambda k, v: True).create(force_overwrite=True)
+
+	with pytest.raises(RuntimeError):
+		DDB.at("create", key="any").create(force_overwrite=True)
+
 
 def test_create_edge_cases(env, use_compression, use_orjson, sort_keys, indent):
 	cases = [-2, 0.0, "", "x", [], {}, True]

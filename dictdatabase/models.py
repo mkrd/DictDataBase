@@ -28,9 +28,9 @@ class OperationType:
 		self.key = key is not None
 
 		if self.key and self.where:
-			raise ValueError("Cannot specify both key and where")
+			raise TypeError("Cannot specify both key and where")
 		if self.key and self.dir:
-			raise ValueError("Cannot specify sub-key when selecting a folder. Specify the key in the path instead.")
+			raise TypeError("Cannot specify sub-key when selecting a folder. Specify the key in the path instead.")
 
 	@property
 	def file_normal(self):

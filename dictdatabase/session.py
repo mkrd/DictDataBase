@@ -69,7 +69,7 @@ class DDBSession(Generic[T]):
 				self.write_lock._lock()
 				self.original_data = io_unsafe.read(self.db_name)
 				data = {}
-				for k, v in self.original_data:
+				for k, v in self.original_data.items():
 					if self.where(k, v):
 						data[k] = v
 				self.data_handle = data

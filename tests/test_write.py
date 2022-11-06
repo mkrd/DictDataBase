@@ -55,6 +55,6 @@ def test_multi_session(env, use_compression, use_orjson, sort_keys, indent):
 
 
 def test_write_wildcard_key_except(env, use_compression, use_orjson, sort_keys, indent):
-	with pytest.raises(ValueError):
+	with pytest.raises(TypeError):
 		with DDB.at("test/*", key="any").session() as (session, d):
 			pass
