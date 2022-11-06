@@ -2,7 +2,6 @@ import dictdatabase as DDB
 from path_dict import pd
 import random
 import time
-import json
 
 
 def make_table(recursion_depth=3, keys_per_level=50):
@@ -28,6 +27,7 @@ def print_and_assert_results(readers, writers, per_proc, tables, big_file, compr
 	print(f"⏱️  {ops_sec} op/s ({ops} in {t2 - t1:.2f}s), {big_file = }, {compression = }")
 	for t in range(tables):
 		db = DDB.at(f"incr{t}").read()
+		# print(db["counter"]["counter"], "==", per_proc * writers)
 		assert db["counter"]["counter"] == per_proc * writers
 		# print(f"✅ counter={db['counter']}")
 
@@ -35,13 +35,13 @@ def print_and_assert_results(readers, writers, per_proc, tables, big_file, compr
 def random_reads(file_count):
 	""" Read the n tables in random order """
 	for t in sorted(range(file_count), key=lambda _: random.random()):
-		DDB.at(f"incr{t}").read(key="counter")
+		DDB.at(f"incr{t}", key="counter").read()
 
 
 def random_writes(file_count):
 	""" Iterated the n tables in random order and increment the counter """
 	for t in sorted(range(file_count), key=lambda _: random.random()):
-		with DDB.at(f"incr{t}").session(key="counter", as_type=pd) as (session, d):
+		with DDB.at(f"incr{t}", key="counter").session(as_type=pd) as (session, d):
 			d.at("counter").set(d.at("counter").get() + 1)
 			session.write()
 

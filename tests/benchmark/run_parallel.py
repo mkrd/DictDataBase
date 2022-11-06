@@ -56,20 +56,20 @@ scenarios = {
 	(1, 50, 50): [
 		(20, False, False)
 	],
-	(1, 4, 0): [
+	(1, 10, 0): [
 		(800, False, False),
 		(800, False, True),
 		(20, True, False),
 	],
-	(1, 4, 1): [
+	(1, 10, 1): [
 		(200, False, False),
 		(20, True, False),
 	],
-	(1, 1, 4): [
+	(1, 1, 10): [
 		(200, False, False),
 		(12, True, False),
 	],
-	(1, 4, 4): [
+	(1, 10, 10): [
 		(200, False, False),
 		(8, True, False),
 	],

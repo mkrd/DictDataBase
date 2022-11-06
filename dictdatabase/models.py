@@ -87,28 +87,27 @@ class DDBMethodChooser:
 
 
 	def __init__(self, path: tuple, key: str = None, where: Callable[[Any, Any], bool] = None):
-
 		pc = []
 		for p in path:
 			pc += p if isinstance(p,  list) else [p]
 		self.path = utils.to_path_str([str(p) for p in pc])
-		self.key = key
-		self.where = where
 		self.op_type = OperationType(self.path, self.key, self.where)
 		# Invariants:
 		# - Both key and where cannot be not None at the same time
 		# - If key is not None, then there is no wildcard in the path.
+		self.key = key
+		self.where = where
 
 
 	def exists(self) -> bool:
 		"""
-			Efficiently checks if a database exists. If the selected path contains
-			a wildcard, it will return True if at least one file exists in the folder.
+		Efficiently checks if a database exists. If the selected path contains
+		a wildcard, it will return True if at least one file exists in the folder.
 
 
-			If a key was specified, check if it exists in a database.
-			The key can be anywhere in the database, even deeply nested.
-			As long it exists as a key in any dict, it will be found.
+		If a key was specified, check if it exists in a database.
+		The key can be anywhere in the database, even deeply nested.
+		As long it exists as a key in any dict, it will be found.
 		"""
 		if self.where is not None:
 			raise RuntimeError("DDB.at(where=...).exists() cannot be used with the where parameter")
@@ -128,11 +127,14 @@ class DDBMethodChooser:
 
 	def create(self, data=None, force_overwrite: bool = False):
 		"""
-		It creates a database file at the given path, and writes the given database to
-		it
+		Create a new file with the given data as the content. If the file
+		already exists, a FileExistsError will be raised unless
+		`force_overwrite` is set to True.
 
-		:param data: The database to create. If not specified, an empty
-		:param force_overwrite: If True, will overwrite the database if it already
+		Args:
+		- `data`: The data to write to the file. If not specified, an empty dict
+		will be written.
+		- `force_overwrite`: If `True`, will overwrite the file if it already
 		exists, defaults to False (optional).
 		"""
 		if self.where is not None or self.key is not None:
@@ -149,7 +151,7 @@ class DDBMethodChooser:
 
 	def delete(self):
 		"""
-			Delete the database at the selected path.
+		Delete the file at the selected path.
 		"""
 		if self.where is not None or self.key is not None:
 			raise RuntimeError("DDB.at().delete() cannot be used with the where or key parameters")
@@ -158,15 +160,11 @@ class DDBMethodChooser:
 
 	def read(self, as_type: T = None) -> dict | T | None:
 		"""
-			Reads a database and returns it. If a key is given, return the value at that key, more info in Args.
+		Reads a file or folder depending on previous `.at(...)` selection.
 
-			Args:
-			- `key`: If provided, only return the value of the given key. The key
-				can be anywhere in the database, even deeply nested. If multiple
-				identical keys exist, the one at the outermost indentation will
-				be returned. This is very fast, as it does not read the entire
-				database, but only the key - value pair.
-			- `as_type`: If provided, return the value as the given type. Eg. as=str will return str(value).
+		Args:
+		- `as_type`: If provided, return the value as the given type.
+		Eg. as_type=str will return str(value).
 		"""
 
 		def type_cast(value):
@@ -206,12 +204,15 @@ class DDBMethodChooser:
 		return type_cast(data)
 
 
-
 	def session(self, as_type: T = None) -> DDBSession[T]:
 		"""
-			Open multiple files at once using a glob pattern, like "user/*".
-			Mutliple arguments are allowed to access folders,
-			so session(f"users/{user_id}") is equivalent
-			to session("users", user_id).
+		Opens a session to the selected file(s) or folder, depending on previous
+		`.at(...)` selection. Inside the with block, you have exclusive access
+		to the file(s) or folder.
+		Call `session.write()` to write the data to the file(s) or folder.
+
+		Args:
+		- `as_type`: If provided, cast the value to the given type.
+		Eg. as_type=str will return str(value).
 		"""
 		return DDBSession(self.path, self.op_type, self.key, self.where, as_type)

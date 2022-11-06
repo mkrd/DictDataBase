@@ -35,13 +35,15 @@ for i in range(10000):
 DDB.at("users").create(all_users)
 
 
+# 06.11.22: 2695ms
 t1 = time.monotonic()
 with profiler.Profiler() as p:
     DDB.at("users_dir/*").read()
 p.open_in_browser()
-
 print("Read all users from directory:", time.monotonic() - t1)
 
+
+# 06.11.22: 181ms
 t1 = time.monotonic()
 DDB.at("users").read()
 print("Read all users from single file:", time.monotonic() - t1)
