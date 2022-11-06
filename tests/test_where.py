@@ -18,4 +18,5 @@ def test_where(env, use_compression, use_orjson, sort_keys, indent):
 
     assert DDB.at("nonexistent", where=lambda k, v: v["a"] > 5).read() is None
 
-    s = DDB.at("test_select/*", where=lambda k, v: v.at("a").get()).read(as_type=PathDict)
+    s = DDB.at("test_select/*", where=lambda k, v: v.at("a").get() > 7).read(as_type=PathDict)
+    assert s.get() == {"8": {"a": 8}, "9": {"a": 9}}
