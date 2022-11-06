@@ -68,10 +68,8 @@ def read_index_file(db_name: str):
 	path = f"{config.storage_directory}/.ddb/{db_name.replace('/', '___')}.index"
 	Path(path).parent.mkdir(parents=True, exist_ok=True)
 	if not os.path.exists(path):
-		print("Index file does not exist")
 		return {}
 	with open(path, "rb") as f:
-		print("Index file exists")
 		return orjson.loads(f.read())
 
 
