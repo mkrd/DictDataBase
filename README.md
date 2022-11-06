@@ -25,14 +25,15 @@ DictDataBase is a simple and fast database for handling json or compressed json 
 - If your storage is slow.
 - If a relational database is better suited for your use case.
 
-## Install
+Install
+================================================================================
 
 ```sh
 pip install dictdatabase
 ```
 
-
-# Configuration
+Configuration
+================================================================================
 There are 5 configuration options:
 
 ### Storage directory
@@ -70,17 +71,18 @@ However, orjson is a lot more performant in virtually all cases.
 DDB.config.use_orjson = True # Default value
 ```
 
+Usage
+================================================================================
 
-# Usage
-
-## Import
+Import
+--------------------------------------------------------------------------------
 
 ```python
 import dictdatabase as DDB
 ```
 
-
-## Create dict
+Create a file
+--------------------------------------------------------------------------------
 This library is called DictDataBase, but you can actually use any json serializable object.
 ```python
 user_data_dict = {
@@ -97,27 +99,40 @@ DDB.at("users").create(user_data_dict)
 # in your specified storage directory.
 ```
 
-## Check if file or sub-key exists
+Check if file or sub-key exists
+--------------------------------------------------------------------------------
 ```python
 DDB.at("users").exists()  # True
-DDB.at("users").exists("none")  # False
+DDB.at("users", key="none").exists()  # False
 # Also works on nested keys
-DDB.at("users").exists("Ben")  # True
-DDB.at("users").exists("Sam")  # False
+DDB.at("users", key="Ben").exists()  # True
+DDB.at("users", key="Sam").exists()  # False
 ```
 
-## Read dicts
+Read dicts
+--------------------------------------------------------------------------------
+
 ```python
 d = DDB.at("users").read()
 # You now have a copy of the json file named "users"
 d == user_data_dict # True
 
 # Only partially read Joe
-joe = DDB.at("users").read("Joe")
+joe = DDB.at("users", key="Joe").read()
 joe == user_data_dict["Joe"] # True
 ```
+It is also possible to only read a subset of keys based on a filter callback:
 
-## Write dicts
+```python
+DDB.at("numbers").create({"a", 1, "b", 2, "c": 3})
+
+above_1 = DDB.at("numbers", where=lambda k, v: v > 1).read()
+>>> above_1 == {"b", 2, "c": 3}
+```
+
+Write dicts
+--------------------------------------------------------------------------------
+
 ```python
 with DDB.at("users").session() as (session, users):
     # You now have a copy of the json file users as the variable users
@@ -133,24 +148,31 @@ print(DDB.at("user_data").read()["follows"])
 If you do not call session.write(), changes will not be written to disk!
 
 
-## Partial reading and writing
+Partial writing
+--------------------------------------------------------------------------------
 Imagine you have a huge json file with many purchases.
 The json file looks like this: `{<id>: <purchase>, <id>: <purchase>, ...}`.
 Normally, you would have to read and parse the entire file to get a specific key.
-After modifying the purchase, you would also have to serialize and write the entire file again.
-With DDB, you can do it more efficiently:
+After modifying the purchase, you would also have to serialize and write the
+entire file again. With DDB, you can do it more efficiently:
 ```python
-with DDB.at("purchases").session(key="134425") as (session, purchase):
+with DDB.at("purchases", key="3244").session() as (session, purchase):
     purchase["status"] = "cancelled"
     session.write()
 ```
 Afterwards, the status is updated in the json file.
-However, DDB did only efficiently gather the one purchase with id 134425, parsed its value, and serialized that value alone before writing again.
-This is several orders of magnitude faster than the naive approach when working with big files.
+However, DDB did only efficiently gather the one purchase with id 134425, parsed
+its value, and serialized that value alone before writing again. This is several
+orders of magnitude faster than the naive approach when working with big files.
 
 
-## Folders
-You can also read and write to folders of files. Consider the same example as before, but now we have a folder called `purchases` that contains many files `<id>.json`. If you want to open a session or read a specific one, you can do
+Folders
+--------------------------------------------------------------------------------
+
+You can also read and write to folders of files. Consider the same example as
+before, but now we have a folder called `purchases` that contains many files
+`<id>.json`. If you want to open a session or read a specific one, you can do:
+
 ```python
 DDB.at("purchases/<id>").read()
 # Or equivalently:
@@ -164,48 +186,80 @@ DDB.at("purchases/*").read()
 DDB.at("purchases", "*").read()
 ```
 
-## Select from folder
-If you have a folder containing many json files, you can read them selectively based on a function.
-The file is included if the provided function returns true when it get the file dict as input:
+### Select from folder
+
+If you have a folder containing many json files, you can read them selectively
+based on a function. The file is included if the provided function returns true
+when it get the file dict as input:
 
 To open a session or read all, do the following:
 ```python
 for i in range(10):
     DDB.at("folder", i).create({"a": i})
 # Now in the directory "folder", 10 files exist
-res = DDB.at("folder/*").select(lambda x: x["a"] > 7)
+res = DDB.at("folder/*", where=lambda x: x["a"] > 7).read() # .session() also possible
 assert ress == {"8": {"a": 8}, "9": {"a": 9}} # True
 ```
 
 
 
-# Performance
+Performance
+================================================================================
+
 In preliminary testing, DictDataBase showed promising performance.
 
 ### SQLite vs DictDataBase
-In each case, `16` parallel processes were spawned to perform `128` increments of a counter in `4` tables/files.
-SQLite achieves `2435 operations/s` while DictDataBase managed to achieve `3143 operations/s`.
+In each case, `16` parallel processes were spawned to perform `128` increments
+of a counter in `4` tables/files. SQLite achieves `2435 operations/s` while
+DictDataBase managed to achieve `3143 operations/s`.
 
 ### More tests
-It remains to be tested how DictDatabase performs in different scenarios, for example when multiple processes want to perform full writes to one big file.
+It remains to be tested how DictDatabase performs in different scenarios, for
+example when multiple processes want to perform full writes to one big file.
 
 
-# API Reference
+API Reference
+================================================================================
 
-### `at(pattern) -> DDBMethodChooser`
-`pattern` can be multiple parameters, which will be joined with a "`/"` to a path.
-The file at the given path is then selected, and further operations can be performed using the `DDBMethodChooser`
+### `at(path) -> DDBMethodChooser:`
+Select a file or folder to perform an operation on.
+If you want to select a specific key in a file, use the `key` parameter,
+e.g. `DDB.at("file", key="subkey")`.
 
-## DDBMethodChooser
+If you want to select an entire folder, use the `*` wildcard,
+eg. `DDB.at("folder", "*")`, or `DDB.at("folder/*")`. You can also use
+the `where` callback to select a subset of the file or folder.
 
-### `exists(key: str = None) -> bool`
-Efficiently checks if a database exists.
-If it contains a wildcard, it will return True if at least one exists.
-If the key is passed, check if it exists in a database.
-The key can be anywhere in the database, even deeply nested.
-As long it exists as a key in any dict, it will be found.
+If the callback returns `True`, the item will be selected. The callback
+needs to accept a key and value as arguments.
 
-### `create(db=None, force_overwrite=False)`
+Args:
+- `path`: The path to the file or folder. Can be a string, a
+comma-separated list of strings, or a list.
+- `key`: The key to select from the file.
+- `where`: A function that takes a key and value and returns `True` if the
+key should be selected.
+
+Beware: If you select a folder with the `*` wildcard, you can't use the `key`
+parameter.
+Also, you cannot use the `key` and `where` parameters at the same time.
+
+DDBMethodChooser
+--------------------------------------------------------------------------------
+
+### `exists() -> bool:`
+Create a new file with the given data as the content. If the file
+already exists, a FileExistsError will be raised unless
+`force_overwrite` is set to True.
+
+Args:
+- `data`: The data to write to the file. If not specified, an empty dict
+will be written.
+- `force_overwrite`: If `True`, will overwrite the file if it already
+exists, defaults to False (optional).
+
+
+### `create(data=None, force_overwrite: bool = False):`
 It creates a database file at the given path, and writes the given database to
 it
 :param db: The database to create. If not specified, an empty database is
@@ -214,31 +268,21 @@ created.
 exists, defaults to False (optional).
 
 ### `delete()`
-Delete the database at the selected path.
+Delete the file at the selected path.
 
-### `read(key: str = None, as_type=None) -> dict | Any`
-Reads a database and returns it. If a key is given, return the value at that key, more info in Args.
-
-Args:
-- `key`: If provided, only return the value of the given key. The key
-    can be anywhere in the database, even deeply nested. If multiple
-    identical keys exist, the one at the outermost indentation will
-    be returned. This is very fast, as it does not read the entire
-    database, but only the key - value pair.
-- `as_type`: If provided, return the value as the given type. Eg. as=str will return str(value).
-
-### `session(key: str = None, as_type=None) -> DDBSession | DDBMultiSession | DDBSubSession`
-Open multiple files at once using a glob pattern, like "user/*".
-Multiple arguments are allowed to access folders,
-so session(f"users/{user_id}") is equivalent
-to session("users", user_id).
-
-### `select(fn: callable, as_type: T = None) -> dict | T:`
-Selects a subset of the database based on a function.
-The function should take a key and value as arguments and return True or False.
-All keys and values where the function returns True will be returned in a new dict.
-If as_type is specified, the dict will be returned as the given type, and the value passed to the function will be converted to that type.
+### `read(self, as_type: T = None) -> dict | T | None:`
+Reads a file or folder depending on previous `.at(...)` selection.
 
 Args:
-- `fn`: The function to use to select the subset.
-- `as_type`: If provided, return the value as the given type. Eg. as=str will return str(value).
+- `as_type`: If provided, return the value as the given type.
+Eg. as_type=str will return str(value).
+
+### `session(self, as_type: T = None) -> DDBSession[T]:`
+Opens a session to the selected file(s) or folder, depending on previous
+`.at(...)` selection. Inside the with block, you have exclusive access
+to the file(s) or folder.
+Call `session.write()` to write the data to the file(s) or folder.
+
+Args:
+- `as_type`: If provided, cast the value to the given type.
+Eg. as_type=str will return str(value).
