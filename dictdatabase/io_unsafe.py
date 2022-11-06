@@ -58,9 +58,8 @@ def read(db_name: str) -> dict:
 		Make sure the file exists. If it does notnot a FileNotFoundError is
 		raised.
 	"""
-	if config.use_orjson:
-		return orjson.loads(read_file(db_name, as_bytes=True))
-	return json.loads(read_file(db_name))
+	# Always use orjson to read the file, because it is faster
+	return orjson.loads(read_file(db_name, as_bytes=True))
 
 
 
@@ -100,7 +99,7 @@ def partial_read(db_name: str, key: str) -> PartialFileHandle:
 			return PartialFileHandle(
 				db_name=db_name,
 				key=key,
-				key_value=json.loads(partial_str),
+				key_value=orjson.loads(partial_str),
 				value_start_index=index[0],
 				value_end_index=index[1],
 				indent_level=index[2],
@@ -145,7 +144,7 @@ def partial_read(db_name: str, key: str) -> PartialFileHandle:
 	return PartialFileHandle(
 		db_name=db_name,
 		key=key,
-		key_value=json.loads(data[value_start_index:value_end_index]),
+		key_value=orjson.loads(data[value_start_index:value_end_index]),
 		value_start_index=value_start_index,
 		value_end_index=value_end_index,
 		original_data_str=data,
