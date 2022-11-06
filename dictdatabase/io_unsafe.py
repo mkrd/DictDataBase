@@ -69,8 +69,8 @@ def read_index_file(db_name: str):
 	Path(path).parent.mkdir(parents=True, exist_ok=True)
 	if not os.path.exists(path):
 		return {}
-	with open(path, "r") as f:
-		return json.load(f)
+	with open(path, "rb") as f:
+		return orjson.loads(f.read())
 
 
 def write_index_file(db_name: str, key, start_index, end_index, indent_level, indent_with, value_hash):
@@ -78,9 +78,8 @@ def write_index_file(db_name: str, key, start_index, end_index, indent_level, in
 	Path(path).parent.mkdir(parents=True, exist_ok=True)
 	indices = read_index_file(db_name)
 	indices[key] = [start_index, end_index, indent_level, indent_with, value_hash]
-	with open(path, "w") as f:
-		json.dump(indices, f)
-
+	with open(path, "wb") as f:
+		f.write(orjson.dumps(indices))
 
 
 def partial_read(db_name: str, key: str) -> PartialFileHandle:
@@ -126,16 +125,16 @@ def partial_read(db_name: str, key: str) -> PartialFileHandle:
 		indentation_str += data[i]
 
 	if "\t" in indentation_str:
-		indent_with = "\t"
 		indent_level = len(indentation_str)
+		indent_with = "\t"
 	elif isinstance(config.indent, int) and config.indent > 0:
-		indent_with = " " * (len(indentation_str) // config.indent)
 		indent_level = len(indentation_str) // config.indent
+		indent_with = " " * config.indent
 	elif isinstance(config.indent, str):
-		indent_with = "  "
 		indent_level = len(indentation_str) // 2
+		indent_with = "  "
 	else:
-		indent_with, indent_level = "", 0
+		indent_level, indent_with  = 0, ""
 
 
 	value_start_index = key_str_index + len(key_str) + space_after_semicolon
