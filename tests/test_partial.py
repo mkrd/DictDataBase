@@ -65,7 +65,7 @@ def test_write_file_where(env, use_compression, use_orjson, sort_keys, indent):
 	DDB.at(name).create(j, force_overwrite=True)
 
 	with DDB.at(name, where=lambda k, v: v > 10).session() as (session, vals):
-		vals |= {"b": 30, "d": 50, "e": 60}
+		vals.update({"b": 30, "d": 50, "e": 60})
 		session.write()
 	assert DDB.at(name).read() == {
 		"a": 1,

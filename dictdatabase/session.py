@@ -125,7 +125,8 @@ class DDBSession(Generic[T]):
 		elif self.op_type.file_key:
 			io_unsafe.partial_write(self.partial_handle)
 		elif self.op_type.file_where:
-			io_unsafe.write(self.db_name, self.original_data | self.data_handle)
+			self.original_data.update(self.data_handle)
+			io_unsafe.write(self.db_name, self.original_data)
 		elif self.op_type.dir_normal or self.op_type.dir_where:
 			for name in self.db_name:
 				io_unsafe.write(name, self.data_handle[name.split("/")[-1]])
