@@ -56,6 +56,7 @@ It can be an `int` for the number of spaces, the tab character, or `None` if you
 ```python
 DDB.config.indent = "\t" # Default value
 ```
+Notice: If `DDB.config.use_orjson = True`, then the value can only be 2 (spaces) or 0/None for no indentation.
 
 ### Sort keys
 Specify if you want the dict keys to be sorted when writing to a file. Behaves exactly like `json.dumps(sort_keys=...)`.
