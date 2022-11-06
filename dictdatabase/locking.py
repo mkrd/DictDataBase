@@ -34,9 +34,11 @@ def get_lock_file_names(ddb_dir: str, db_name: str, *, id: str = None, time_ns: 
 	"""
 	res = []
 	for x in os.listdir(ddb_dir):
-		if not x.startswith(db_name) or not x.endswith(".lock"):
+		if not x.endswith(".lock"):
 			continue
-		_, f_id, f_time_ns, f_stage, f_mode, _ = x.split(".")
+		f_name, f_id, f_time_ns, f_stage, f_mode, _ = x.split(".")
+		if f_name != db_name:
+			continue
 		if id is not None and f_id != id:
 			continue
 		if time_ns is not None and f_time_ns != str(time_ns):
@@ -55,9 +57,11 @@ def any_lock_files(ddb_dir: str, db_name: str, *, id: str = None, time_ns: int =
 		lock file with the given arguments.
 	"""
 	for x in os.listdir(ddb_dir):
-		if not x.startswith(db_name) or not x.endswith(".lock"):
+		if not x.endswith(".lock"):
 			continue
-		_, f_id, f_time_ns, f_stage, f_mode, _ = x.split(".")
+		f_name, f_id, f_time_ns, f_stage, f_mode, _ = x.split(".")
+		if f_name != db_name:
+			continue
 		if id is not None and f_id != id:
 			continue
 		if time_ns is not None and f_time_ns != str(time_ns):
