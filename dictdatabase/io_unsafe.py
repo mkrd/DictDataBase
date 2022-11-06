@@ -19,6 +19,7 @@ class PartialFileHandle:
 	original_data_str: str
 	indent_level: int
 	indent_with: str
+	index_data: dict
 
 
 ################################################################################
@@ -67,18 +68,18 @@ def read_index_file(db_name: str):
 	path = f"{config.storage_directory}/.ddb/{db_name.replace('/', '___')}.index"
 	Path(path).parent.mkdir(parents=True, exist_ok=True)
 	if not os.path.exists(path):
+		print("Index file does not exist")
 		return {}
 	with open(path, "rb") as f:
+		print("Index file exists")
 		return orjson.loads(f.read())
 
 
-def write_index_file(db_name: str, key, start_index, end_index, indent_level, indent_with, value_hash):
-	path = f"{config.storage_directory}/.ddb/{db_name}.index"
-	Path(path).parent.mkdir(parents=True, exist_ok=True)
-	indices = read_index_file(db_name)
-	indices[key] = [start_index, end_index, indent_level, indent_with, value_hash]
+def write_index_file(index_data: dict, db_name: str, key, start_index, end_index, indent_level, indent_with, value_hash):
+	path = f"{config.storage_directory}/.ddb/{db_name.replace('/', '___')}.index"
+	index_data[key] = [start_index, end_index, indent_level, indent_with, value_hash]
 	with open(path, "wb") as f:
-		f.write(orjson.dumps(indices))
+		f.write(orjson.dumps(index_data))
 
 
 def partial_read(db_name: str, key: str) -> PartialFileHandle:
@@ -92,7 +93,8 @@ def partial_read(db_name: str, key: str) -> PartialFileHandle:
 	"""
 
 	data = read_file(db_name)
-	index = read_index_file(db_name).get(key, None)
+	index_data = read_index_file(db_name)
+	index = index_data.get(key, None)
 	if index is not None:
 		partial_str = data[index[0]:index[1]]
 		if index[4] == hashlib.sha256(partial_str.encode()).hexdigest():
@@ -105,6 +107,7 @@ def partial_read(db_name: str, key: str) -> PartialFileHandle:
 				indent_level=index[2],
 				indent_with=index[3],
 				original_data_str=data,
+				index_data=index_data,
 			)
 
 	key_str = f"\"{key}\":"
@@ -139,7 +142,7 @@ def partial_read(db_name: str, key: str) -> PartialFileHandle:
 	value_start_index = key_str_index + len(key_str) + space_after_semicolon
 	value_end_index = utils.seek_index_through_value(data, value_start_index)
 
-	write_index_file(db_name, key, value_start_index, value_end_index, indent_level, indent_with, hashlib.sha256(data[value_start_index:value_end_index].encode()).hexdigest())
+	write_index_file(index_data, db_name, key, value_start_index, value_end_index, indent_level, indent_with, hashlib.sha256(data[value_start_index:value_end_index].encode()).hexdigest())
 
 	return PartialFileHandle(
 		db_name=db_name,
@@ -150,6 +153,7 @@ def partial_read(db_name: str, key: str) -> PartialFileHandle:
 		original_data_str=data,
 		indent_level=indent_level,
 		indent_with=indent_with,
+		index_data=index_data,
 	)
 
 
@@ -190,9 +194,9 @@ def write(db_name: str, db: dict):
 		to the file of the db_path.
 	"""
 	if config.use_orjson:
-		orjson_indent = orjson.OPT_INDENT_2 if config.indent else 0
-		orjson_sort_keys = orjson.OPT_SORT_KEYS if config.sort_keys else 0
-		db_dump = orjson.dumps(db, option=orjson_indent | orjson_sort_keys)
+		option = orjson.OPT_INDENT_2 if config.indent else 0
+		option |= orjson.OPT_SORT_KEYS if config.sort_keys else 0
+		db_dump = orjson.dumps(db, option=option)
 	else:
 		db_dump = json.dumps(db, indent=config.indent, sort_keys=config.sort_keys)
 
@@ -204,9 +208,9 @@ def partial_write(pf: PartialFileHandle):
 		Write a partial file handle to the db.
 	"""
 	if config.use_orjson:
-		orjson_indent = orjson.OPT_INDENT_2 if config.indent else 0
-		orjson_sort_keys = orjson.OPT_SORT_KEYS if config.sort_keys else 0
-		partial_dump = orjson.dumps(pf.key_value, option=orjson_indent | orjson_sort_keys)
+		option = orjson.OPT_INDENT_2 if config.indent else 0
+		option |= orjson.OPT_SORT_KEYS if config.sort_keys else 0
+		partial_dump = orjson.dumps(pf.key_value, option=option)
 		partial_dump = partial_dump.decode()
 	else:
 		partial_dump = json.dumps(pf.key_value, indent=config.indent, sort_keys=config.sort_keys)
@@ -216,5 +220,14 @@ def partial_write(pf: PartialFileHandle):
 
 	dump_start = pf.original_data_str[:pf.value_start_index]
 	dump_end = pf.original_data_str[pf.value_end_index:]
-	write_index_file(pf.db_name, pf.key, len(dump_start), len(dump_start) + len(partial_dump), pf.indent_level, pf.indent_with, hashlib.sha256(partial_dump.encode()).hexdigest())
+	write_index_file(
+		pf.index_data,
+		pf.db_name,
+		pf.key,
+		len(dump_start),
+		len(dump_start) + len(partial_dump),
+		pf.indent_level,
+		pf.indent_with,
+		hashlib.sha256(partial_dump.encode()).hexdigest()
+	)
 	write_dump(pf.db_name, f"{dump_start}{partial_dump}{dump_end}")

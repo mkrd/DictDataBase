@@ -15,13 +15,13 @@ p = profiler.Profiler(interval=0.0001)
 with p:
     # fM44 is small
     # a2lU has many annotations
-    # DDB.at("tasks").read(key="fM44", as_type=PathDict)
-    # for _ in range(10):
-    #     with DDB.at("tasks").session(key="a2lU", as_type=PathDict) as (session, task):
-    #         task["jay"] = lambda x: (x or 0) + 1
-    #         session.write()
-    DDB.at("tasks_as_dir/*").read()
-    io_unsafe.partial_read("tasks", "a2lU")
+    # DDB.at("tasks", key="fM44").read(key="fM44", as_type=PathDict)
+    for _ in range(10):
+        with DDB.at("archive", "tasks", "kiel", key="UTBS").session(as_type=PathDict) as (session, task):
+            task["jay"] = lambda x: (x or 0) + 1
+            session.write()
+    # DDB.at("tasks_as_dir/*").read()
+    # io_unsafe.partial_read("tasks", "a2lU")
 
 
 p.open_in_browser(timeline=False)
