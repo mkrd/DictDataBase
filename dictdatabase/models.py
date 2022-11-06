@@ -91,12 +91,12 @@ class DDBMethodChooser:
 		for p in path:
 			pc += p if isinstance(p,  list) else [p]
 		self.path = utils.to_path_str([str(p) for p in pc])
+		self.key = key
+		self.where = where
 		self.op_type = OperationType(self.path, self.key, self.where)
 		# Invariants:
 		# - Both key and where cannot be not None at the same time
 		# - If key is not None, then there is no wildcard in the path.
-		self.key = key
-		self.where = where
 
 
 	def exists(self) -> bool:
