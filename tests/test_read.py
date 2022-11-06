@@ -23,8 +23,8 @@ def test_exists(env, use_compression, use_orjson, sort_keys, indent):
 	DDB.at("test_exists").create({"a": 1}, force_overwrite=True)
 	assert DDB.at("test_exists").exists()
 	assert not DDB.at("test_exists/nonexistent").exists()
-	assert DDB.at("test_exists").exists("a")
-	assert not DDB.at("test_exists").exists("b")
+	assert DDB.at("test_exists", key="a").exists()
+	assert not DDB.at("test_exists", key="b").exists()
 
 
 
@@ -48,7 +48,7 @@ def test_read_integrity():
 	for case in cases:
 		with open(f"{DDB.config.storage_directory}/test_read_integrity.json", "w") as f:
 			f.write(case)
-		dd = DDB.at("test_read_integrity").read(key="a")
+		dd = DDB.at("test_read_integrity", key="a").read()
 		assert dd == json.loads(case)["a"]
 
 

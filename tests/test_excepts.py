@@ -53,7 +53,7 @@ def test_except_on_write_outside_session(env, use_compression, use_orjson, sort_
 
 def test_wildcard_and_subkey_except(env, use_compression, use_orjson, sort_keys, indent):
 	with pytest.raises(ValueError):
-		DDB.at("test_wildcard_and_subkey_except/*").read(key="key")
+		DDB.at("test_wildcard_and_subkey_except/*", key="key").read()
 
 
 

@@ -1,16 +1,11 @@
 from __future__ import annotations
-from typing import Tuple, TypeVar, Generic
+from typing import Tuple, TypeVar, Generic, Any, Callable
 from . import utils, io_unsafe, locking
+
 
 
 T = TypeVar("T")
 JSONSerializable = TypeVar("JSONSerializable", str, int, float, bool, None, list, dict)
-
-
-class SessionType:
-	SINGLE = 0
-	MULTI = 1
-	SUB = 2
 
 
 class DDBSession(Generic[T]):
@@ -26,19 +21,15 @@ class DDBSession(Generic[T]):
 	in_session: bool = False
 	as_type: T
 
-	def __init__(self, db_name: str, key: str = None, as_type: T = None):
+	def __init__(self, db_name: str, op_type, key: str = None, where: Callable[[Any, Any], bool] = None, as_type: T = None):
 		self.db_name = db_name
 		self.as_type = as_type
-		if key is not None:
-			if "*" in db_name:
-				raise ValueError("A key cannot be specified with a wildcard.")
-			self.key = key
-			self.session_type = SessionType.SUB
-		elif "*" in db_name:
+		self.where = where
+		self.key = key
+		self.op_type = op_type
+
+		if op_type.dir:
 			self.db_name = utils.find(db_name)
-			self.session_type = SessionType.MULTI
-		else:
-			self.session_type = SessionType.SINGLE
 
 	def __enter__(self) -> Tuple["DDBSession", JSONSerializable | T]:
 		"""
@@ -49,34 +40,74 @@ class DDBSession(Generic[T]):
 			No new read tasks will be allowed. When all read tasks are done, the session aquire the write lock.
 			Now, it can savely read and write while all other tasks wait.
 		"""
+		self.in_session = True
+
+		def type_cast(data):
+			if self.as_type is None:
+				return data
+			return self.as_type(data)
+
 		try:
-			if self.session_type in (SessionType.SINGLE, SessionType.SUB):
+
+			if self.op_type.file_normal:
 				self.write_lock = locking.WriteLock(self.db_name)
 				self.write_lock._lock()
-			else:
+				data = io_unsafe.read(self.db_name)
+				self.data_handle = data
+				return self, type_cast(data)
+
+			if self.op_type.file_key:
+				self.write_lock = locking.WriteLock(self.db_name)
+				self.write_lock._lock()
+				self.partial_handle = io_unsafe.partial_read(self.db_name, self.key)
+				data = self.partial_handle.key_value
+				self.data_handle = data
+				return self, type_cast(data)
+
+			if self.op_type.file_where:
+				self.write_lock = locking.WriteLock(self.db_name)
+				self.write_lock._lock()
+				self.original_data = io_unsafe.read(self.db_name)
+				data = {}
+				for k, v in self.original_data:
+					if self.where(k, v):
+						data[k] = v
+				self.data_handle = data
+				return self, type_cast(data)
+
+			if self.op_type.dir_normal:
 				self.write_lock = [locking.WriteLock(x) for x in self.db_name]
 				for lock in self.write_lock:
 					lock._lock()
-			self.in_session = True
+				data = {n.split("/")[-1]: io_unsafe.read(n) for n in self.db_name}
+				self.data_handle = data
+				return self, type_cast(data)
 
-			if self.session_type == SessionType.SINGLE:
-				dh = io_unsafe.read(self.db_name)
-				self.data_handle = dh
-			elif self.session_type == SessionType.SUB:
-				self.partial_handle = io_unsafe.partial_read(self.db_name, self.key)
-				dh = self.partial_handle.key_value
-				self.data_handle = dh
-			elif self.session_type == SessionType.MULTI:
-				dh = {n.split("/")[-1]: io_unsafe.read(n) for n in self.db_name}
-				self.data_handle = dh
-			return self, self.as_type(dh) if self.as_type is not None else dh
+			if self.op_type.dir_where:
+				selected_db_names, write_lock, data = [], [], {}
+				for db_name in self.db_name:
+					lock = locking.WriteLock(db_name)
+					lock._lock()
+					k, v = db_name.split("/")[-1], io_unsafe.read(db_name)
+					if self.where(k, v):
+						data[k] = v
+						write_lock.append(lock)
+						selected_db_names.append(db_name)
+					else:
+						lock._unlock()
+				self.data_handle = data
+				self.write_lock = write_lock
+				self.db_name = selected_db_names
+				return self, type_cast(data)
+
 		except BaseException as e:
 			self.__exit__(type(e), e, e.__traceback__)
 			raise e
 
 
+
 	def __exit__(self, type, value, tb):
-		if self.session_type == SessionType.MULTI:
+		if self.op_type.dir:
 			# Use getattr in case the attr doesn't exist
 			for lock in getattr(self, "write_lock", []):
 				lock._unlock()
@@ -89,10 +120,12 @@ class DDBSession(Generic[T]):
 	def write(self):
 		if not self.in_session:
 			raise PermissionError("Only call write() inside a with statement.")
-		if self.session_type == SessionType.SINGLE:
+		elif self.op_type.file_normal:
 			io_unsafe.write(self.db_name, self.data_handle)
-		elif self.session_type == SessionType.SUB:
+		elif self.op_type.file_key:
 			io_unsafe.partial_write(self.partial_handle)
-		elif self.session_type == SessionType.MULTI:
+		elif self.op_type.file_where:
+			io_unsafe.write(self.db_name, self.original_data | self.data_handle)
+		elif self.op_type.dir_normal or self.op_type.dir_where:
 			for name in self.db_name:
 				io_unsafe.write(name, self.data_handle[name.split("/")[-1]])
