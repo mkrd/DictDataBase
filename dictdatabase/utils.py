@@ -5,6 +5,18 @@ import glob
 from . import config
 
 
+
+
+BACKSLASH = "\\".encode()[0]
+QUOTE = '"'.encode()[0]
+OPEN_SQUARE = "[".encode()[0]
+CLOSE_SQUARE = "]".encode()[0]
+OPEN_CURLY = "{".encode()[0]
+CLOSE_CURLY = "}".encode()[0]
+SPACE = " ".encode()[0]
+TAB = "\t".encode()[0]
+
+
 def db_paths(db_name: str) -> Tuple[str, bool, str, bool]:
 	"""
 	Returns a tuple of four elements, the first and third being the paths to the JSON
@@ -58,7 +70,7 @@ def expand_find_path_pattern(path):
 	return [f for r in res for f in find(*r)]
 
 
-def seek_index_through_value(data: str, index: int) -> int:
+def seek_index_through_value_bytes(data: bytes, index: int) -> int:
 	"""
 	Finds the index of the next comma or closing bracket/brace, but only if
 	it is at the same indentation level as at the start index.
@@ -73,27 +85,28 @@ def seek_index_through_value(data: str, index: int) -> int:
 
 	# See https://www.json.org/json-en.html for the JSON syntax
 
-	skip_next, in_str, list_depth, dict_depth = False, False, 0, 0
+	skip_next, in_str, list_depth, dict_depth = 0, False, 0, 0
 
 	for i in range(index, len(data)):
-		if skip_next:
-			skip_next = False
+		if skip_next > 0:
+			skip_next -= 1
 			continue
 		current = data[i]
-		if current == "\\":
-			skip_next = True
+
+		if current == BACKSLASH:
+			skip_next = 1
 			continue
-		if current == '"':
+		if current == QUOTE:
 			in_str = not in_str
-		if in_str or current == " ":
+		if in_str or current == SPACE:
 			continue
-		if current == "[":
+		if current == OPEN_SQUARE:
 			list_depth += 1
-		elif current == "]":
+		elif current == CLOSE_SQUARE:
 			list_depth -= 1
-		elif current == "{":
+		elif current == OPEN_CURLY:
 			dict_depth += 1
-		elif current == "}":
+		elif current == CLOSE_CURLY:
 			dict_depth -= 1
 		if list_depth == 0 and dict_depth == 0:
 			return i + 1
@@ -101,34 +114,34 @@ def seek_index_through_value(data: str, index: int) -> int:
 	raise TypeError("Invalid JSON syntax")
 
 
-def count_nesting(data: str, start: int, end: int) -> int:
+def count_nesting_bytes(data: bytes, start: int, end: int) -> int:
 	"""
 	Returns the number of nesting levels between the start and end indices.
 
 	:param data: The string to be parsed
 	"""
-	skip_next, in_str, nesting = False, False, 0
+	skip_next, in_str, nesting = 0, False, 0
 
 	for i in range(start, end):
-		if skip_next:
-			skip_next = False
+		if skip_next > 0:
+			skip_next -= 1
 			continue
 		current = data[i]
-		if current == "\\":
-			skip_next = True
+		if current == BACKSLASH:
+			skip_next = 1
 			continue
-		if current == '"':
+		if current == QUOTE:
 			in_str = not in_str
-		if in_str or current == " ":
+		if in_str or current == SPACE:
 			continue
-		elif current == "{":
+		elif current == OPEN_CURLY:
 			nesting += 1
-		elif current == "}":
+		elif current == CLOSE_CURLY:
 			nesting -= 1
 	return nesting
 
 
-def find_outermost_json_key_index(data: str, key: str):
+def find_outermost_json_key_index_bytes(data: bytes, key: bytes):
 	"""
 		Returns the index of the key that is at the outermost nesting level.
 		If the key is not found, return -1.
@@ -144,7 +157,7 @@ def find_outermost_json_key_index(data: str, key: str):
 	key_nest = [(curr_i, 0)]  # (key, nesting)
 
 	while (next_i := data.find(key, curr_i + len(key))) != -1:
-		nesting = count_nesting(data, curr_i + len(key), next_i)
+		nesting = count_nesting_bytes(data, curr_i + len(key), next_i)
 		key_nest.append((next_i, nesting))
 		curr_i = next_i
 
@@ -158,7 +171,7 @@ def find_outermost_json_key_index(data: str, key: str):
 	return min(key_nest, key=lambda x: x[1])[0]
 
 
-def detect_indentation_in_json_string(json_string: str, index) -> Tuple[int, str]:
+def detect_indentation_in_json_bytes(json_string: bytes, index: int) -> Tuple[int, str]:
 	"""
 	Count the amount of whitespace before the index
 	to determine the indentation level and whitespace used.
@@ -171,16 +184,17 @@ def detect_indentation_in_json_string(json_string: str, index) -> Tuple[int, str
 	- A tuple of the indentation level and the whitespace used
 	"""
 
-	indentation_str = ""
+	indentation_bytes = bytes()
 	for i in range(index-1, -1, -1):
-		if json_string[i] not in [" ", "\t"]:
+		if json_string[i] not in [SPACE, TAB]:
 			break
-		indentation_str += json_string[i]
+		# Add byte to indentation_bytes
+		indentation_bytes = indentation_bytes + bytes([json_string[i]])
 
-	if "\t" in indentation_str:
-		return len(indentation_str), "\t"
+	if indentation_bytes.find(TAB) != -1:
+		return len(indentation_bytes), "\t"
 	if isinstance(config.indent, int) and config.indent > 0:
-		return len(indentation_str) // config.indent, " " * config.indent
+		return len(indentation_bytes) // config.indent, " " * config.indent
 	if isinstance(config.indent, str):
-		return len(indentation_str) // 2, "  "
+		return len(indentation_bytes) // 2, "  "
 	return 0, ""

@@ -42,7 +42,8 @@ def test_read_integrity():
 		r'{"a": "\\\"\"", "b": 2}',
 	]
 
-	for case in cases:
+
+	for i, case in enumerate(cases):
 		with open(f"{DDB.config.storage_directory}/test_read_integrity.json", "w") as f:
 			f.write(case)
 		dd = DDB.at("test_read_integrity", key="a").read()
