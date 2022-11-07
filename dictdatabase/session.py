@@ -41,64 +41,54 @@ class DDBSession(Generic[T]):
 			Now, it can savely read and write while all other tasks wait.
 		"""
 		self.in_session = True
-
-		def type_cast(data):
-			if self.as_type is None:
-				return data
-			return self.as_type(data)
+		self.data_handle = {}
 
 		try:
 
 			if self.op_type.file_normal:
 				self.write_lock = locking.WriteLock(self.db_name)
 				self.write_lock._lock()
-				data = io_unsafe.read(self.db_name)
-				self.data_handle = data
-				return self, type_cast(data)
+				self.data_handle = io_unsafe.read(self.db_name)
 
-			if self.op_type.file_key:
+			elif self.op_type.file_key:
 				self.write_lock = locking.WriteLock(self.db_name)
 				self.write_lock._lock()
 				self.partial_handle = io_unsafe.partial_read(self.db_name, self.key, as_handle=True)
-				data = self.partial_handle.partial_dict.value
-				self.data_handle = data
-				return self, type_cast(data)
+				self.data_handle = self.partial_handle.partial_dict.value
 
-			if self.op_type.file_where:
+			elif self.op_type.file_where:
 				self.write_lock = locking.WriteLock(self.db_name)
 				self.write_lock._lock()
 				self.original_data = io_unsafe.read(self.db_name)
-				data = {}
 				for k, v in self.original_data.items():
 					if self.where(k, v):
-						data[k] = v
-				self.data_handle = data
-				return self, type_cast(data)
+						self.data_handle[k] = v
 
-			if self.op_type.dir_normal:
+			elif self.op_type.dir_normal:
 				self.write_lock = [locking.WriteLock(x) for x in self.db_name]
 				for lock in self.write_lock:
 					lock._lock()
-				data = {n.split("/")[-1]: io_unsafe.read(n) for n in self.db_name}
-				self.data_handle = data
-				return self, type_cast(data)
+				self.data_handle = {n.split("/")[-1]: io_unsafe.read(n) for n in self.db_name}
 
-			if self.op_type.dir_where:
-				selected_db_names, write_lock, data = [], [], {}
+			elif self.op_type.dir_where:
+				selected_db_names, write_lock = [], []
 				for db_name in self.db_name:
 					lock = locking.WriteLock(db_name)
 					lock._lock()
 					k, v = db_name.split("/")[-1], io_unsafe.read(db_name)
 					if self.where(k, v):
-						data[k] = v
+						self.data_handle[k] = v
 						write_lock.append(lock)
 						selected_db_names.append(db_name)
 					else:
 						lock._unlock()
-				self.data_handle = data
 				self.write_lock = write_lock
 				self.db_name = selected_db_names
-				return self, type_cast(data)
+
+			casted = self.data_handle
+			if self.as_type is not None:
+				casted = self.as_type(self.data_handle)
+			return self, casted
 
 		except BaseException as e:
 			self.__exit__(type(e), e, e.__traceback__)
