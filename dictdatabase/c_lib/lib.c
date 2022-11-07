@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <string.h>
 
-int square(int i) {
-	return i * i;
-}
-
-
+////////////////////////////////////////////////////////////////////////////////
+// run
+// cc -fPIC -shared -o dictdatabase/c_lib/lib.so dictdatabase/c_lib/lib.c
+// to compile
+////////////////////////////////////////////////////////////////////////////////
 
 // def seek_index_through_value_bytes(data: bytes, index: int) -> int:
 // 	"""
