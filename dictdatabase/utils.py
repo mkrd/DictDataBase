@@ -2,19 +2,7 @@ from __future__ import annotations
 from typing import Tuple
 import os
 import glob
-from . import config
-
-
-
-
-BACKSLASH = "\\".encode()[0]
-QUOTE = '"'.encode()[0]
-OPEN_SQUARE = "[".encode()[0]
-CLOSE_SQUARE = "]".encode()[0]
-OPEN_CURLY = "{".encode()[0]
-CLOSE_CURLY = "}".encode()[0]
-SPACE = " ".encode()[0]
-TAB = "\t".encode()[0]
+from . import config, byte_codes
 
 
 def db_paths(db_name: str) -> Tuple[str, bool, str, bool]:
@@ -85,28 +73,27 @@ def seek_index_through_value_bytes(data: bytes, index: int) -> int:
 
 	# See https://www.json.org/json-en.html for the JSON syntax
 
-	skip_next, in_str, list_depth, dict_depth = 0, False, 0, 0
+	skip_next, in_str, list_depth, dict_depth = False, False, 0, 0
 
 	for i in range(index, len(data)):
-		if skip_next > 0:
-			skip_next -= 1
+		if skip_next:
+			skip_next = False
 			continue
 		current = data[i]
-
-		if current == BACKSLASH:
-			skip_next = 1
+		if current == byte_codes.BACKSLASH:
+			skip_next = True
 			continue
-		if current == QUOTE:
+		if current == byte_codes.QUOTE:
 			in_str = not in_str
-		if in_str or current == SPACE:
+		if in_str or current == byte_codes.SPACE:
 			continue
-		if current == OPEN_SQUARE:
+		if current == byte_codes.OPEN_SQUARE:
 			list_depth += 1
-		elif current == CLOSE_SQUARE:
+		elif current == byte_codes.CLOSE_SQUARE:
 			list_depth -= 1
-		elif current == OPEN_CURLY:
+		elif current == byte_codes.OPEN_CURLY:
 			dict_depth += 1
-		elif current == CLOSE_CURLY:
+		elif current == byte_codes.CLOSE_CURLY:
 			dict_depth -= 1
 		if list_depth == 0 and dict_depth == 0:
 			return i + 1
@@ -120,23 +107,23 @@ def count_nesting_bytes(data: bytes, start: int, end: int) -> int:
 
 	:param data: The string to be parsed
 	"""
-	skip_next, in_str, nesting = 0, False, 0
+	skip_next, in_str, nesting = False, False, 0
 
 	for i in range(start, end):
-		if skip_next > 0:
-			skip_next -= 1
+		if skip_next:
+			skip_next = False
 			continue
 		current = data[i]
-		if current == BACKSLASH:
-			skip_next = 1
+		if current == byte_codes.BACKSLASH:
+			skip_next = True
 			continue
-		if current == QUOTE:
+		if current == byte_codes.QUOTE:
 			in_str = not in_str
-		if in_str or current == SPACE:
+		if in_str or current == byte_codes.SPACE:
 			continue
-		elif current == OPEN_CURLY:
+		elif current == byte_codes.OPEN_CURLY:
 			nesting += 1
-		elif current == CLOSE_CURLY:
+		elif current == byte_codes.CLOSE_CURLY:
 			nesting -= 1
 	return nesting
 
@@ -184,14 +171,16 @@ def detect_indentation_in_json_bytes(json_string: bytes, index: int) -> Tuple[in
 	- A tuple of the indentation level and the whitespace used
 	"""
 
-	indentation_bytes = bytes()
+	indentation_bytes, contains_tab = bytes(), False
 	for i in range(index-1, -1, -1):
-		if json_string[i] not in [SPACE, TAB]:
+		if json_string[i] not in [byte_codes.SPACE, byte_codes.TAB]:
 			break
+		if json_string[i] == byte_codes.TAB:
+			contains_tab = True
 		# Add byte to indentation_bytes
 		indentation_bytes = indentation_bytes + bytes([json_string[i]])
 
-	if indentation_bytes.find(TAB) != -1:
+	if contains_tab:
 		return len(indentation_bytes), "\t"
 	if isinstance(config.indent, int) and config.indent > 0:
 		return len(indentation_bytes) // config.indent, " " * config.indent
