@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dictdatabase"
-version = "2.1.5"
+version = "2.2.0"
 repository = "https://github.com/mkrd/DictDataBase"
 description = "Easy-to-use database using dicts"
 authors = ["Marcel Kröker <kroeker.marcel@gmail.com>"]
@@ -17,7 +17,7 @@ classifiers=[
 
 [tool.poetry.dependencies]
 python = "^3.8"
-orjson = "^3.8.0"
+orjson = "^3.8.1"
 
 [tool.poetry.group.dev.dependencies]
 pycodestyle = "^2.9.1"
