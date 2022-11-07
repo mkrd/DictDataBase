@@ -17,7 +17,7 @@ with p:
     # a2lU has many annotations
     # DDB.at("tasks", key="fM44").read(key="fM44", as_type=PathDict)
     for _ in range(10):
-        with DDB.at("archive", "tasks", "kiel", key="UTBS").session(as_type=PathDict) as (session, task):
+        with DDB.at("tasks", key="a2lU").session(as_type=PathDict) as (session, task):
             task["jay"] = lambda x: (x or 0) + 1
             session.write()
     # DDB.at("tasks_as_dir/*").read()
