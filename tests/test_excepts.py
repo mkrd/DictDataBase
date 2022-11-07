@@ -59,4 +59,4 @@ def test_wildcard_and_subkey_except(env, use_compression, use_orjson, sort_keys,
 
 def test_utils_invalid_json_except(env):
 	with pytest.raises(TypeError):
-		utils.seek_index_through_value("{This is not { JSON", 0)
+		utils.seek_index_through_value_bytes(b"{This is not { JSON", 0)

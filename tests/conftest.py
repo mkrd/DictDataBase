@@ -18,7 +18,7 @@ def use_compression(request):
 
 
 
-@pytest.fixture(params=[False, True])
+@pytest.fixture(params=[True, False])
 def use_orjson(request):
 	DDB.config.use_orjson = request.param
 	return request.param
