@@ -4,6 +4,9 @@ import os
 import glob
 from . import config, byte_codes
 
+import ctypes
+c_code = ctypes.CDLL(f"{os.path.dirname(__file__)}/c_lib/lib.so")
+
 
 def db_paths(db_name: str) -> Tuple[str, bool, str, bool]:
 	"""
@@ -73,59 +76,11 @@ def seek_index_through_value_bytes(data: bytes, index: int) -> int:
 
 	# See https://www.json.org/json-en.html for the JSON syntax
 
-	skip_next, in_str, list_depth, dict_depth = False, False, 0, 0
+	c_call = c_code.seek_index_through_value_bytes(data, index)
+	if c_call == -1:
+		raise TypeError("Invalid JSON")
+	return c_call
 
-	for i in range(index, len(data)):
-		if skip_next:
-			skip_next = False
-			continue
-		current = data[i]
-		if current == byte_codes.BACKSLASH:
-			skip_next = True
-			continue
-		if current == byte_codes.QUOTE:
-			in_str = not in_str
-		if in_str or current == byte_codes.SPACE:
-			continue
-		if current == byte_codes.OPEN_SQUARE:
-			list_depth += 1
-		elif current == byte_codes.CLOSE_SQUARE:
-			list_depth -= 1
-		elif current == byte_codes.OPEN_CURLY:
-			dict_depth += 1
-		elif current == byte_codes.CLOSE_CURLY:
-			dict_depth -= 1
-		if list_depth == 0 and dict_depth == 0:
-			return i + 1
-
-	raise TypeError("Invalid JSON syntax")
-
-
-def count_nesting_bytes(data: bytes, start: int, end: int) -> int:
-	"""
-	Returns the number of nesting levels between the start and end indices.
-
-	:param data: The string to be parsed
-	"""
-	skip_next, in_str, nesting = False, False, 0
-
-	for i in range(start, end):
-		if skip_next:
-			skip_next = False
-			continue
-		current = data[i]
-		if current == byte_codes.BACKSLASH:
-			skip_next = True
-			continue
-		if current == byte_codes.QUOTE:
-			in_str = not in_str
-		if in_str or current == byte_codes.SPACE:
-			continue
-		elif current == byte_codes.OPEN_CURLY:
-			nesting += 1
-		elif current == byte_codes.CLOSE_CURLY:
-			nesting -= 1
-	return nesting
 
 
 def find_outermost_json_key_index_bytes(data: bytes, key: bytes):
@@ -144,7 +99,7 @@ def find_outermost_json_key_index_bytes(data: bytes, key: bytes):
 	key_nest = [(curr_i, 0)]  # (key, nesting)
 
 	while (next_i := data.find(key, curr_i + len(key))) != -1:
-		nesting = count_nesting_bytes(data, curr_i + len(key), next_i)
+		nesting = c_code.count_nesting(data, curr_i + len(key), next_i)
 		key_nest.append((next_i, nesting))
 		curr_i = next_i
 
