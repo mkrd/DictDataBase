@@ -106,7 +106,7 @@ def partial_read(db_name: str, key: str, as_handle=False) -> PartialFileHandle |
 
 	# Not found in index file, search for key in the entire file
 	json_key = f"\"{key}\":".encode()
-	json_key_start_index = utils.find_outermost_json_key_index_bytes(data, json_key)
+	json_key_start_index = utils.find_outermost_key_index_in_json_bytes(data, json_key)
 	json_key_end_index = json_key_start_index + len(json_key)
 
 	if json_key_start_index == -1:

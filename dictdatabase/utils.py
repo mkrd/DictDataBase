@@ -32,7 +32,8 @@ def find(*pattern) -> list[str]:
 	"""
 	Returns a list of all the database names that match the given glob pattern.
 
-	:param pattern: The glob pattern to search for
+	Args:
+	- `pattern`: The glob pattern to search for
 	"""
 	pattern = to_path_str(pattern)
 	dbs_ddb = glob.glob(f"{config.storage_directory}/{pattern}.ddb")
@@ -45,11 +46,11 @@ def find(*pattern) -> list[str]:
 
 def expand_find_path_pattern(path):
 	"""
-		For a tuple of path items, expand it to a list of all real paths.
-		An item can be some string, a wildcard "*" or a list to select specific paths.
+	For a tuple of path items, expand it to a list of all real paths. An item
+	can be some string, a wildcard "*" or a list to select specific paths.
 
-		Args:
-		- `path`: A tuple of path items
+	Args:
+	- `path`: A tuple of path items
 	"""
 	res = [[]]
 	for item in path.split("/"):
@@ -58,14 +59,14 @@ def expand_find_path_pattern(path):
 	return [f for r in res for f in find(*r)]
 
 
-def seek_index_through_value_bytes(data: bytes, index: int) -> int:
+def seek_index_through_value_bytes(json_bytes: bytes, index: int) -> int:
 	"""
-	Finds the index of the next comma or closing bracket/brace, but only if
-	it is at the same indentation level as at the start index.
+	Finds the index of the next comma or closing bracket/brace after the value
+	of a key-value pair in a bytes object containing valid JSON when decoded.
 
 	Args:
-	- `data`: A vaild JSON string
-	- `index`: The start index in data
+	- `json_bytes`: A bytes object containing valid JSON when decoded
+	- `index`: The start index in json_bytes
 
 	Returns:
 	- The end index of the value.
@@ -75,11 +76,11 @@ def seek_index_through_value_bytes(data: bytes, index: int) -> int:
 
 	skip_next, in_str, list_depth, dict_depth = False, False, 0, 0
 
-	for i in range(index, len(data)):
+	for i in range(index, len(json_bytes)):
 		if skip_next:
 			skip_next = False
 			continue
-		current = data[i]
+		current = json_bytes[i]
 		if current == byte_codes.BACKSLASH:
 			skip_next = True
 			continue
@@ -101,19 +102,22 @@ def seek_index_through_value_bytes(data: bytes, index: int) -> int:
 	raise TypeError("Invalid JSON syntax")
 
 
-def count_nesting_bytes(data: bytes, start: int, end: int) -> int:
+def count_nesting_in_bytes(json_bytes: bytes, start: int, end: int) -> int:
 	"""
 	Returns the number of nesting levels between the start and end indices.
+	The nesting is counted by the number of opening and closing brackets/braces
+	that are not in a string or escaped with a backslash.
 
-	:param data: The string to be parsed
+	Args:
+	- `json_bytes`: A bytes object containing valid JSON when decoded
 	"""
-	skip_next, in_str, nesting = False, False, 0
 
+	skip_next, in_str, nesting = False, False, 0
 	for i in range(start, end):
 		if skip_next:
 			skip_next = False
 			continue
-		current = data[i]
+		current = json_bytes[i]
 		if current == byte_codes.BACKSLASH:
 			skip_next = True
 			continue
@@ -128,23 +132,24 @@ def count_nesting_bytes(data: bytes, start: int, end: int) -> int:
 	return nesting
 
 
-def find_outermost_json_key_index_bytes(data: bytes, key: bytes):
+def find_outermost_key_index_in_json_bytes(json_bytes: bytes, key: bytes):
 	"""
-		Returns the index of the key that is at the outermost nesting level.
-		If the key is not found, return -1.
-		If the key you are looking for is `some_key`, then you should pass
-		`"some_key":` as the `key` argument to this function.
-		Args:
-		- `data`: Correct JSON as a string
-		- `key`: The key of an object in `data` to search for
+	Returns the index of the key that is at the outermost nesting level. If the
+	key is not found, return -1. If the key you are looking for is `some_key`,
+	then you should pass `"some_key":` as the `key` argument to this function.
+
+	Args:
+	- `json_bytes`: A bytes object containing valid JSON when decoded
+	- `key`: The key of an key-value pair in `json_bytes` to search for,
+	represented as bytes.
 	"""
-	if (curr_i := data.find(key, 0)) == -1:
+	if (curr_i := json_bytes.find(key, 0)) == -1:
 		return -1
 
 	key_nest = [(curr_i, 0)]  # (key, nesting)
 
-	while (next_i := data.find(key, curr_i + len(key))) != -1:
-		nesting = count_nesting_bytes(data, curr_i + len(key), next_i)
+	while (next_i := json_bytes.find(key, curr_i + len(key))) != -1:
+		nesting = count_nesting_in_bytes(json_bytes, curr_i + len(key), next_i)
 		key_nest.append((next_i, nesting))
 		curr_i = next_i
 
@@ -158,13 +163,13 @@ def find_outermost_json_key_index_bytes(data: bytes, key: bytes):
 	return min(key_nest, key=lambda x: x[1])[0]
 
 
-def detect_indentation_in_json_bytes(json_string: bytes, index: int) -> Tuple[int, str]:
+def detect_indentation_in_json_bytes(json_bytes: bytes, index: int) -> Tuple[int, str]:
 	"""
-	Count the amount of whitespace before the index
-	to determine the indentation level and whitespace used.
+	Count the amount of whitespace before the index to determine the indentation
+	level and whitespace used.
 
 	Args:
-	- `json_string`: A string containing correct JSON data
+	- `json_bytes`: A bytes object containing valid JSON when decoded
 	- `index`: The index behind which the indentation is to be determined
 
 	Returns:
@@ -172,13 +177,12 @@ def detect_indentation_in_json_bytes(json_string: bytes, index: int) -> Tuple[in
 	"""
 
 	indentation_bytes, contains_tab = bytes(), False
-	for i in range(index-1, -1, -1):
-		if json_string[i] not in [byte_codes.SPACE, byte_codes.TAB]:
+	for i in range(index - 1, -1, -1):
+		if json_bytes[i] not in [byte_codes.SPACE, byte_codes.TAB]:
 			break
-		if json_string[i] == byte_codes.TAB:
+		if json_bytes[i] == byte_codes.TAB:
 			contains_tab = True
-		# Add byte to indentation_bytes
-		indentation_bytes = indentation_bytes + bytes([json_string[i]])
+		indentation_bytes = indentation_bytes + bytes([json_bytes[i]])
 
 	if contains_tab:
 		return len(indentation_bytes), "\t"
