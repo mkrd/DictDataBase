@@ -1,5 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
+from typing import Tuple
 import orjson
 import json
 import zlib
@@ -9,14 +10,19 @@ from pathlib import Path
 from . import config, utils
 
 
+
+@dataclass(frozen=True)
+class PartialDict:
+	prefix: str
+	key: str
+	value: str
+	suffix: str
+
+
 @dataclass(frozen=True)
 class PartialFileHandle:
 	db_name: str
-	key: str
-	key_value: dict
-	value_start_index: int
-	value_end_index: int
-	original_data_str: str
+	partial_dict: PartialDict
 	indent_level: int
 	indent_with: str
 	index_data: dict
@@ -80,7 +86,7 @@ def write_index_file(index_data: dict, db_name: str, key, start_index, end_index
 		f.write(orjson.dumps(index_data))
 
 
-def partial_read(db_name: str, key: str) -> PartialFileHandle:
+def partial_read(db_name: str, key: str, as_handle=False) -> PartialFileHandle | dict:
 	"""
 		Partially read a key from a db.
 		The key MUST be unique in the entire db, otherwise the behavior is undefined.
@@ -91,68 +97,56 @@ def partial_read(db_name: str, key: str) -> PartialFileHandle:
 	"""
 
 	data = read_file(db_name)
+
+	# Search for key in the index file
 	index_data = read_index_file(db_name)
 	index = index_data.get(key, None)
 	if index is not None:
-		partial_str = data[index[0]:index[1]]
-		if index[4] == hashlib.sha256(partial_str.encode()).hexdigest():
-			return PartialFileHandle(
-				db_name=db_name,
-				key=key,
-				key_value=orjson.loads(partial_str),
-				value_start_index=index[0],
-				value_end_index=index[1],
-				indent_level=index[2],
-				indent_with=index[3],
-				original_data_str=data,
-				index_data=index_data,
-			)
+		start_index, end_index, indent_level, indent_with, value_hash = index
+		partial_str = data[start_index:end_index]
+		partial_str_hash = hashlib.sha256(partial_str.encode()).hexdigest()
+		if value_hash == partial_str_hash:
+			partial_value = orjson.loads(partial_str)
+			if not as_handle:
+				return partial_value
+			partial_dict = PartialDict(data[:start_index], key, partial_value, data[end_index:])
+			return PartialFileHandle(db_name, partial_dict, indent_level, indent_with, index_data)
 
-	key_str = f"\"{key}\":"
-	key_str_index = utils.find_outermost_key_str_index(data, key_str)
+	# Not found in index file, search for key in the entire file
+	json_key = f"\"{key}\":"
+	json_key_start_index = utils.find_outermost_json_key_index(data, json_key)
+	json_key_end_index = json_key_start_index + len(json_key)
 
-	if key_str_index == -1:
+	if json_key_start_index == -1:
 		raise KeyError(f"Key \"{key}\" not found in db \"{db_name}\"")
 
-	space_after_semicolon = 1 if data[key_str_index + len(key_str)] == " " else 0
-
-	# Count the amount of whitespace before the key
-	# to determine the indentation level
-	indentation_str = ""
-	for i in range(key_str_index-1, -1, -1):
-		if data[i] not in [" ", "\t"]:
-			break
-		indentation_str += data[i]
-
-	if "\t" in indentation_str:
-		indent_level = len(indentation_str)
-		indent_with = "\t"
-	elif isinstance(config.indent, int) and config.indent > 0:
-		indent_level = len(indentation_str) // config.indent
-		indent_with = " " * config.indent
-	elif isinstance(config.indent, str):
-		indent_level = len(indentation_str) // 2
-		indent_with = "  "
-	else:
-		indent_level, indent_with  = 0, ""
-
-
-	value_start_index = key_str_index + len(key_str) + space_after_semicolon
+	# Key found, now determine the bounds of the value
+	space_after_semicolon = 1 if data[json_key_end_index] == " " else 0
+	value_start_index = json_key_end_index + space_after_semicolon
 	value_end_index = utils.seek_index_through_value(data, value_start_index)
 
-	write_index_file(index_data, db_name, key, value_start_index, value_end_index, indent_level, indent_with, hashlib.sha256(data[value_start_index:value_end_index].encode()).hexdigest())
+	indent_level, indent_with  = utils.detect_indentation_in_json_string(data, json_key_start_index)
+	partial_str = data[value_start_index:value_end_index]
 
-	return PartialFileHandle(
-		db_name=db_name,
-		key=key,
-		key_value=orjson.loads(data[value_start_index:value_end_index]),
-		value_start_index=value_start_index,
-		value_end_index=value_end_index,
-		original_data_str=data,
-		indent_level=indent_level,
-		indent_with=indent_with,
-		index_data=index_data,
+	# Write key info to index file
+	write_index_file(
+		index_data,
+		db_name,
+		key,
+		value_start_index,
+		value_end_index,
+		indent_level,
+		indent_with,
+		hashlib.sha256(partial_str.encode()).hexdigest()
 	)
+
+	partial_value = orjson.loads(partial_str)
+	if not as_handle:
+		return partial_value
+
+	partial_dict = PartialDict(data[:value_start_index], key, partial_value, data[value_end_index:])
+	return PartialFileHandle(db_name, partial_dict, indent_level, indent_with, index_data)
+
 
 
 ################################################################################
@@ -208,24 +202,24 @@ def partial_write(pf: PartialFileHandle):
 	if config.use_orjson:
 		option = orjson.OPT_INDENT_2 if config.indent else 0
 		option |= orjson.OPT_SORT_KEYS if config.sort_keys else 0
-		partial_dump = orjson.dumps(pf.key_value, option=option)
+		partial_dump = orjson.dumps(pf.partial_dict.value, option=option)
 		partial_dump = partial_dump.decode()
 	else:
-		partial_dump = json.dumps(pf.key_value, indent=config.indent, sort_keys=config.sort_keys)
+		partial_dump = json.dumps(pf.partial_dict.value, indent=config.indent, sort_keys=config.sort_keys)
 
 	if pf.indent_level > 0 and pf.indent_with:
 		partial_dump = partial_dump.replace("\n", "\n" + (pf.indent_level * pf.indent_with))
 
-	dump_start = pf.original_data_str[:pf.value_start_index]
-	dump_end = pf.original_data_str[pf.value_end_index:]
 	write_index_file(
 		pf.index_data,
 		pf.db_name,
-		pf.key,
-		len(dump_start),
-		len(dump_start) + len(partial_dump),
+		pf.partial_dict.key,
+		len(pf.partial_dict.prefix),
+		len(pf.partial_dict.prefix) + len(partial_dump),
 		pf.indent_level,
 		pf.indent_with,
 		hashlib.sha256(partial_dump.encode()).hexdigest()
 	)
-	write_dump(pf.db_name, f"{dump_start}{partial_dump}{dump_end}")
+
+	dump = f"{pf.partial_dict.prefix}{partial_dump}{pf.partial_dict.suffix}"
+	write_dump(pf.db_name, dump)

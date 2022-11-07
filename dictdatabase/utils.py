@@ -128,7 +128,7 @@ def count_nesting(data: str, start: int, end: int) -> int:
 	return nesting
 
 
-def find_outermost_key_str_index(data: str, key: str):
+def find_outermost_json_key_index(data: str, key: str):
 	"""
 		Returns the index of the key that is at the outermost nesting level.
 		If the key is not found, return -1.
@@ -156,3 +156,31 @@ def find_outermost_key_str_index(data: str, key: str):
 	for i in range(1, len(key_nest)):
 		key_nest[i] = (key_nest[i][0], key_nest[i - 1][1] + key_nest[i][1])
 	return min(key_nest, key=lambda x: x[1])[0]
+
+
+def detect_indentation_in_json_string(json_string: str, index) -> Tuple[int, str]:
+	"""
+	Count the amount of whitespace before the index
+	to determine the indentation level and whitespace used.
+
+	Args:
+	- `json_string`: A string containing correct JSON data
+	- `index`: The index behind which the indentation is to be determined
+
+	Returns:
+	- A tuple of the indentation level and the whitespace used
+	"""
+
+	indentation_str = ""
+	for i in range(index-1, -1, -1):
+		if json_string[i] not in [" ", "\t"]:
+			break
+		indentation_str += json_string[i]
+
+	if "\t" in indentation_str:
+		return len(indentation_str), "\t"
+	if isinstance(config.indent, int) and config.indent > 0:
+		return len(indentation_str) // config.indent, " " * config.indent
+	if isinstance(config.indent, str):
+		return len(indentation_str) // 2, "  "
+	return 0, ""

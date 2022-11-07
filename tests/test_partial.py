@@ -52,6 +52,10 @@ def test_subwrite(env, use_compression, use_orjson, sort_keys, indent):
 		session.write()
 	assert DDB.at(name, key="f").read() == 2
 
+	with pytest.raises(KeyError):
+		with DDB.at(name, key="none").session() as (session, key):
+			session.write()
+
 
 def test_write_file_where(env, use_compression, use_orjson, sort_keys, indent):
 	name = "test_write_file_where"
