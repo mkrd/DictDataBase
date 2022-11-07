@@ -54,24 +54,24 @@ scenarios = {
 	# file_count, readers, writers, operations_per_process, big_file, compression
 	# Let's try to break shit
 	(1, 50, 50): [
-		(20, False, False)
+		(5, False, False)
 	],
 	(1, 10, 0): [
-		(800, False, False),
-		(800, False, True),
-		(20, True, False),
+		(3000, False, False),
+		(3000, False, True),
+		(140, True, False),
 	],
 	(1, 10, 1): [
-		(200, False, False),
-		(20, True, False),
+		(400, False, False),
+		(60, True, False),
 	],
 	(1, 1, 10): [
-		(200, False, False),
-		(12, True, False),
+		(800, False, False),
+		(40, True, False),
 	],
 	(1, 10, 10): [
-		(200, False, False),
-		(8, True, False),
+		(300, False, False),
+		(15, True, False),
 	],
 
 
