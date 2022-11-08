@@ -53,28 +53,26 @@ def parallel_stressor(file_count, readers, writers, operations_per_process, big_
 scenarios = {
 	# file_count, readers, writers, operations_per_process, big_file, compression
 	# Let's try to break shit
-	(1, 50, 50): [
-		(20, False, False)
+	(1, 20, 20): [
+		(30, False, False)
 	],
-	(1, 10, 0): [
-		(800, False, False),
-		(800, False, True),
-		(20, True, False),
+	(1, 8, 0): [
+		(1500, False, False),
+		(1500, False, True),
+		(1500, True, False),
 	],
-	(1, 10, 1): [
+	(1, 8, 1): [
 		(200, False, False),
-		(20, True, False),
+		(25, True, False),
 	],
-	(1, 1, 10): [
+	(1, 1, 8): [
 		(200, False, False),
-		(12, True, False),
+		(10, True, False),
 	],
-	(1, 10, 10): [
-		(200, False, False),
+	(1, 8, 8): [
+		(100, False, False),
 		(8, True, False),
 	],
-
-
 }
 
 
