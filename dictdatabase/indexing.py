@@ -1,5 +1,4 @@
 import orjson
-from pathlib import Path
 import os
 from . import config
 
@@ -10,7 +9,7 @@ class Indexer:
 		db_name = db_name.replace("/", "___")
 		path = os.path.join(config.storage_directory, ".ddb", f"{db_name}.index")
 		self.path = path
-		Path(self.path).parent.mkdir(parents=True, exist_ok=True)
+		os.makedirs(os.path.dirname(path), exist_ok=True)
 		if not os.path.exists(self.path):
 			self.data = {}
 		else:
