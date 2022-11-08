@@ -32,7 +32,7 @@ class PartialFileHandle:
 ################################################################################
 
 
-def read_bytes(db_name: str) -> bytes:
+def read_bytes(db_name: str, start=None, end=None) -> bytes:
 	"""
 		Read the content of a db as a string, or as bytes if as_bytes=True.
 		Reading works even when the config changes, so a compressed ddb file can
@@ -44,11 +44,21 @@ def read_bytes(db_name: str) -> bytes:
 		if ddb_exists:
 			raise FileExistsError(f"DB Inconsistency: \"{db_name}\" exists as .json and .ddb")
 		with open(json_path, "rb") as f:
+			if start is not None:
+				f.seek(start)
+				if end is not None:
+					return f.read(end - start)
+				return f.read()
 			return f.read()
 	if not ddb_exists:
 		raise FileNotFoundError(f"DB does not exist: \"{db_name}\"")
 	with open(ddb_path, "rb") as f:
-		return zlib.decompress(f.read())
+		json_bytes = zlib.decompress(f.read())
+		if start is not None:
+			if end is not None:
+				return json_bytes[start:end]
+			return json_bytes[start:]
+		return json_bytes
 
 
 def read(db_name: str) -> dict:
@@ -78,7 +88,76 @@ def write_index_file(index_data: dict, db_name: str, key, start_index, end_index
 		f.write(orjson.dumps(index_data))
 
 
-def partial_read(db_name: str, key: str, as_handle=False) -> PartialFileHandle | dict:
+
+
+def try_read_by_index(index_data, db_name, key):
+
+	if (index := index_data.get(key, None)) is None:
+		return None
+
+	start_index, end_index, indent_level, indent_with, value_hash = index
+	partial_bytes = read_bytes(db_name, start_index, end_index)
+
+	if value_hash != hashlib.sha256(partial_bytes).hexdigest():
+		return None
+
+	return orjson.loads(partial_bytes)
+
+
+
+
+
+def partial_read_only(db_name: str, key: str) -> dict:
+	"""
+		Partially read a key from a db.
+		The key MUST be unique in the entire db, otherwise the behavior is undefined.
+		This is a lot faster than reading the entire db, because it does not parse
+		the entire file, but only the part <value> part of the <key>: <value> pair.
+
+		If the key is not found, a `KeyError` is raised.
+	"""
+
+	# data = read_bytes(db_name)
+
+	# Search for key in the index file
+	index_data = read_index_file(db_name)
+
+	if (value_data := try_read_by_index(index_data, db_name, key)) is not None:
+		return value_data
+
+	file_bytes = read_bytes(db_name)
+
+	# Not found in index file, search for key in the entire file
+	key_start, key_end = utils.find_outermost_key_in_json_bytes(file_bytes, key)
+
+	if key_end == -1:
+		raise KeyError(f"Key \"{key}\" not found in db \"{db_name}\"")
+
+	# Key found, now determine the bounds of the value
+	space_after_semicolon = 1 if file_bytes[key_end] == byte_codes.SPACE else 0
+	value_start = key_end + space_after_semicolon
+	value_end = utils.seek_index_through_value_bytes(file_bytes, value_start)
+
+	indent_level, indent_with  = utils.detect_indentation_in_json_bytes(file_bytes, key_start)
+	value_bytes = file_bytes[value_start:value_end]
+
+	# Write key info to index file
+	write_index_file(
+		index_data,
+		db_name,
+		key,
+		value_start,
+		value_end,
+		indent_level,
+		indent_with,
+		hashlib.sha256(value_bytes).hexdigest()
+	)
+
+	return orjson.loads(value_bytes)
+
+
+
+def get_partial_file_handle(db_name: str, key: str) -> PartialFileHandle | dict:
 	"""
 		Partially read a key from a db.
 		The key MUST be unique in the entire db, otherwise the behavior is undefined.
@@ -99,44 +178,38 @@ def partial_read(db_name: str, key: str, as_handle=False) -> PartialFileHandle |
 		partial_bytes_hash = hashlib.sha256(partial_bytes).hexdigest()
 		if value_hash == partial_bytes_hash:
 			partial_value = orjson.loads(partial_bytes)
-			if not as_handle:
-				return partial_value
 			partial_dict = PartialDict(data[:start_index], key, partial_value, data[end_index:])
 			return PartialFileHandle(db_name, partial_dict, indent_level, indent_with, index_data)
 
 	# Not found in index file, search for key in the entire file
-	json_key = f"\"{key}\":".encode()
-	json_key_start_index = utils.find_outermost_key_index_in_json_bytes(data, json_key)
-	json_key_end_index = json_key_start_index + len(json_key)
+	key_start, key_end = utils.find_outermost_key_in_json_bytes(data, key)
 
-	if json_key_start_index == -1:
+	if key_end == -1:
 		raise KeyError(f"Key \"{key}\" not found in db \"{db_name}\"")
 
 	# Key found, now determine the bounds of the value
-	space_after_semicolon = 1 if data[json_key_end_index] == byte_codes.SPACE else 0
-	value_start_index = json_key_end_index + space_after_semicolon
-	value_end_index = utils.seek_index_through_value_bytes(data, value_start_index)
+	space_after_semicolon = 1 if data[key_end] == byte_codes.SPACE else 0
+	value_start = key_end + space_after_semicolon
+	value_end = utils.seek_index_through_value_bytes(data, value_start)
 
-	indent_level, indent_with  = utils.detect_indentation_in_json_bytes(data, json_key_start_index)
-	partial_bytes = data[value_start_index:value_end_index]
+	indent_level, indent_with  = utils.detect_indentation_in_json_bytes(data, key_start)
+	partial_bytes = data[value_start:value_end]
 
 	# Write key info to index file
 	write_index_file(
 		index_data,
 		db_name,
 		key,
-		value_start_index,
-		value_end_index,
+		value_start,
+		value_end,
 		indent_level,
 		indent_with,
 		hashlib.sha256(partial_bytes).hexdigest()
 	)
 
 	partial_value = orjson.loads(partial_bytes)
-	if not as_handle:
-		return partial_value
 
-	partial_dict = PartialDict(data[:value_start_index], key, partial_value, data[value_end_index:])
+	partial_dict = PartialDict(data[:value_start], key, partial_value, data[value_end:])
 	return PartialFileHandle(db_name, partial_dict, indent_level, indent_with, index_data)
 
 
