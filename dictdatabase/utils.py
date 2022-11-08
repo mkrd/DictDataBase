@@ -21,14 +21,13 @@ def db_paths(db_name: str) -> Tuple[str, bool, str, bool]:
 	return j, os.path.exists(j), d, os.path.exists(d)
 
 
-def find(*file_name) -> list[str]:
+def find(file_name: str) -> list[str]:
 	"""
 	Returns a list of all the database names that match the given glob file_name.
 
 	Args:
 	- `file_name`: The glob file_name to search for
 	"""
-	file_name = "/".join(file_name)
 
 	files_all = glob.glob(f"{config.storage_directory}/{file_name}.ddb")
 	files_all += glob.glob(f"{config.storage_directory}/{file_name}.json")
@@ -36,21 +35,6 @@ def find(*file_name) -> list[str]:
 	for trim in [f"{config.storage_directory}/", ".ddb", ".json"]:
 		files_all = [d.replace(trim, "") for d in files_all]
 	return files_all
-
-
-def expand_find_path_pattern(path):
-	"""
-	For a tuple of path items, expand it to a list of all real paths. An item
-	can be some string, a wildcard "*" or a list to select specific paths.
-
-	Args:
-	- `path`: A tuple of path items
-	"""
-	res = [[]]
-	for item in path.split("/"):
-		if isinstance(item, str):
-			res = [r + [item] for r in res]
-	return [f for r in res for f in find(*r)]
 
 
 def seek_index_through_value_bytes(json_bytes: bytes, index: int) -> int:

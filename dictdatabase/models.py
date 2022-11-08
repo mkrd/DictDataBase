@@ -190,11 +190,11 @@ class DDBMethodChooser:
 					data[k] = v
 
 		elif self.op_type.dir_normal:
-			pattern_paths = utils.expand_find_path_pattern(self.path)
+			pattern_paths = utils.find(self.path)
 			data = {n.split("/")[-1]: io_safe.read(n) for n in pattern_paths}
 
 		elif self.op_type.dir_where:
-			for db_name in utils.expand_find_path_pattern(self.path):
+			for db_name in utils.find(self.path):
 				k, v = db_name.split("/")[-1], io_safe.read(db_name)
 				if self.where(k, type_cast(v)):
 					data[k] = v
