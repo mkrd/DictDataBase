@@ -90,7 +90,7 @@ class DDBMethodChooser:
 		pc = []
 		for p in path:
 			pc += p if isinstance(p,  list) else [p]
-		self.path = utils.to_path_str([str(p) for p in pc])
+		self.path = "/".join([str(p) for p in pc])
 		self.key = key
 		self.where = where
 		self.op_type = OperationType(self.path, self.key, self.where)

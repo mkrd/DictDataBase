@@ -7,41 +7,35 @@ from . import config, byte_codes
 
 def db_paths(db_name: str) -> Tuple[str, bool, str, bool]:
 	"""
-	Returns a tuple of four elements, the first and third being the paths to the JSON
-	and and DDB files, and the second and third being booleans indicating whether those
-	files exist:
+		Returns a tuple of four elements, the first and third being the paths to the
+		JSON and DDB files, and the second and third being booleans indicating whether
+		those files exist:
 
-	>>> (json_path, json_exists, ddb_path, ddb_exists)
+		>>> (json_path, json_exists, ddb_path, ddb_exists)
 
-	:param db_name: The name of the database
+		Args:
+		- `db_name`: The name of the database
 	"""
 	base = f"{config.storage_directory}/{db_name}"
 	j, d = f"{base}.json", f"{base}.ddb"
 	return j, os.path.exists(j), d, os.path.exists(d)
 
 
-def to_path_str(s) -> str:
+def find(*file_name) -> list[str]:
 	"""
-		Join a tuple or list using "/" as a separator.
-		:param s: The string to convert to a path string.
-	"""
-	return "/".join(s) if isinstance(s, (tuple, list)) else s
-
-
-def find(*pattern) -> list[str]:
-	"""
-	Returns a list of all the database names that match the given glob pattern.
+	Returns a list of all the database names that match the given glob file_name.
 
 	Args:
-	- `pattern`: The glob pattern to search for
+	- `file_name`: The glob file_name to search for
 	"""
-	pattern = to_path_str(pattern)
-	dbs_ddb = glob.glob(f"{config.storage_directory}/{pattern}.ddb")
-	dbs_json = glob.glob(f"{config.storage_directory}/{pattern}.json")
-	dbs_all = dbs_ddb + dbs_json
+	file_name = "/".join(file_name)
+
+	files_all = glob.glob(f"{config.storage_directory}/{file_name}.ddb")
+	files_all += glob.glob(f"{config.storage_directory}/{file_name}.json")
+
 	for trim in [f"{config.storage_directory}/", ".ddb", ".json"]:
-		dbs_all = [d.replace(trim, "") for d in dbs_all]
-	return dbs_all
+		files_all = [d.replace(trim, "") for d in files_all]
+	return files_all
 
 
 def expand_find_path_pattern(path):
