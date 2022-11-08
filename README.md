@@ -24,6 +24,7 @@ DictDataBase is a simple and fast database for handling json or compressed json 
 ### Why not DictDataBase
 - If your storage is slow.
 - If a relational database is better suited for your use case.
+- If you need to read files that are larger than your system's RAM.
 
 Install
 ================================================================================
