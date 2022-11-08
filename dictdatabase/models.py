@@ -119,8 +119,7 @@ class DDBMethodChooser:
 			return True
 		# Key is passed and occurs is True
 		try:
-			io_safe.partial_read(self.path, key=self.key)
-			return True
+			return io_safe.partial_read(self.path, key=self.key) is not None
 		except KeyError:
 			return False
 
