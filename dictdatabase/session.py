@@ -53,7 +53,7 @@ class DDBSession(Generic[T]):
 			elif self.op_type.file_key:
 				self.write_lock = locking.WriteLock(self.db_name)
 				self.write_lock._lock()
-				self.partial_handle = io_unsafe.partial_read(self.db_name, self.key, as_handle=True)
+				self.partial_handle = io_unsafe.get_partial_file_handle(self.db_name, self.key)
 				self.data_handle = self.partial_handle.partial_dict.value
 
 			elif self.op_type.file_where:

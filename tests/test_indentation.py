@@ -2,7 +2,7 @@
 import dictdatabase as DDB
 import orjson
 import json
-from dictdatabase import utils, io_unsafe, config
+from dictdatabase import utils, io_unsafe, config, io_bytes
 
 data = {
 	'a': 1,
@@ -36,10 +36,10 @@ def test_indentation(env, use_compression, use_orjson, sort_keys, indent):
 		session.write()
 	data["b"]["c"] = 3
 
-	assert io_unsafe.read_bytes("test_indentation") == string_dump(data)
+	assert io_bytes.read("test_indentation") == string_dump(data)
 
 	with DDB.at("test_indentation", key="d").session() as (session, db_d):
 		db_d["e"] = 4
 		session.write()
 	data["b"]["d"]["e"] = 4
-	assert io_unsafe.read_bytes("test_indentation") == string_dump(data)
+	assert io_bytes.read("test_indentation") == string_dump(data)

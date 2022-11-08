@@ -132,19 +132,26 @@ def count_nesting_in_bytes(json_bytes: bytes, start: int, end: int) -> int:
 	return nesting
 
 
-def find_outermost_key_index_in_json_bytes(json_bytes: bytes, key: bytes):
+def find_outermost_key_in_json_bytes(json_bytes: bytes, key: str):
 	"""
 	Returns the index of the key that is at the outermost nesting level. If the
 	key is not found, return -1. If the key you are looking for is `some_key`,
-	then you should pass `"some_key":` as the `key` argument to this function.
+	the function will search for `"some_key":` and return the start and end
+	index of that string that is at the outermost nesting level, or -1 if the
+	it is not found.
 
 	Args:
 	- `json_bytes`: A bytes object containing valid JSON when decoded
 	- `key`: The key of an key-value pair in `json_bytes` to search for,
 	represented as bytes.
+
+	Returns:
+	- A tuple of the key start and end index, or (-1, -1) if the key is not found.
 	"""
+	key = f"\"{key}\":".encode()
+
 	if (curr_i := json_bytes.find(key, 0)) == -1:
-		return -1
+		return -1, -1
 
 	key_nest = [(curr_i, 0)]  # (key, nesting)
 
@@ -155,12 +162,15 @@ def find_outermost_key_index_in_json_bytes(json_bytes: bytes, key: bytes):
 
 	# Early exit if there is only one key
 	if len(key_nest) == 1:
-		return key_nest[0][0]
+		return key_nest[0][0], key_nest[0][0] + len(key)
 
 	# Relative to total nesting
 	for i in range(1, len(key_nest)):
 		key_nest[i] = (key_nest[i][0], key_nest[i - 1][1] + key_nest[i][1])
-	return min(key_nest, key=lambda x: x[1])[0]
+
+	start_index = min(key_nest, key=lambda x: x[1])[0]
+	end_index = start_index + len(key)
+	return start_index, end_index
 
 
 def detect_indentation_in_json_bytes(json_bytes: bytes, index: int) -> Tuple[int, str]:

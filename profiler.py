@@ -21,7 +21,6 @@ with p:
             task["jay"] = lambda x: (x or 0) + 1
             session.write()
     # DDB.at("tasks_as_dir/*").read()
-    # io_unsafe.partial_read("tasks", "a2lU")
 
 
 p.open_in_browser(timeline=False)

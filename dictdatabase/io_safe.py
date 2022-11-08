@@ -21,7 +21,7 @@ def partial_read(db_name: str, key: str):
 	if not json_exists and not ddb_exists:
 		return None
 	with locking.ReadLock(db_name):
-		return io_unsafe.partial_read(db_name, key)
+		return io_unsafe.partial_read_only(db_name, key)
 
 
 def write(db_name: str, data: dict):
