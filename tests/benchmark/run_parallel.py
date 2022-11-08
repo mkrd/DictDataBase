@@ -6,7 +6,6 @@ import shutil
 import time
 import os
 from pyinstrument import Profiler
-
 from utils import print_and_assert_results, db_job, make_table
 
 
@@ -77,20 +76,77 @@ scenarios = {
 
 
 
+def benchmark(iterations, setup: callable = None):
+	def decorator(function):
+		def wrapper(*args, **kwargs):
+			if setup:
+				setup()
+			t1 = time.monotonic()
+			for _ in range(iterations):
+				function(*args, **kwargs)
+			t2 = time.monotonic()
+			print(f"⏱️ {iterations / (t2 - t1):.1f} op/s for {function.__name__} ({(t2 - t1):.1f} seconds)")
+		return wrapper
+	return decorator
+
+
+
+
+@benchmark(iterations=9000, setup=lambda: DDB.at("db").create({"data": {"counter": 0}}, force_overwrite=True))
+def sequential_full_read_small_file():
+	DDB.at("db").read()
+
+
+@benchmark(iterations=8000, setup=lambda: DDB.at("db").create({"data": {"counter": 0}}, force_overwrite=True))
+def sequential_partial_read_small_file():
+	DDB.at("db", key="data").read()
+
+
+@benchmark(iterations=8000, setup=lambda: DDB.at("db").create({"data": {"counter": 0}}, force_overwrite=True))
+def sequential_full_write_small_file():
+	with DDB.at("db").session() as (session, db):
+		db["data"]["counter"] += 1
+		session.write()
+
+
+@benchmark(iterations=6000, setup=lambda: DDB.at("db").create({"data": {"counter": 0}}, force_overwrite=True))
+def sequential_partial_write_small_file():
+	with DDB.at("db", key="data").session() as (session, db):
+		db["counter"] += 1
+		session.write()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 if __name__ == "__main__":
-	DDB.config.storage_directory = ".ddb_bench_parallel"
+	DDB.config.storage_directory = ".ddb_bench_multi"
+
+	# Sequential benchmarks
+	print("✨ Simple sequential benchmarks")
+	sequential_full_read_small_file()
+	sequential_partial_read_small_file()
+	sequential_full_write_small_file()
+	sequential_partial_write_small_file()
+
+	# Parallel benchmarks
 	for (file_count, readers, writers), scenario_params in scenarios.items():
-		print("")
-		print(f"✨ Scenario: {file_count} files, {readers} readers, {writers} writers")
+		print(f"\n✨ Scenario: {readers} readers, {writers} writers")
 		for ops_per_proc, big_file, compression in scenario_params:
-			# p = Profiler(interval=0.0001)
-			# p.start()
+
 			try:
-				shutil.rmtree(".ddb_bench_parallel", ignore_errors=True)
-				os.mkdir(".ddb_bench_parallel")
+				shutil.rmtree(".ddb_bench_multi", ignore_errors=True)
+				os.mkdir(".ddb_bench_multi")
 				parallel_stressor(file_count, readers, writers, ops_per_proc, big_file, compression)
 			finally:
-				shutil.rmtree(".ddb_bench_parallel", ignore_errors=True)
-			# p.stop()
-			# p.open_in_browser()
+				shutil.rmtree(".ddb_bench_multi", ignore_errors=True)
