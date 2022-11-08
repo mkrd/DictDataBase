@@ -5,9 +5,9 @@ from . import config, utils
 
 def read(db_name: str, start=None, end=None) -> bytes:
 	"""
-		Read the content of a db as a string, or as bytes if as_bytes=True.
-		Reading works even when the config changes, so a compressed ddb file can
-		also be read if compression is disabled, and vice versa.
+		Read the content of a db as as bytes. Reading works even when the config
+		changes, so a compressed ddb file can also be read if compression is
+		disabled, and vice versa.
 	"""
 	json_path, json_exists, ddb_path, ddb_exists = utils.db_paths(db_name)
 
@@ -52,5 +52,6 @@ def write(db_name: str, dump: bytes):
 		f.write(dump)
 
 	# Remove the other file if it exists
+	# This is done after writing to avoid data loss
 	if remove_this is not None:
 		os.remove(remove_this)
