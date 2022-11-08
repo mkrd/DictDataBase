@@ -3,6 +3,7 @@ import os
 from . import config
 
 
+
 class Indexer:
 
 	def __init__(self, db_name: str):
@@ -16,8 +17,12 @@ class Indexer:
 			with open(self.path, "rb") as f:
 				self.data = orjson.loads(f.read())
 
+
+
 	def get(self, key):
 		return self.data.get(key, None)
+
+
 
 	def write(self, key, start_index, end_index, indent_level, indent_with, value_hash):
 		self.data[key] = [start_index, end_index, indent_level, indent_with, value_hash]
