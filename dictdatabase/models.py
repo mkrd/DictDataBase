@@ -112,8 +112,7 @@ class DDBMethodChooser:
 		if self.where is not None:
 			raise RuntimeError("DDB.at(where=...).exists() cannot be used with the where parameter")
 
-		occurs = len(utils.find(self.path)) > 0
-		if not occurs:
+		if len(utils.find(self.path)) == 0:
 			return False
 		if self.key is None:
 			return True
