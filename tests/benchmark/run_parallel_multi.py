@@ -38,7 +38,7 @@ def parallel_stressor(file_count):
 	res = []
 	pool = Pool(processes=file_count)
 	for _ in range(file_count):
-		r = pool.apply_async(proc_job, args=(10000,
+		r = pool.apply_async(proc_job, args=(1000,
 			DDB.config.storage_directory,
 			DDB.config.use_compression,
 			DDB.config.use_orjson,
