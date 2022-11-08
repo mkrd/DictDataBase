@@ -91,16 +91,12 @@ def write_index_file(index_data: dict, db_name: str, key, start_index, end_index
 
 
 def try_read_by_index(index_data, db_name, key):
-
 	if (index := index_data.get(key, None)) is None:
 		return None
-
-	start_index, end_index, indent_level, indent_with, value_hash = index
+	start_index, end_index, _, _, value_hash = index
 	partial_bytes = read_bytes(db_name, start_index, end_index)
-
 	if value_hash != hashlib.sha256(partial_bytes).hexdigest():
 		return None
-
 	return orjson.loads(partial_bytes)
 
 
@@ -157,7 +153,7 @@ def partial_read_only(db_name: str, key: str) -> dict:
 
 
 
-def get_partial_file_handle(db_name: str, key: str) -> PartialFileHandle | dict:
+def get_partial_file_handle(db_name: str, key: str) -> PartialFileHandle:
 	"""
 		Partially read a key from a db.
 		The key MUST be unique in the entire db, otherwise the behavior is undefined.
