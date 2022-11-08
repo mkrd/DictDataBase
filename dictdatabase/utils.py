@@ -162,7 +162,7 @@ def find_outermost_key_in_json_bytes(json_bytes: bytes, key: str):
 
 	# Early exit if there is only one key
 	if len(key_nest) == 1:
-		return key_nest[0][0], len(key)
+		return key_nest[0][0], key_nest[0][0] + len(key)
 
 	# Relative to total nesting
 	for i in range(1, len(key_nest)):
