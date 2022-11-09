@@ -11,6 +11,7 @@ class PartialDict:
 	prefix: bytes
 	key: str
 	value: dict
+	value_start: int
 	suffix: bytes
 
 
@@ -135,7 +136,8 @@ def get_partial_file_handle(db_name: str, key: str) -> PartialFileHandle:
 		partial_bytes = data[start_index:end_index]
 		if value_hash == hashlib.sha256(partial_bytes).hexdigest():
 			partial_value = orjson.loads(partial_bytes)
-			partial_dict = PartialDict(data[:start_index], key, partial_value, data[end_index:])
+			prefix = data[:start_index] if config.use_compression else None
+			partial_dict = PartialDict(prefix, key, partial_value, start_index, data[end_index:])
 			return PartialFileHandle(db_name, partial_dict, indent_level, indent_with, indexer)
 
 	# Not found in index file, search for key in the entire file
@@ -155,7 +157,7 @@ def get_partial_file_handle(db_name: str, key: str) -> PartialFileHandle:
 	# Write key info to index file
 
 	partial_value = orjson.loads(partial_bytes)
-	partial_dict = PartialDict(data[:value_start], key, partial_value, data[value_end:])
+	partial_dict = PartialDict(data[:value_start], key, partial_value, value_start, data[value_end:])
 	return PartialFileHandle(db_name, partial_dict, indent_level, indent_with, indexer)
 
 
@@ -180,9 +182,18 @@ def partial_write(pf: PartialFileHandle):
 		replace_with = ("\n" + (pf.indent_level * pf.indent_with)).encode()
 		partial_dump = partial_dump.replace(replace_this, replace_with)
 
-	pf.indexer.write(pf.partial_dict.key, len(pf.partial_dict.prefix),
-		len(pf.partial_dict.prefix) + len(partial_dump), pf.indent_level,
+	if config.use_compression:
+		pf.indexer.write(pf.partial_dict.key, len(pf.partial_dict.prefix),
+			len(pf.partial_dict.prefix) + len(partial_dump), pf.indent_level,
+			pf.indent_with, hashlib.sha256(partial_dump).hexdigest()
+		)
+	else:
+		pf.indexer.write(pf.partial_dict.key, pf.partial_dict.value_start,
+		pf.partial_dict.value_start + len(partial_dump), pf.indent_level,
 		pf.indent_with, hashlib.sha256(partial_dump).hexdigest()
 	)
 
-	io_bytes.write(pf.db_name, pf.partial_dict.prefix + partial_dump + pf.partial_dict.suffix)
+	if pf.partial_dict.prefix is not None:
+		io_bytes.write(pf.db_name, pf.partial_dict.prefix + partial_dump + pf.partial_dict.suffix)
+	else:
+		io_bytes.write(pf.db_name, partial_dump + pf.partial_dict.suffix, start=pf.partial_dict.value_start)

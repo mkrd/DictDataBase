@@ -36,6 +36,10 @@ def test_indentation(env, use_compression, use_orjson, sort_keys, indent):
 		session.write()
 	data["b"]["c"] = 3
 
+	print(io_bytes.read("test_indentation"))
+	print(string_dump(data))
+	print("")
+
 	assert io_bytes.read("test_indentation") == string_dump(data)
 
 	with DDB.at("test_indentation", key="d").session() as (session, db_d):

@@ -2,6 +2,20 @@ import orjson
 import os
 from . import config
 
+# Problem: Multiple read processes will concurrently read and write the same file
+# In some cases this will result in a empty read error, thats why the try-except exists
+
+
+# Idea 1:
+# - Never write to the index when reading
+# - When writing, the lock is exclusive on the index aswell, so no other process can read or write
+# Problem: If a file is only ever reed, it will never be indexed
+
+# Idea 2:
+# - Write a new index_record to a new unique file
+# - Reading index happens from all related files
+# - When writing, the new index_record is collected and written into the main file
+# Problem: If a file is only ever reed, lots of index record files will accumulate
 
 
 class Indexer:

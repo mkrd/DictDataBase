@@ -37,7 +37,7 @@ def read(db_name: str, start=None, end=None) -> bytes:
 
 
 
-def write(db_name: str, dump: bytes):
+def write(db_name: str, dump: bytes, start=None):
 	"""
 		Write the bytes to the file of the db_path. If the db was compressed but
 		now config.use_compression is False, remove the compressed file, and
@@ -54,6 +54,8 @@ def write(db_name: str, dump: bytes):
 	# Write bytes or string to file
 	remove_file = None
 	if config.use_compression:
+		if start is not None:
+			raise RuntimeError("Cannot write to compressed file at a specific index")
 		write_file = ddb_path
 		if json_exists:
 			remove_file = json_path
@@ -64,8 +66,14 @@ def write(db_name: str, dump: bytes):
 			remove_file = ddb_path
 
 	# Write bytes or string to file
-	with open(write_file, "wb") as f:
-		f.write(dump)
+	if start is None:
+		with open(write_file, "wb") as f:
+			f.write(dump)
+	else:
+		with open(write_file, "ab") as f:
+			f.seek(start)
+			f.truncate()
+			f.write(dump)
 
 	# Remove the other file if it exists
 	# This is done after writing to avoid data loss
