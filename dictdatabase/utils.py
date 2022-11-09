@@ -21,7 +21,7 @@ def file_info(db_name: str) -> Tuple[str, bool, str, bool]:
 	return j, os.path.exists(j), d, os.path.exists(d)
 
 
-def find(file_name: str) -> list[str]:
+def find_all(file_name: str) -> list[str]:
 	"""
 	Returns a list of all the database names that match the given glob file_name.
 

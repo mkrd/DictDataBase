@@ -28,8 +28,6 @@ class DDBSession(Generic[T]):
 		self.key = key
 		self.op_type = op_type
 
-		if op_type.dir:
-			self.db_name = utils.find(db_name)
 
 	def __enter__(self) -> Tuple["DDBSession", JSONSerializable | T]:
 		"""
@@ -65,12 +63,14 @@ class DDBSession(Generic[T]):
 						self.data_handle[k] = v
 
 			elif self.op_type.dir_normal:
+				self.db_name = utils.find_all(self.db_name)
 				self.write_lock = [locking.WriteLock(x) for x in self.db_name]
 				for lock in self.write_lock:
 					lock._lock()
 				self.data_handle = {n.split("/")[-1]: io_unsafe.read(n) for n in self.db_name}
 
 			elif self.op_type.dir_where:
+				self.db_name = utils.find_all(self.db_name)
 				selected_db_names, write_lock = [], []
 				for db_name in self.db_name:
 					lock = locking.WriteLock(db_name)

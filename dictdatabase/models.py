@@ -112,7 +112,7 @@ class DDBMethodChooser:
 		if self.where is not None:
 			raise RuntimeError("DDB.at(where=...).exists() cannot be used with the where parameter")
 
-		if len(utils.find(self.path)) == 0:
+		if len(utils.find_all(self.path)) == 0:
 			return False
 		if self.key is None:
 			return True
@@ -184,11 +184,11 @@ class DDBMethodChooser:
 					data[k] = v
 
 		elif self.op_type.dir_normal:
-			pattern_paths = utils.find(self.path)
+			pattern_paths = utils.find_all(self.path)
 			data = {n.split("/")[-1]: io_safe.read(n) for n in pattern_paths}
 
 		elif self.op_type.dir_where:
-			for db_name in utils.find(self.path):
+			for db_name in utils.find_all(self.path):
 				k, v = db_name.split("/")[-1], io_safe.read(db_name)
 				if self.where(k, type_cast(v)):
 					data[k] = v
