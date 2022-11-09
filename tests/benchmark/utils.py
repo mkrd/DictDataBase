@@ -30,27 +30,3 @@ def print_and_assert_results(readers, writers, per_proc, tables, big_file, compr
 		# print(db["counter"]["counter"], "==", per_proc * writers)
 		assert db["counter"]["counter"] == per_proc * writers
 		# print(f"✅ counter={db['counter']}")
-
-
-def random_reads(file_count):
-	""" Read the n tables in random order """
-	for t in sorted(range(file_count), key=lambda _: random.random()):
-		DDB.at(f"incr{t}", key="counter").read()
-
-
-def random_writes(file_count):
-	""" Iterated the n tables in random order and increment the counter """
-	for t in sorted(range(file_count), key=lambda _: random.random()):
-		with DDB.at(f"incr{t}", key="counter").session(as_type=pd) as (session, d):
-			d.at("counter").set(d.at("counter").get() + 1)
-			session.write()
-
-
-def db_job(mode="r", file_count=1, per_proc=1):
-	durations = []
-	for _ in range(per_proc):
-		t_start = time.monotonic_ns()
-		random_writes(file_count) if mode == "w" else random_reads(file_count)
-		t_end = time.monotonic_ns()
-		durations.append((t_end - t_start) / 1e6)
-	print_stats(mode, durations)

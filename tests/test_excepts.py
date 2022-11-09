@@ -1,5 +1,5 @@
 import dictdatabase as DDB
-from dictdatabase import utils
+from dictdatabase import utils, io_bytes
 from path_dict import pd
 import pytest
 
@@ -60,3 +60,10 @@ def test_wildcard_and_subkey_except(env, use_compression, use_orjson, sort_keys,
 def test_utils_invalid_json_except(env):
 	with pytest.raises(TypeError):
 		utils.seek_index_through_value_bytes(b"{This is not { JSON", 0)
+
+
+def test_bytes_write_except(env):
+	# It is not allowed to specify a start index when compression is used.
+	with pytest.raises(RuntimeError):
+		DDB.config.use_compression = True
+		io_bytes.write("any", b"any", start=1)
