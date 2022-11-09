@@ -117,10 +117,7 @@ class DDBMethodChooser:
 		if self.key is None:
 			return True
 		# Key is passed and occurs is True
-		try:
-			return io_safe.partial_read(self.path, key=self.key) is not None
-		except KeyError:
-			return False
+		return io_safe.partial_read(self.path, key=self.key) is not None
 
 
 	def create(self, data=None, force_overwrite: bool = False):
@@ -176,9 +173,6 @@ class DDBMethodChooser:
 			data = io_safe.read(self.path)
 
 		elif self.op_type.file_key:
-			_, json_exists, _, ddb_exists = utils.db_paths(self.path)
-			if not json_exists and not ddb_exists:
-				return None
 			data = io_safe.partial_read(self.path, self.key)
 
 		elif self.op_type.file_where:

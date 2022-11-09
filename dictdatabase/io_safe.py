@@ -11,7 +11,7 @@ def read(file_name: str) -> dict:
 		- `file_name`: The name of the file to read from.
 	"""
 
-	_, json_exists, _, ddb_exists = utils.db_paths(file_name)
+	_, json_exists, _, ddb_exists = utils.file_info(file_name)
 
 	if not json_exists and not ddb_exists:
 		return None
@@ -30,7 +30,7 @@ def partial_read(file_name: str, key: str) -> dict:
 		- `key`: The key to read the value of.
 	"""
 
-	_, json_exists, _, ddb_exists = utils.db_paths(file_name)
+	_, json_exists, _, ddb_exists = utils.file_info(file_name)
 
 	if not json_exists and not ddb_exists:
 		return None
@@ -65,7 +65,7 @@ def delete(file_name: str):
 		- `file_name`: The name of the file to delete.
 	"""
 
-	json_path, json_exists, ddb_path, ddb_exists = utils.db_paths(file_name)
+	json_path, json_exists, ddb_path, ddb_exists = utils.file_info(file_name)
 
 	if not json_exists and not ddb_exists:
 		return

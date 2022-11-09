@@ -5,7 +5,7 @@ import glob
 from . import config, byte_codes
 
 
-def db_paths(db_name: str) -> Tuple[str, bool, str, bool]:
+def file_info(db_name: str) -> Tuple[str, bool, str, bool]:
 	"""
 		Returns a tuple of four elements, the first and third being the paths to the
 		JSON and DDB files, and the second and third being booleans indicating whether

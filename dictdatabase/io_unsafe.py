@@ -54,7 +54,7 @@ def try_read_bytes_by_index(indexer: indexing.Indexer, db_name, key):
 	return orjson.loads(partial_bytes)
 
 
-def partial_read_only(db_name: str, key: str) -> dict:
+def partial_read_only(db_name: str, key: str) -> dict | None:
 	"""
 		Partially read a key from a db.
 		The key MUST be unique in the entire db, otherwise the behavior is undefined.
@@ -75,7 +75,7 @@ def partial_read_only(db_name: str, key: str) -> dict:
 	key_start, key_end = utils.find_outermost_key_in_json_bytes(file_bytes, key)
 
 	if key_end == -1:
-		raise KeyError(f"Key \"{key}\" not found in db \"{db_name}\"")
+		return None
 
 	# Key found, now determine the bounds of the value
 	space_after_semicolon = 1 if file_bytes[key_end] == byte_codes.SPACE else 0

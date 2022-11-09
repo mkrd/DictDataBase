@@ -17,7 +17,7 @@ def read(db_name: str, start=None, end=None) -> bytes:
 		- `start`: The start index to read from.
 		- `end`: The end index to read up to (not included).
 	"""
-	json_path, json_exists, ddb_path, ddb_exists = utils.db_paths(db_name)
+	json_path, json_exists, ddb_path, ddb_exists = utils.file_info(db_name)
 
 	if json_exists:
 		if ddb_exists:
@@ -49,7 +49,7 @@ def write(db_name: str, dump: bytes, start=None):
 		decoded.
 	"""
 
-	json_path, json_exists, ddb_path, ddb_exists = utils.db_paths(db_name)
+	json_path, json_exists, ddb_path, ddb_exists = utils.file_info(db_name)
 
 	# Write bytes or string to file
 	remove_file = None
