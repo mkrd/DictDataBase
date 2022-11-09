@@ -63,6 +63,7 @@ def test_utils_invalid_json_except(env):
 
 
 def test_bytes_write_except(env):
+	# It is not allowed to specify a start index when compression is used.
 	with pytest.raises(RuntimeError):
 		DDB.config.use_compression = True
-		io_bytes.write("any", b"any", 1)
+		io_bytes.write("any", b"any", start=1)
