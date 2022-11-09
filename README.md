@@ -27,14 +27,14 @@ DictDataBase is a simple and fast database for handling json or compressed json 
 - If you need to read files that are larger than your system's RAM.
 
 Install
-================================================================================
+========================================================================================
 
 ```sh
 pip install dictdatabase
 ```
 
 Configuration
-================================================================================
+========================================================================================
 There are 5 configuration options:
 
 ### Storage directory
@@ -74,17 +74,17 @@ DDB.config.use_orjson = True # Default value
 ```
 
 Usage
-================================================================================
+========================================================================================
 
 Import
---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------
 
 ```python
 import dictdatabase as DDB
 ```
 
 Create a file
---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------
 This library is called DictDataBase, but you can actually use any json serializable object.
 ```python
 user_data_dict = {
@@ -102,7 +102,7 @@ DDB.at("users").create(user_data_dict)
 ```
 
 Check if file or sub-key exists
---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------
 ```python
 DDB.at("users").exists()  # True
 DDB.at("users", key="none").exists()  # False
@@ -112,7 +112,7 @@ DDB.at("users", key="Sam").exists()  # False
 ```
 
 Read dicts
---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------
 
 ```python
 d = DDB.at("users").read()
@@ -133,7 +133,7 @@ above_1 = DDB.at("numbers", where=lambda k, v: v > 1).read()
 ```
 
 Write dicts
---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------
 
 ```python
 with DDB.at("users").session() as (session, users):
@@ -151,7 +151,7 @@ If you do not call session.write(), changes will not be written to disk!
 
 
 Partial writing
---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------
 Imagine you have a huge json file with many purchases.
 The json file looks like this: `{<id>: <purchase>, <id>: <purchase>, ...}`.
 Normally, you would have to read and parse the entire file to get a specific key.
@@ -169,7 +169,7 @@ orders of magnitude faster than the naive approach when working with big files.
 
 
 Folders
---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------
 
 You can also read and write to folders of files. Consider the same example as
 before, but now we have a folder called `purchases` that contains many files
@@ -206,7 +206,7 @@ assert ress == {"8": {"a": 8}, "9": {"a": 9}} # True
 
 
 Performance
-================================================================================
+========================================================================================
 
 In preliminary testing, DictDataBase showed promising performance.
 
@@ -220,8 +220,39 @@ It remains to be tested how DictDatabase performs in different scenarios, for
 example when multiple processes want to perform full writes to one big file.
 
 
+Advanced
+========================================================================================
+
+Sleep Timeout
+----------------------------------------------------------------------------------------
+DictDataBase uses a file locking protocol to coordinate concurrent file accesses.
+While waiting for a file where another thread or process currently has exclusive
+access rights, the status of the file lock is periodically checked. You can set
+the timout between the checks:
+
+```python
+DDB.locking.SLEEP_TIMEOUT = 0.001 # 1ms, default value
+```
+
+A value of 1 millisecond is good and it is generally not recommended to change it,
+but you can still tune it to optimize performance in your use case.
+
+Lock Timeout
+----------------------------------------------------------------------------------------
+When a lock file is older than the lock timeout, it is considered orphaned and will
+be removed. This could be the case when your operating terminates a thread or process
+while it holds a lock. The timeout can be adjusted:
+
+```python
+DDB.locking.LOCK_TIMEOUT = 30.0 # 30s, default value
+```
+
+Chose a value that is long enough where you know that your database operations will
+less than it.
+
+
 API Reference
-================================================================================
+========================================================================================
 
 ### `at(path) -> DDBMethodChooser:`
 Select a file or folder to perform an operation on.
@@ -247,7 +278,7 @@ parameter.
 Also, you cannot use the `key` and `where` parameters at the same time.
 
 DDBMethodChooser
---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------
 
 ### `exists() -> bool:`
 Create a new file with the given data as the content. If the file
