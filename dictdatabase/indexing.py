@@ -8,14 +8,24 @@ class Indexer:
 
 	def __init__(self, db_name: str):
 		db_name = db_name.replace("/", "___")
-		path = os.path.join(config.storage_directory, ".ddb", f"{db_name}.index")
-		self.path = path
-		os.makedirs(os.path.dirname(path), exist_ok=True)
+		self.path = os.path.join(config.storage_directory, ".ddb", f"{db_name}.index")
+
+		os.makedirs(os.path.dirname(self.path), exist_ok=True)
 		if not os.path.exists(self.path):
 			self.data = {}
 		else:
-			with open(self.path, "rb") as f:
-				self.data = orjson.loads(f.read())
+			while True:
+				try:
+
+					with open(self.path, "rb") as f:
+						fr = f.read()
+
+						frl = orjson.loads(fr)
+
+						self.data = frl
+						return
+				except:
+					print("❌ except")
 
 
 

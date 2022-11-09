@@ -9,14 +9,11 @@ from pyinstrument import Profiler
 import threading
 
 from utils import print_and_assert_results
+from dictdatabase.configuration import Confuguration
 
 
-def proc_job(n, sd, uc, uo, id, sk):
-	DDB.config.storage_directory = sd
-	DDB.config.use_compression = uc
-	DDB.config.use_orjson = uo
-	DDB.config.indent = id
-	DDB.config.sort_keys = sk
+def proc_job(n, cfg):
+	DDB.config = cfg
 	DDB.locking.SLEEP_TIMEOUT = 0.001
 
 	for _ in range(n):
@@ -38,13 +35,7 @@ def parallel_stressor(file_count):
 	res = []
 	pool = Pool(processes=file_count)
 	for _ in range(file_count):
-		r = pool.apply_async(proc_job, args=(1000,
-			DDB.config.storage_directory,
-			DDB.config.use_compression,
-			DDB.config.use_orjson,
-			DDB.config.indent,
-			DDB.config.sort_keys,
-		))
+		r = pool.apply_async(proc_job, args=(1000, DDB.config))
 		res.append(r)
 	pool.close()
 	pool.join()
