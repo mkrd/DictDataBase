@@ -22,8 +22,23 @@ from . import config
 
 
 class Indexer:
+	"""
+		The Indexer takes the name of a database file, and tries to load the .index file
+		of the corresponding database file.
+
+		The name of the index file is the name of the database file, with the extension
+		.index and all "/" replaced with "___"
+
+		The content of the index file is a json object, where the keys are keys inside
+		the database json file, and the values are lists of 5 elements:
+		- start_index: The index of the first byte of the value of the key in the database file
+		- end_index: The index of the last byte of the value of the key in the database file
+		- indent_level: The indent level of the key in the database file
+		- indent_with: The indent string used.
+	"""
 
 	def __init__(self, db_name: str):
+		# Make path of index file
 		db_name = db_name.replace("/", "___")
 		self.path = os.path.join(config.storage_directory, ".ddb", f"{db_name}.index")
 
@@ -39,13 +54,18 @@ class Indexer:
 			self.data = {}
 
 
-
 	def get(self, key):
+		"""
+			Returns a list of 5 elements for a key if it exists, otherwise None
+			Elements:[start_index, end_index, indent_level, indent_with, value_hash]
+		"""
 		return self.data.get(key, None)
 
 
-
 	def write(self, key, start_index, end_index, indent_level, indent_with, value_hash):
+		"""
+			Write index information for a key to the index file
+		"""
 		self.data[key] = [start_index, end_index, indent_level, indent_with, value_hash]
 		with open(self.path, "wb") as f:
 			f.write(orjson.dumps(self.data))
