@@ -13,19 +13,13 @@ class Indexer:
 		os.makedirs(os.path.dirname(self.path), exist_ok=True)
 		if not os.path.exists(self.path):
 			self.data = {}
-		else:
-			while True:
-				try:
+			return
 
-					with open(self.path, "rb") as f:
-						fr = f.read()
-
-						frl = orjson.loads(fr)
-
-						self.data = frl
-						return
-				except:
-					print("❌ except")
+		try:
+			with open(self.path, "rb") as f:
+				self.data = orjson.loads(f.read())
+		except BaseException:
+			self.data = {}
 
 
 

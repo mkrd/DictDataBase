@@ -7,7 +7,7 @@ from . import config
 # Design decisions:
 # - Do not use pathlib, because it is slower than os
 
-SLEEP_TIMEOUT = 0.005
+SLEEP_TIMEOUT = 0.001
 
 # If a process crashes and doesn't remove its locks, remove them after a timeout
 LOCK_TIMEOUT = 30.0

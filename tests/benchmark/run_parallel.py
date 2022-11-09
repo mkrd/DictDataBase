@@ -89,10 +89,9 @@ class Scenario:
 	ops: int = 10
 
 	def print(self):
-		res = f"✨ Scenario: {'🔹' * self.readers} {'🔻' * self.writers} ({self.readers}r{self.writers}w)"
+		res = f"✨ Scenario: {'🔹' * self.readers}{'🔻' * self.writers} ({self.readers}r{self.writers}w)"
 		res += ", 🔸 compression" if self.use_compression else ""
 		res += ", 💎 big file" if self.big_file else ""
-
 		print(res)
 
 
@@ -100,7 +99,7 @@ def print_and_assert_results(scenario: Scenario, t):
 	ops = (scenario.writers + scenario.readers) * scenario.ops * scenario.files
 	ops_sec = f"{(ops / t):.0f}"
 	s = f"⏱️ {ops_sec} op/s ({ops} in {t:.2f}s)"
-	print(str.ljust(s, 30), end="")
+	print(str.ljust(s, 32), end="")
 	for t in range(scenario.files):
 		db = DDB.at(f"incr{t}").read()
 		if db["counter"]["counter"] != scenario.ops * scenario.writers:
@@ -111,11 +110,11 @@ def print_and_assert_results(scenario: Scenario, t):
 
 
 
-def process_job(i, mode, scenario, cfg):
+def process_job(mode, scenario, cfg):
 	DDB.config = cfg
 	DDB.locking.SLEEP_TIMEOUT = 0.001
+
 	t1 = time.monotonic()
-	print("start", i)
 	for _ in range(scenario.ops):
 		for t in sorted(range(scenario.files), key=lambda _: random.random()):
 			if mode == "r":
@@ -125,7 +124,6 @@ def process_job(i, mode, scenario, cfg):
 				with DDB.at(f"incr{t}", key="counter").session(as_type=PathDict) as (session, d):
 					d.at("counter").set(d.at("counter").get() + 1)
 					session.write()
-	print("FIN", i)
 	t2 = time.monotonic()
 	return t2 - t1
 
@@ -145,8 +143,8 @@ def parallel_stressor(scenario: Scenario):
 	# Execute process pool running incrementor as the target task
 	res = []
 	pool = Pool(processes=scenario.readers + scenario.writers)
-	for i, mode in enumerate("w" * scenario.writers + "r" * scenario.readers):
-		res.append(pool.apply_async(process_job, args=(i, mode, scenario, DDB.config)))
+	for mode in "w" * scenario.writers + "r" * scenario.readers:
+		res.append(pool.apply_async(process_job, args=(mode, scenario, DDB.config)))
 	pool.close()
 	pool.join()
 
@@ -155,26 +153,42 @@ def parallel_stressor(scenario: Scenario):
 
 
 scenarios = [
-	# Stress
-	# Scenario(readers=20, writers=20, ops=30),
-	# # Reading only
-	# Scenario(readers=8, ops=1500),
-	# Scenario(readers=8, ops=1500, use_compression=True),
+
+
+	Scenario(readers=1, ops=6000),
+	Scenario(readers=2, ops=6000),
+	Scenario(readers=4, ops=6000),
+	Scenario(readers=8, ops=3000),
+
+
+	Scenario(writers=1, ops=6000),
+	Scenario(writers=2, ops=1000),
+	Scenario(writers=4, ops=800),
+	Scenario(writers=8, ops=200),
+
+
+	Scenario(readers=20, writers=20, ops=30),
+
+
+	Scenario(readers=8, ops=1500),
+	Scenario(readers=8, ops=1500, use_compression=True),
 	Scenario(readers=8, ops=1500, big_file=True),
 
-	# Scenario(readers=8, writers=1, ops=200),
-	# Scenario(readers=8, writers=1, ops=25, big_file=True),
 
-	# Scenario(readers=1, writers=8, ops=200),
-	# Scenario(readers=1, writers=8, ops=10, big_file=True),
+	Scenario(readers=8, writers=1, ops=200),
+	Scenario(readers=8, writers=1, ops=25, big_file=True),
 
-	# Scenario(readers=8, writers=8, ops=100),
-	# Scenario(readers=8, writers=8, ops=8, big_file=True),
+
+	Scenario(readers=1, writers=8, ops=200),
+	Scenario(readers=1, writers=8, ops=10, big_file=True),
+
+
+	Scenario(readers=8, writers=8, ops=100),
+	Scenario(readers=8, writers=8, ops=8, big_file=True),
 ]
 
 if __name__ == "__main__":
 
-	# Sequential benchmarks
 	# print("✨ Simple sequential benchmarks")
 	# sequential_full_read_small_file()
 	# sequential_partial_read_small_file()
@@ -189,5 +203,4 @@ if __name__ == "__main__":
 			parallel_stressor(scenario)
 			scenario.print()
 		finally:
-			pass
-			# shutil.rmtree(".ddb_bench_multi", ignore_errors=True)
+			shutil.rmtree(".ddb_bench_multi", ignore_errors=True)
