@@ -35,6 +35,7 @@ class Indexer:
 		- end_index: The index of the last byte of the value of the key in the database file
 		- indent_level: The indent level of the key in the database file
 		- indent_with: The indent string used.
+		- value_hash: The hash of the value bytes
 	"""
 
 	def __init__(self, db_name: str):
