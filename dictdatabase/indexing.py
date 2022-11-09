@@ -17,6 +17,9 @@ from . import config
 # - When writing, the new index_record is collected and written into the main file
 # Problem: If a file is only ever reed, lots of index record files will accumulate
 
+# Idea 3:
+# - Leave everything as is. While not ideal, it works. When empty read error occurs, don't use the index for that read
+
 
 class Indexer:
 
@@ -32,7 +35,7 @@ class Indexer:
 		try:
 			with open(self.path, "rb") as f:
 				self.data = orjson.loads(f.read())
-		except BaseException:
+		except orjson.JSONDecodeError:
 			self.data = {}
 
 
