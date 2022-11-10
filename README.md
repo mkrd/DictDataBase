@@ -12,7 +12,7 @@ DictDataBase is a simple and fast database for handling json or compressed json 
 - **No database server** required. Simply import DictDataBase in your project and use it.
 - **Compression**. Configure if the files should be stored as raw json or as json compressed with zlib.
 - **Fast**. A dict can be accessed partially without having to parse the entire file, making the read and writes very efficient.
-- **Tested**. 100% coverage, over 1000 test cases.
+- **Tested**. 99%+ coverage, over 1000 test cases.
 
 ### Why use DictDataBase
 - For example, have a webserver dispatch database reads and writes concurrently.
