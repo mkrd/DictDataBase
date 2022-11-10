@@ -38,6 +38,8 @@ class Indexer:
 		- value_hash: The hash of the value bytes
 	"""
 
+	invalidate = False
+
 	def __init__(self, db_name: str):
 		# Make path of index file
 		db_name = db_name.replace("/", "___")
@@ -68,39 +70,29 @@ class Indexer:
 			Write index information for a key to the index file
 		"""
 
+		# TODO:
+		# Works when starting from an empty index file
+		# But when an index file invalid indices exist, it is not able to get rid of unmatching hashes
+
+		# This seems to be solved by the invalidate flag
+
 		old_key_entry = self.data.get(key, None)
-		if old_key_entry is None:
-			self.data[key] = [start_index, end_index, indent_level, indent_with, value_hash]
-			with open(self.path, "wb") as f:
-				f.write(orjson.dumps(self.data))
-			return
+		if old_key_entry is not None:
+			_, old_end, _, _, _ = old_key_entry
 
-		old_start, old_end, _, _, _ = old_key_entry
-
-
-		# Start should always be the same
-		# But end can change if the value length is changed
-
-
-		if old_end == end_index:
-			self.data[key] = [start_index, end_index, indent_level, indent_with, value_hash]
-			with open(self.path, "wb") as f:
-				f.write(orjson.dumps(self.data))
-			return
-
-
-		delta = end_index - old_end
-		# delta is positive, if the value is longer
-		# delta is negative, if the value is shorter
-
-		# Now for all index entries where the start value is greater than the current keys start value
-		# update the indices by delta
-		print("delta", delta)
-
-		for entry in self.data.values():
-			if entry[0] > old_end:
-				entry[0] += delta
-				entry[1] += delta
+			# Start should always be the same
+			# But end can change if the value length is changed
+			if old_end != end_index:
+				if not self.invalidate:
+					delta = end_index - old_end
+					for entry in self.data.values():
+						if entry[0] > old_end:
+							entry[0] += delta
+							entry[1] += delta
+				else:
+					# Invalidate all keys after the current key
+					self.data = {}
+					self.invalidate = False
 
 		self.data[key] = [start_index, end_index, indent_level, indent_with, value_hash]
 		with open(self.path, "wb") as f:

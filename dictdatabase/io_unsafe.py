@@ -148,6 +148,7 @@ def try_get_parial_file_handle_by_index(indexer: indexing.Indexer, db_name, key)
 		data_bytes = io_bytes.read(db_name)
 		value_bytes = data_bytes[value_start:value_end]
 		if value_hash != hashlib.sha256(value_bytes).hexdigest():
+			indexer.invalidate_after_key = True
 			return None, data_bytes
 		value_data = orjson.loads(value_bytes)
 		partial_dict = PartialDict(data_bytes[:value_start], key, value_data, value_start, data_bytes[value_end:])
@@ -162,6 +163,7 @@ def try_get_parial_file_handle_by_index(indexer: indexing.Indexer, db_name, key)
 			# If the hashes don't match, read the prefix to concat the full file bytes
 			print("Full bytes parse, hashes don't match")
 			prefix_bytes = io_bytes.read(db_name, 0, value_start)
+			indexer.invalidate_after_key = True
 			return None, prefix_bytes + value_and_suffix_bytes
 		value_data = orjson.loads(value_bytes)
 		partial_dict = PartialDict(None, key, value_data, value_start, value_and_suffix_bytes[value_length:])
