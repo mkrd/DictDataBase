@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Tuple
 from dataclasses import dataclass
 import orjson
 import json
@@ -124,9 +125,18 @@ def write(db_name: str, data: dict):
 ################################################################################
 
 
-def try_get_parial_file_handle_by_index(indexer: indexing.Indexer, db_name, key):
+def try_get_parial_file_handle_by_index(indexer: indexing.Indexer, db_name, key) -> Tuple[PartialFileHandle | None, bytes | None]:
+	"""
+		Try to get a partial file handle by using the key entry in the index file.
+
+		If the data could be read from the index file, a tuple of the partial file
+		handle and None is returned.
+		If the data could not be read from the index file, a tuple of None and the file
+		bytes is returned, so that the file bytes can be searched for the key.
+	"""
+
 	if (index := indexer.get(key)) is None:
-		return None
+		return None, io_bytes.read(db_name)
 	value_start, value_end, indent_level, indent_with, value_hash = index
 
 	# If compression is enabled, all data has to be read from the file
@@ -134,7 +144,7 @@ def try_get_parial_file_handle_by_index(indexer: indexing.Indexer, db_name, key)
 		data_bytes = io_bytes.read(db_name)
 		value_bytes = data_bytes[value_start:value_end]
 		if value_hash != hashlib.sha256(value_bytes).hexdigest():
-			return None
+			return None, data_bytes
 		value_data = orjson.loads(value_bytes)
 		partial_dict = PartialDict(data_bytes[:value_start], key, value_data, value_start, data_bytes[value_end:])
 
@@ -144,11 +154,13 @@ def try_get_parial_file_handle_by_index(indexer: indexing.Indexer, db_name, key)
 		value_length = value_end - value_start
 		value_bytes = value_and_suffix_bytes[:value_length]
 		if value_hash != hashlib.sha256(value_bytes).hexdigest():
-			return None
+			# If the hashes don't match, read the prefix to concat the full file bytes
+			prefix_bytes = io_bytes.read(db_name, 0, value_start)
+			return None, prefix_bytes + value_and_suffix_bytes
 		value_data = orjson.loads(value_bytes)
 		partial_dict = PartialDict(None, key, value_data, value_start, value_and_suffix_bytes[value_length:])
 
-	return PartialFileHandle(db_name, partial_dict, indent_level, indent_with, indexer)
+	return PartialFileHandle(db_name, partial_dict, indent_level, indent_with, indexer), None
 
 
 
@@ -163,30 +175,31 @@ def get_partial_file_handle(db_name: str, key: str) -> PartialFileHandle:
 		If the key is not found, a `KeyError` is raised.
 	"""
 
-	data = io_bytes.read(db_name)
 
 	# Search for key in the index file
 	indexer = indexing.Indexer(db_name)
-	if (partial_file_handle := try_get_parial_file_handle_by_index(indexer, db_name, key)) is not None:
-		return partial_file_handle
+	partial_handle, data_bytes = try_get_parial_file_handle_by_index(indexer, db_name, key)
+	if partial_handle is not None:
+		return partial_handle
 
 	# Not found in index file, search for key in the entire file
-	key_start, key_end = utils.find_outermost_key_in_json_bytes(data, key)
+	key_start, key_end = utils.find_outermost_key_in_json_bytes(data_bytes, key)
 
 	if key_end == -1:
 		raise KeyError(f"Key \"{key}\" not found in db \"{db_name}\"")
 
 	# Key found, now determine the bounds of the value
-	value_start = key_end + (1 if data[key_end] == byte_codes.SPACE else 0)
-	value_end = utils.seek_index_through_value_bytes(data, value_start)
+	value_start = key_end + (1 if data_bytes[key_end] == byte_codes.SPACE else 0)
+	value_end = utils.seek_index_through_value_bytes(data_bytes, value_start)
 
-	indent_level, indent_with  = utils.detect_indentation_in_json_bytes(data, key_start)
-	partial_bytes = data[value_start:value_end]
+	indent_level, indent_with  = utils.detect_indentation_in_json_bytes(data_bytes, key_start)
+	partial_bytes = data_bytes[value_start:value_end]
 
 	# Write key info to index file
 
 	partial_value = orjson.loads(partial_bytes)
-	partial_dict = PartialDict(data[:value_start], key, partial_value, value_start, data[value_end:])
+	prefix_bytes = data_bytes[:value_start] if config.use_compression else None
+	partial_dict = PartialDict(prefix_bytes, key, partial_value, value_start, data_bytes[value_end:])
 	return PartialFileHandle(db_name, partial_dict, indent_level, indent_with, indexer)
 
 
