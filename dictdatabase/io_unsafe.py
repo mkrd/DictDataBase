@@ -125,9 +125,9 @@ def write(db_name: str, data: dict):
 
 
 def try_get_parial_file_handle_by_index(indexer: indexing.Indexer, db_name, key):
-	if (index := indexer.get(key)) is None:
+	if (index_key_entry := indexer.get(key)) is None:
 		return None
-	value_start, value_end, indent_level, indent_with, value_hash = index
+	value_start, value_end, indent_level, indent_with, value_hash = index_key_entry
 
 	# If compression is enabled, all data has to be read from the file
 	if config.use_compression:
