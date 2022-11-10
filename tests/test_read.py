@@ -5,12 +5,12 @@ import json
 from tests.utils import make_complex_nested_random_dict
 
 
-def test_non_existent(env, use_compression, use_orjson, sort_keys, indent):
+def test_non_existent(use_test_dir, use_compression, use_orjson, sort_keys, indent):
 	d = DDB.at("nonexistent").read()
 	assert d is None
 
 
-def test_file_exists_error(env, use_compression, use_orjson, sort_keys, indent):
+def test_file_exists_error(use_test_dir, use_compression, use_orjson, sort_keys, indent):
 	with open(f"{DDB.config.storage_directory}/test_file_exists_error.json", "w") as f:
 		f.write("")
 	with open(f"{DDB.config.storage_directory}/test_file_exists_error.ddb", "w") as f:
@@ -19,7 +19,7 @@ def test_file_exists_error(env, use_compression, use_orjson, sort_keys, indent):
 		DDB.at("test_file_exists_error").read()
 
 
-def test_invalid_params(env, use_compression, use_orjson, sort_keys, indent):
+def test_invalid_params(use_test_dir, use_compression, use_orjson, sort_keys, indent):
 	with pytest.raises(TypeError):
 		DDB.at("test_invalid_params", key="any", where=lambda k, v: True).read()
 
@@ -54,7 +54,7 @@ def test_read_integrity():
 
 
 
-def test_create_and_read(env, use_compression, use_orjson, sort_keys, indent):
+def test_create_and_read(use_test_dir, use_compression, use_orjson, sort_keys, indent):
 	name = "test_create_and_read"
 	d = make_complex_nested_random_dict(12, 6)
 	DDB.at(name).create(d, force_overwrite=True)
@@ -62,7 +62,7 @@ def test_create_and_read(env, use_compression, use_orjson, sort_keys, indent):
 	assert d == dd
 
 
-def test_read_compression_switching(env, use_orjson, sort_keys, indent):
+def test_read_compression_switching(use_test_dir, use_orjson, sort_keys, indent):
 	name = "test_read_compression_switching"
 	DDB.config.use_compression = False
 	d = make_complex_nested_random_dict(12, 6)
@@ -76,7 +76,7 @@ def test_read_compression_switching(env, use_orjson, sort_keys, indent):
 	assert d == dd
 
 
-def test_multiread(env, use_compression, use_orjson, sort_keys, indent):
+def test_multiread(use_test_dir, use_compression, use_orjson, sort_keys, indent):
 	dl = []
 	for i in range(3):
 		dl += [make_complex_nested_random_dict(12, 6)]

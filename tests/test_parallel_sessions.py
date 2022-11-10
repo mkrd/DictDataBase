@@ -27,7 +27,7 @@ def read_counters(n, tables, cfg):
 	return True
 
 
-def test_stress_multiprocessing(env, use_compression, use_orjson):
+def test_stress_multiprocessing(use_test_dir, use_compression, use_orjson):
 	per_thread = 15
 	tables = 1
 	threads = 3
@@ -65,11 +65,11 @@ def read_partial(n, cfg):
 	return True
 
 
-def test_induce_indexer_except(env, use_compression, use_orjson):
-	DDB.at("test_stress_parallel0").create({"key": "value"}, force_overwrite=True)
+def test_induce_indexer_except(use_test_dir, use_compression):
+	DDB.at("test_stress_parallel0").create({}, force_overwrite=True)
 
 	pool = Pool(processes=2)
 	for _ in range(2):
-		pool.apply_async(read_partial, args=(1500, DDB.config))
+		pool.apply_async(read_partial, args=(1000, DDB.config))
 	pool.close()
 	pool.join()

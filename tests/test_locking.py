@@ -5,14 +5,14 @@ import time
 from tests import TEST_DIR
 
 
-def test_double_lock_exception(env, use_compression):
+def test_double_lock_exception(use_test_dir, use_compression):
 	with pytest.raises(RuntimeError):
 		with locking.ReadLock("db"):
 			with locking.ReadLock("db"):
 				pass
 
 
-def test_get_lock_names(env, use_compression):
+def test_get_lock_names(use_test_dir, use_compression):
 	lock = locking.ReadLock("db")
 	lock._lock()
 	assert locking.get_lock_file_names(lock.ddb_dir, "none") == []
@@ -28,7 +28,7 @@ def test_get_lock_names(env, use_compression):
 	lock._unlock()
 
 
-def test_count_lock_files(env, use_compression):
+def test_count_lock_files(use_test_dir, use_compression):
 	lock = locking.ReadLock("db")
 	lock._lock()
 	assert locking.get_lock_file_names(lock.ddb_dir, "none") == []
@@ -44,7 +44,7 @@ def test_count_lock_files(env, use_compression):
 	lock._unlock()
 
 
-def test_remove_orphaned_locks(env):
+def test_remove_orphaned_locks(use_test_dir):
 	prev_config = locking.LOCK_TIMEOUT
 	locking.LOCK_TIMEOUT = 0.1
 	lock = locking.ReadLock("db")
@@ -56,7 +56,7 @@ def test_remove_orphaned_locks(env):
 	locking.LOCK_TIMEOUT = prev_config
 
 
-def test_AbstractLock(env):
+def test_AbstractLock(use_test_dir):
 	l = locking.AbstractLock("test")
 	with pytest.raises(NotImplementedError):
 		l._lock()

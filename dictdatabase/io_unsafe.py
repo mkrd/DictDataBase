@@ -78,8 +78,7 @@ def partial_read_only(db_name: str, key: str) -> dict | None:
 		return None
 
 	# Key found, now determine the bounds of the value
-	space_after_semicolon = 1 if file_bytes[key_end] == byte_codes.SPACE else 0
-	value_start = key_end + space_after_semicolon
+	value_start = key_end + (1 if file_bytes[key_end] == byte_codes.SPACE else 0)
 	value_end = utils.seek_index_through_value_bytes(file_bytes, value_start)
 
 	indent_level, indent_with  = utils.detect_indentation_in_json_bytes(file_bytes, key_start)
@@ -92,8 +91,23 @@ def partial_read_only(db_name: str, key: str) -> dict | None:
 
 
 ################################################################################
-#### Full Writing
+#### Writing
 ################################################################################
+
+
+def serialize_data_to_json_bytes(data: dict) -> bytes:
+	"""
+		Serialize the data as json bytes. Depending on the config,
+		this can be done with orjson or the standard json module.
+		Additionally, config.sort_keys and config.indent are respected.
+	"""
+	if config.use_orjson:
+		option = orjson.OPT_INDENT_2 if config.indent else 0
+		option |= orjson.OPT_SORT_KEYS if config.sort_keys else 0
+		return orjson.dumps(data, option=option)
+	else:
+		db_dump = json.dumps(data, indent=config.indent, sort_keys=config.sort_keys)
+		return db_dump.encode()
 
 
 def write(db_name: str, data: dict):
@@ -101,14 +115,8 @@ def write(db_name: str, data: dict):
 		Write the dict db dumped as a json string
 		to the file of the db_path.
 	"""
-	if config.use_orjson:
-		option = orjson.OPT_INDENT_2 if config.indent else 0
-		option |= orjson.OPT_SORT_KEYS if config.sort_keys else 0
-		db_dump = orjson.dumps(data, option=option)
-	else:
-		db_dump = json.dumps(data, indent=config.indent, sort_keys=config.sort_keys)
-		db_dump = db_dump.encode()
-	io_bytes.write(db_name, db_dump)
+	data_bytes = serialize_data_to_json_bytes(data)
+	io_bytes.write(db_name, data_bytes)
 
 
 ################################################################################
@@ -132,12 +140,12 @@ def get_partial_file_handle(db_name: str, key: str) -> PartialFileHandle:
 	indexer = indexing.Indexer(db_name)
 	index = indexer.get(key)
 	if index is not None:
-		start_index, end_index, indent_level, indent_with, value_hash = index
-		partial_bytes = data[start_index:end_index]
+		value_start, value_end, indent_level, indent_with, value_hash = index
+		partial_bytes = data[value_start:value_end]
 		if value_hash == hashlib.sha256(partial_bytes).hexdigest():
 			partial_value = orjson.loads(partial_bytes)
-			prefix = data[:start_index] if config.use_compression else None
-			partial_dict = PartialDict(prefix, key, partial_value, start_index, data[end_index:])
+			prefix = data[:value_start] if config.use_compression else None
+			partial_dict = PartialDict(prefix, key, partial_value, value_start, data[value_end:])
 			return PartialFileHandle(db_name, partial_dict, indent_level, indent_with, indexer)
 
 	# Not found in index file, search for key in the entire file
@@ -147,8 +155,7 @@ def get_partial_file_handle(db_name: str, key: str) -> PartialFileHandle:
 		raise KeyError(f"Key \"{key}\" not found in db \"{db_name}\"")
 
 	# Key found, now determine the bounds of the value
-	space_after_semicolon = 1 if data[key_end] == byte_codes.SPACE else 0
-	value_start = key_end + space_after_semicolon
+	value_start = key_end + (1 if data[key_end] == byte_codes.SPACE else 0)
 	value_end = utils.seek_index_through_value_bytes(data, value_start)
 
 	indent_level, indent_with  = utils.detect_indentation_in_json_bytes(data, key_start)
@@ -166,34 +173,27 @@ def partial_write(pf: PartialFileHandle):
 		Write a partial file handle to the db.
 	"""
 
-	if config.use_orjson:
-		option = orjson.OPT_INDENT_2 if config.indent else 0
-		option |= orjson.OPT_SORT_KEYS if config.sort_keys else 0
-		partial_dump = orjson.dumps(pf.partial_dict.value, option=option)
-	else:
-		partial_dump = json.dumps(pf.partial_dict.value,
-			indent=config.indent,
-			sort_keys=config.sort_keys
-		).encode()
+	partial_bytes = serialize_data_to_json_bytes(pf.partial_dict.value)
 
 	# Add indentation
 	if pf.indent_level > 0 and pf.indent_with:
 		replace_this = "\n".encode()
 		replace_with = ("\n" + (pf.indent_level * pf.indent_with)).encode()
-		partial_dump = partial_dump.replace(replace_this, replace_with)
+		partial_bytes = partial_bytes.replace(replace_this, replace_with)
 
-	if config.use_compression:
-		pf.indexer.write(pf.partial_dict.key, len(pf.partial_dict.prefix),
-			len(pf.partial_dict.prefix) + len(partial_dump), pf.indent_level,
-			pf.indent_with, hashlib.sha256(partial_dump).hexdigest()
-		)
-	else:
-		pf.indexer.write(pf.partial_dict.key, pf.partial_dict.value_start,
-		pf.partial_dict.value_start + len(partial_dump), pf.indent_level,
-		pf.indent_with, hashlib.sha256(partial_dump).hexdigest()
+	# Write key info to index file
+	pf.indexer.write(
+		key=pf.partial_dict.key,
+		start_index=pf.partial_dict.value_start,
+		end_index=pf.partial_dict.value_start + len(partial_bytes),
+		indent_level=pf.indent_level,
+		indent_with=pf.indent_with,
+		value_hash=hashlib.sha256(partial_bytes).hexdigest()
 	)
 
-	if pf.partial_dict.prefix is not None:
-		io_bytes.write(pf.db_name, pf.partial_dict.prefix + partial_dump + pf.partial_dict.suffix)
+	if pf.partial_dict.prefix is None:
+		# Prefix could not be determined due to compression, so write the entire file
+		io_bytes.write(pf.db_name, partial_bytes + pf.partial_dict.suffix, start=pf.partial_dict.value_start)
 	else:
-		io_bytes.write(pf.db_name, partial_dump + pf.partial_dict.suffix, start=pf.partial_dict.value_start)
+		# Prefix was determined, so only write the changed part and the suffix
+		io_bytes.write(pf.db_name, pf.partial_dict.prefix + partial_bytes + pf.partial_dict.suffix)

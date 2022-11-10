@@ -4,7 +4,7 @@ import json
 import pytest
 
 
-def test_subread(env, use_compression, use_orjson, sort_keys, indent):
+def test_subread(use_test_dir, use_compression, use_orjson, sort_keys, indent):
 	name = "test_subread"
 	j = {
 		"a": "Hello{}",
@@ -34,7 +34,7 @@ def test_subread(env, use_compression, use_orjson, sort_keys, indent):
 	assert DDB.at("test_subread3", key="a").read() == {"b": {"\\c\\": {"a": "a"}}}
 
 
-def test_subwrite(env, use_compression, use_orjson, sort_keys, indent):
+def test_subwrite(use_test_dir, use_compression, use_orjson, sort_keys, indent):
 	name = "test_subwrite"
 	j = {
 		"b": {"0": 1},
@@ -57,7 +57,7 @@ def test_subwrite(env, use_compression, use_orjson, sort_keys, indent):
 			session.write()
 
 
-def test_write_file_where(env, use_compression, use_orjson, sort_keys, indent):
+def test_write_file_where(use_test_dir, use_compression, use_orjson, sort_keys, indent):
 	name = "test_write_file_where"
 	j = {
 		"a": 1,
@@ -80,7 +80,7 @@ def test_write_file_where(env, use_compression, use_orjson, sort_keys, indent):
 	}
 
 
-def test_dir_where(env, use_compression, use_orjson, sort_keys, indent):
+def test_dir_where(use_test_dir, use_compression, use_orjson, sort_keys, indent):
 	name = "test_dir_where"
 	for i in range(5):
 		DDB.at(name, i).create({"k": i}, force_overwrite=True)

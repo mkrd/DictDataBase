@@ -5,7 +5,7 @@ import shutil
 
 
 @pytest.fixture(scope="session")
-def env(request):
+def use_test_dir(request):
 	DDB.config.storage_directory = TEST_DIR
 	request.addfinalizer(lambda: shutil.rmtree(TEST_DIR))
 
