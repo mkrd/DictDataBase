@@ -124,6 +124,35 @@ def write(db_name: str, data: dict):
 ################################################################################
 
 
+def try_get_parial_file_handle_by_index(indexer: indexing.Indexer, db_name, key):
+	if (index := indexer.get(key)) is None:
+		return None
+	value_start, value_end, indent_level, indent_with, value_hash = index
+
+	# If compression is enabled, all data has to be read from the file
+	if config.use_compression:
+		data_bytes = io_bytes.read(db_name)
+		value_bytes = data_bytes[value_start:value_end]
+		if value_hash != hashlib.sha256(value_bytes).hexdigest():
+			return None
+		value_data = orjson.loads(value_bytes)
+		partial_dict = PartialDict(data_bytes[:value_start], key, value_data, value_start, data_bytes[value_end:])
+
+	# If compression is disabled, only the value and suffix have to be read
+	else:
+		value_and_suffix_bytes = io_bytes.read(db_name, value_start)
+		value_length = value_end - value_start
+		value_bytes = value_and_suffix_bytes[:value_length]
+		if value_hash != hashlib.sha256(value_bytes).hexdigest():
+			return None
+		value_data = orjson.loads(value_bytes)
+		partial_dict = PartialDict(None, key, value_data, value_start, value_and_suffix_bytes[value_length:])
+
+	return PartialFileHandle(db_name, partial_dict, indent_level, indent_with, indexer)
+
+
+
+
 def get_partial_file_handle(db_name: str, key: str) -> PartialFileHandle:
 	"""
 		Partially read a key from a db.
@@ -138,15 +167,8 @@ def get_partial_file_handle(db_name: str, key: str) -> PartialFileHandle:
 
 	# Search for key in the index file
 	indexer = indexing.Indexer(db_name)
-	index = indexer.get(key)
-	if index is not None:
-		value_start, value_end, indent_level, indent_with, value_hash = index
-		partial_bytes = data[value_start:value_end]
-		if value_hash == hashlib.sha256(partial_bytes).hexdigest():
-			partial_value = orjson.loads(partial_bytes)
-			prefix = data[:value_start] if config.use_compression else None
-			partial_dict = PartialDict(prefix, key, partial_value, value_start, data[value_end:])
-			return PartialFileHandle(db_name, partial_dict, indent_level, indent_with, indexer)
+	if (partial_file_handle := try_get_parial_file_handle_by_index(indexer, db_name, key)) is not None:
+		return partial_file_handle
 
 	# Not found in index file, search for key in the entire file
 	key_start, key_end = utils.find_outermost_key_in_json_bytes(data, key)
