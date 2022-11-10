@@ -67,6 +67,41 @@ class Indexer:
 		"""
 			Write index information for a key to the index file
 		"""
+
+		old_key_entry = self.data.get(key, None)
+		if old_key_entry is None:
+			self.data[key] = [start_index, end_index, indent_level, indent_with, value_hash]
+			with open(self.path, "wb") as f:
+				f.write(orjson.dumps(self.data))
+			return
+
+		old_start, old_end, _, _, _ = old_key_entry
+
+
+		# Start should always be the same
+		# But end can change if the value length is changed
+
+
+		if old_end == end_index:
+			self.data[key] = [start_index, end_index, indent_level, indent_with, value_hash]
+			with open(self.path, "wb") as f:
+				f.write(orjson.dumps(self.data))
+			return
+
+
+		delta = end_index - old_end
+		# delta is positive, if the value is longer
+		# delta is negative, if the value is shorter
+
+		# Now for all index entries where the start value is greater than the current keys start value
+		# update the indices by delta
+		print("delta", delta)
+
+		for entry in self.data.values():
+			if entry[0] > old_end:
+				entry[0] += delta
+				entry[1] += delta
+
 		self.data[key] = [start_index, end_index, indent_level, indent_with, value_hash]
 		with open(self.path, "wb") as f:
 			f.write(orjson.dumps(self.data))

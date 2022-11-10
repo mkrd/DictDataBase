@@ -66,10 +66,13 @@ def partial_read_only(db_name: str, key: str) -> dict | None:
 	"""
 
 	# Search for key in the index file
+	if config.use_indexing:
+		indexer = indexing.Indexer(db_name)
+		if (value_data := try_read_bytes_by_index(indexer, db_name, key)) is not None:
+			return value_data
+	else:
+		indexer = None
 
-	indexer = indexing.Indexer(db_name)
-	if (value_data := try_read_bytes_by_index(indexer, db_name, key)) is not None:
-		return value_data
 
 	# Not found in index file, search for key in the entire file
 	file_bytes = io_bytes.read(db_name)
@@ -87,7 +90,8 @@ def partial_read_only(db_name: str, key: str) -> dict | None:
 	value_hash = hashlib.sha256(value_bytes).hexdigest()
 
 	# Write key info to index file
-	indexer.write(key, value_start, value_end, indent_level, indent_with, value_hash)
+	if config.use_indexing:
+		indexer.write(key, value_start, value_end, indent_level, indent_with, value_hash)
 	return orjson.loads(value_bytes)
 
 
@@ -134,8 +138,8 @@ def try_get_parial_file_handle_by_index(indexer: indexing.Indexer, db_name, key)
 		If the data could not be read from the index file, a tuple of None and the file
 		bytes is returned, so that the file bytes can be searched for the key.
 	"""
-
 	if (index := indexer.get(key)) is None:
+		print("no key index found")
 		return None, io_bytes.read(db_name)
 	value_start, value_end, indent_level, indent_with, value_hash = index
 
@@ -150,16 +154,19 @@ def try_get_parial_file_handle_by_index(indexer: indexing.Indexer, db_name, key)
 
 	# If compression is disabled, only the value and suffix have to be read
 	else:
+		print("key found ")
 		value_and_suffix_bytes = io_bytes.read(db_name, value_start)
 		value_length = value_end - value_start
 		value_bytes = value_and_suffix_bytes[:value_length]
 		if value_hash != hashlib.sha256(value_bytes).hexdigest():
 			# If the hashes don't match, read the prefix to concat the full file bytes
+			print("Full bytes parse, hashes don't match")
 			prefix_bytes = io_bytes.read(db_name, 0, value_start)
 			return None, prefix_bytes + value_and_suffix_bytes
 		value_data = orjson.loads(value_bytes)
 		partial_dict = PartialDict(None, key, value_data, value_start, value_and_suffix_bytes[value_length:])
 
+	print("Got handle on try, hashes match")
 	return PartialFileHandle(db_name, partial_dict, indent_level, indent_with, indexer), None
 
 
@@ -177,10 +184,14 @@ def get_partial_file_handle(db_name: str, key: str) -> PartialFileHandle:
 
 
 	# Search for key in the index file
-	indexer = indexing.Indexer(db_name)
-	partial_handle, data_bytes = try_get_parial_file_handle_by_index(indexer, db_name, key)
-	if partial_handle is not None:
-		return partial_handle
+	if config.use_indexing:
+		indexer = indexing.Indexer(db_name)
+		partial_handle, data_bytes = try_get_parial_file_handle_by_index(indexer, db_name, key)
+		if partial_handle is not None:
+			return partial_handle
+	else:
+		indexer = None
+		data_bytes = io_bytes.read(db_name)
 
 	# Not found in index file, search for key in the entire file
 	key_start, key_end = utils.find_outermost_key_in_json_bytes(data_bytes, key)
@@ -193,11 +204,8 @@ def get_partial_file_handle(db_name: str, key: str) -> PartialFileHandle:
 	value_end = utils.seek_index_through_value_bytes(data_bytes, value_start)
 
 	indent_level, indent_with  = utils.detect_indentation_in_json_bytes(data_bytes, key_start)
-	partial_bytes = data_bytes[value_start:value_end]
 
-	# Write key info to index file
-
-	partial_value = orjson.loads(partial_bytes)
+	partial_value = orjson.loads(data_bytes[value_start:value_end])
 	prefix_bytes = data_bytes[:value_start] if config.use_compression else None
 	partial_dict = PartialDict(prefix_bytes, key, partial_value, value_start, data_bytes[value_end:])
 	return PartialFileHandle(db_name, partial_dict, indent_level, indent_with, indexer)
@@ -217,14 +225,15 @@ def partial_write(pf: PartialFileHandle):
 		partial_bytes = partial_bytes.replace(replace_this, replace_with)
 
 	# Write key info to index file
-	pf.indexer.write(
-		key=pf.partial_dict.key,
-		start_index=pf.partial_dict.value_start,
-		end_index=pf.partial_dict.value_start + len(partial_bytes),
-		indent_level=pf.indent_level,
-		indent_with=pf.indent_with,
-		value_hash=hashlib.sha256(partial_bytes).hexdigest()
-	)
+	if config.use_indexing:
+		pf.indexer.write(
+			key=pf.partial_dict.key,
+			start_index=pf.partial_dict.value_start,
+			end_index=pf.partial_dict.value_start + len(partial_bytes),
+			indent_level=pf.indent_level,
+			indent_with=pf.indent_with,
+			value_hash=hashlib.sha256(partial_bytes).hexdigest()
+		)
 
 	if pf.partial_dict.prefix is None:
 		# Prefix could not be determined due to compression, so write the entire file
