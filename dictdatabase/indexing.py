@@ -63,10 +63,18 @@ class Indexer:
 		return self.data.get(key, None)
 
 
-	def write(self, key, start_index, end_index, indent_level, indent_with, value_hash):
+	def write(self, key, start_index, end_index, indent_level, indent_with, value_hash, old_value_end):
 		"""
 			Write index information for a key to the index file
 		"""
+
+		if self.data.get(key, None) is not None:
+			delta = end_index - old_value_end
+			for entry in self.data.values():
+				if entry[0] > old_value_end:
+					entry[0] += delta
+					entry[1] += delta
+
 		self.data[key] = [start_index, end_index, indent_level, indent_with, value_hash]
 		with open(self.path, "wb") as f:
 			f.write(orjson.dumps(self.data))
