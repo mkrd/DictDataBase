@@ -4,14 +4,14 @@ import pytest
 from tests.utils import make_complex_nested_random_dict
 
 
-def test_non_existent_session(use_test_dir, use_compression, use_orjson, sort_keys, indent):
+def test_non_existent_session(use_test_dir, use_compression, use_orjson, indent):
 	name = "test_non_existent_session"
 	with pytest.raises(FileNotFoundError):
 		with DDB.at(name).session() as (session, d):
 			session.write()
 
 
-def test_write(use_test_dir, use_compression, use_orjson, sort_keys, indent):
+def test_write(use_test_dir, use_compression, use_orjson, indent):
 	name = "test_write"
 	d = make_complex_nested_random_dict(12, 6)
 	DDB.at(name).create(d, force_overwrite=True)
@@ -20,7 +20,7 @@ def test_write(use_test_dir, use_compression, use_orjson, sort_keys, indent):
 		session.write()
 
 
-def test_write_compression_switching(use_test_dir, use_orjson, sort_keys, indent):
+def test_write_compression_switching(use_test_dir, use_orjson, indent):
 	name = "test_write_compression_switching"
 	DDB.config.use_compression = False
 	d = make_complex_nested_random_dict(12, 6)
@@ -41,7 +41,7 @@ def test_write_compression_switching(use_test_dir, use_orjson, sort_keys, indent
 	assert DDB.at(name).read() == d
 
 
-def test_multi_session(use_test_dir, use_compression, use_orjson, sort_keys, indent):
+def test_multi_session(use_test_dir, use_compression, use_orjson, indent):
 	a = {"a": 1}
 	b = {"b": 2}
 
@@ -54,7 +54,7 @@ def test_multi_session(use_test_dir, use_compression, use_orjson, sort_keys, ind
 	assert DDB.at("test_multi_session/*").read() == {"d1": a, "d2": b}
 
 
-def test_write_wildcard_key_except(use_test_dir, use_compression, use_orjson, sort_keys, indent):
+def test_write_wildcard_key_except(use_test_dir, use_compression, use_orjson, indent):
 	with pytest.raises(TypeError):
 		with DDB.at("test/*", key="any").session() as (session, d):
 			pass

@@ -3,7 +3,7 @@ from path_dict import PathDict
 import pytest
 
 
-def test_where(use_test_dir, use_compression, use_orjson, sort_keys, indent):
+def test_where(use_test_dir, use_compression, use_orjson, indent):
     for i in range(10):
         DDB.at("test_select", i).create({"a": i}, force_overwrite=True)
 

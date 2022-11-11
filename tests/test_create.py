@@ -6,7 +6,7 @@ import json
 from tests.utils import make_complex_nested_random_dict
 
 
-def test_create(use_test_dir, use_compression, use_orjson, sort_keys, indent):
+def test_create(use_test_dir, use_compression, use_orjson, indent):
 	DDB.at("create").create(force_overwrite=True)
 	db = DDB.at("create").read()
 	assert db == {}
@@ -23,7 +23,7 @@ def test_create(use_test_dir, use_compression, use_orjson, sort_keys, indent):
 		DDB.at("create", key="any").create(force_overwrite=True)
 
 
-def test_create_edge_cases(use_test_dir, use_compression, use_orjson, sort_keys, indent):
+def test_create_edge_cases(use_test_dir, use_compression, use_orjson, indent):
 	cases = [-2, 0.0, "", "x", [], {}, True]
 
 	for i, c in enumerate(cases):
@@ -34,7 +34,7 @@ def test_create_edge_cases(use_test_dir, use_compression, use_orjson, sort_keys,
 		DDB.at("tcec99").create(object(), force_overwrite=True)
 
 
-def test_nested_file_creation(use_test_dir, use_compression, use_orjson, sort_keys, indent):
+def test_nested_file_creation(use_test_dir, use_compression, use_orjson, indent):
 	n = DDB.at("nested/file/nonexistent").read()
 	assert n is None
 	db = make_complex_nested_random_dict(12, 6)
@@ -42,7 +42,7 @@ def test_nested_file_creation(use_test_dir, use_compression, use_orjson, sort_ke
 	assert DDB.at("nested/file/creation/test").read() == db
 
 
-def test_create_same_file_twice(use_test_dir, use_compression, use_orjson, sort_keys, indent):
+def test_create_same_file_twice(use_test_dir, use_compression, use_orjson, indent):
 	name = "test_create_same_file_twice"
 	# Check that creating the same file twice must raise an error
 	with pytest.raises(FileExistsError):

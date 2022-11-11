@@ -25,13 +25,6 @@ def use_orjson(request):
 
 
 
-@pytest.fixture(params=[False, True])
-def sort_keys(request):
-	DDB.config.sort_keys = request.param
-	return request.param
-
-
-
 @pytest.fixture(params=[None, 0, 2, "\t"])
 def indent(request):
 	DDB.config.indent = request.param

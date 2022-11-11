@@ -9,7 +9,6 @@ class Confuguration:
 	indent: int | str | None = "\t"  # eg. "\t" or 4 or None
 	use_compression: bool = False
 	use_orjson: bool = True
-	sort_keys: bool = True
 
 
 

@@ -101,14 +101,13 @@ def serialize_data_to_json_bytes(data: dict) -> bytes:
 	"""
 		Serialize the data as json bytes. Depending on the config,
 		this can be done with orjson or the standard json module.
-		Additionally, config.sort_keys and config.indent are respected.
+		Additionally config.indent is respected.
 	"""
 	if config.use_orjson:
-		option = orjson.OPT_INDENT_2 if config.indent else 0
-		option |= orjson.OPT_SORT_KEYS if config.sort_keys else 0
+		option = (orjson.OPT_INDENT_2 if config.indent else 0) | orjson.OPT_SORT_KEYS
 		return orjson.dumps(data, option=option)
 	else:
-		db_dump = json.dumps(data, indent=config.indent, sort_keys=config.sort_keys)
+		db_dump = json.dumps(data, indent=config.indent, sort_keys=True)
 		return db_dump.encode()
 
 

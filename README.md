@@ -35,7 +35,7 @@ pip install dictdatabase
 
 Configuration
 ========================================================================================
-There are 5 configuration options:
+There are the following configuration options:
 
 ### Storage directory
 Set storage_directory to the path of the directory that will contain your json files:
@@ -58,12 +58,6 @@ It can be an `int` for the number of spaces, the tab character, or `None` if you
 DDB.config.indent = "\t" # Default value
 ```
 Notice: If `DDB.config.use_orjson = True`, then the value can only be 2 (spaces) or 0/None for no indentation.
-
-### Sort keys
-Specify if you want the dict keys to be sorted when writing to a file. Behaves exactly like `json.dumps(sort_keys=...)`.
-```python
-DDB.config.sort_keys = True # Default value
-```
 
 ### Use orjson
 You can use the orjson encoder and decoder if you need to.

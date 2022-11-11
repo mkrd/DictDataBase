@@ -20,15 +20,14 @@ data = {
 
 def string_dump(db: dict):
 	if not config.use_orjson:
-		return json.dumps(db, indent=config.indent, sort_keys=config.sort_keys).encode()
-	option = orjson.OPT_INDENT_2 if config.indent else 0
-	option |= orjson.OPT_SORT_KEYS if config.sort_keys else 0
+		return json.dumps(db, indent=config.indent, sort_keys=True).encode()
+	option = (orjson.OPT_INDENT_2 if config.indent else 0) | orjson.OPT_SORT_KEYS
 	return orjson.dumps(db, option=option)
 
 
 
 
-def test_indentation(use_test_dir, use_compression, use_orjson, sort_keys, indent):
+def test_indentation(use_test_dir, use_compression, use_orjson, indent):
 	DDB.at("test_indentation").create(data, force_overwrite=True)
 
 	with DDB.at("test_indentation", key="b").session() as (session, db_b):

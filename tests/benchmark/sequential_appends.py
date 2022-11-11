@@ -34,7 +34,6 @@ if __name__ == "__main__":
 	DDB.locking.SLEEP_TIMEOUT = 0.001
 	DDB.config.use_orjson = True
 	DDB.config.indent = 2
-	DDB.config.sort_keys = True
 
 	p = Profiler(interval=0.00001)
 	p.start()
