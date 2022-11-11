@@ -13,6 +13,7 @@ class PartialDict:
 	key: str
 	value: dict
 	value_start: int
+	value_end: int
 	suffix: bytes
 
 
@@ -87,7 +88,7 @@ def partial_read_only(db_name: str, key: str) -> dict | None:
 
 	# Write key info to index file
 
-	indexer.write(key, value_start, value_end, indent_level, indent_with, value_hash)
+	indexer.write(key, value_start, value_end, indent_level, indent_with, value_hash, value_end)
 	return orjson.loads(value_bytes)
 
 
@@ -147,7 +148,7 @@ def try_get_parial_file_handle_by_index(indexer: indexing.Indexer, db_name, key)
 			indexer.invalidate_after_key = True
 			return None, data_bytes
 		value_data = orjson.loads(value_bytes)
-		partial_dict = PartialDict(data_bytes[:value_start], key, value_data, value_start, data_bytes[value_end:])
+		partial_dict = PartialDict(data_bytes[:value_start], key, value_data, value_start, value_end, data_bytes[value_end:])
 
 	# If compression is disabled, only the value and suffix have to be read
 	else:
@@ -162,7 +163,7 @@ def try_get_parial_file_handle_by_index(indexer: indexing.Indexer, db_name, key)
 			indexer.invalidate_after_key = True
 			return None, prefix_bytes + value_and_suffix_bytes
 		value_data = orjson.loads(value_bytes)
-		partial_dict = PartialDict(None, key, value_data, value_start, value_and_suffix_bytes[value_length:])
+		partial_dict = PartialDict(None, key, value_data, value_start, value_end, value_and_suffix_bytes[value_length:])
 
 	print("Got handle on try, hashes match")
 	return PartialFileHandle(db_name, partial_dict, indent_level, indent_with, indexer), None
@@ -200,7 +201,7 @@ def get_partial_file_handle(db_name: str, key: str) -> PartialFileHandle:
 
 	partial_value = orjson.loads(data_bytes[value_start:value_end])
 	prefix_bytes = data_bytes[:value_start] if config.use_compression else None
-	partial_dict = PartialDict(prefix_bytes, key, partial_value, value_start, data_bytes[value_end:])
+	partial_dict = PartialDict(prefix_bytes, key, partial_value, value_start, value_end, data_bytes[value_end:])
 	return PartialFileHandle(db_name, partial_dict, indent_level, indent_with, indexer)
 
 
@@ -224,7 +225,8 @@ def partial_write(pf: PartialFileHandle):
 		end_index=pf.partial_dict.value_start + len(partial_bytes),
 		indent_level=pf.indent_level,
 		indent_with=pf.indent_with,
-		value_hash=hashlib.sha256(partial_bytes).hexdigest()
+		value_hash=hashlib.sha256(partial_bytes).hexdigest(),
+		old_value_end=pf.partial_dict.value_end,
 	)
 
 	if pf.partial_dict.prefix is None:

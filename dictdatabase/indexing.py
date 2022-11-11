@@ -65,7 +65,7 @@ class Indexer:
 		return self.data.get(key, None)
 
 
-	def write(self, key, start_index, end_index, indent_level, indent_with, value_hash):
+	def write(self, key, start_index, end_index, indent_level, indent_with, value_hash, old_value_end):
 		"""
 			Write index information for a key to the index file
 		"""
@@ -76,23 +76,21 @@ class Indexer:
 
 		# This seems to be solved by the invalidate flag
 
-		old_key_entry = self.data.get(key, None)
-		if old_key_entry is not None:
-			_, old_end, _, _, _ = old_key_entry
+		if (old_key_entry := self.data.get(key, None)) is not None:
+			_, _, _, _, old_hash = old_key_entry
 
 			# Start should always be the same
 			# But end can change if the value length is changed
-			if old_end != end_index:
-				if not self.invalidate:
-					delta = end_index - old_end
-					for entry in self.data.values():
-						if entry[0] > old_end:
-							entry[0] += delta
-							entry[1] += delta
-				else:
-					# Invalidate all keys after the current key
-					self.data = {}
-					self.invalidate = False
+			if old_hash != value_hash:
+				delta = end_index - old_value_end
+				for entry in self.data.values():
+					if entry[0] > old_value_end:
+						entry[0] += delta
+						entry[1] += delta
+			else:
+				# Invalidate all keys after the current key
+				self.data = {}
+				self.invalidate = False
 
 		self.data[key] = [start_index, end_index, indent_level, indent_with, value_hash]
 		with open(self.path, "wb") as f:
