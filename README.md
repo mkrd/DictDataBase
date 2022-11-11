@@ -16,7 +16,7 @@ DictDataBase is a simple and fast database for handling json or compressed json 
 
 ### Why use DictDataBase
 - For example, have a webserver dispatch database reads and writes concurrently.
-- If spinning up a database server is an overkill for your application.
+- If spinning up a database server is a bit too much for your application.
     - But you need [ACID](https://en.wikipedia.org/wiki/ACID) guarantees.
 - You have a big database but only want to access single key-value pairs repeatedly. DictDataBase can do this efficiently and quickly.
 - Your use case is suited for working with json data, or you have to work with a lot of json data.
