@@ -4,9 +4,6 @@ import random
 from pyinstrument.profiler import Profiler
 
 
-DDB.config.use_indexing = True
-
-
 user_count = 100_000
 
 # all_users = {}
