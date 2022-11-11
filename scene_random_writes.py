@@ -24,7 +24,7 @@ print("Users created")
 
 p = Profiler(interval=0.0001)
 p.start()
-for it in range(50):
+for it in range(500):
     print(it)
     user_id = str(random.randint(user_count - 100, user_count - 1))
     with DDB.at("users", key=user_id).session() as (session, user):

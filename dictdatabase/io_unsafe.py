@@ -136,7 +136,6 @@ def try_get_parial_file_handle_by_index(indexer: indexing.Indexer, db_name, key)
 		bytes is returned, so that the file bytes can be searched for the key.
 	"""
 	if (index := indexer.get(key)) is None:
-		print("no key index found")
 		return None, io_bytes.read(db_name)
 	value_start, value_end, indent_level, indent_with, value_hash = index
 
@@ -145,27 +144,22 @@ def try_get_parial_file_handle_by_index(indexer: indexing.Indexer, db_name, key)
 		data_bytes = io_bytes.read(db_name)
 		value_bytes = data_bytes[value_start:value_end]
 		if value_hash != hashlib.sha256(value_bytes).hexdigest():
-			indexer.invalidate_after_key = True
 			return None, data_bytes
 		value_data = orjson.loads(value_bytes)
 		partial_dict = PartialDict(data_bytes[:value_start], key, value_data, value_start, value_end, data_bytes[value_end:])
 
 	# If compression is disabled, only the value and suffix have to be read
 	else:
-		print("key found ")
 		value_and_suffix_bytes = io_bytes.read(db_name, value_start)
 		value_length = value_end - value_start
 		value_bytes = value_and_suffix_bytes[:value_length]
 		if value_hash != hashlib.sha256(value_bytes).hexdigest():
 			# If the hashes don't match, read the prefix to concat the full file bytes
-			print("Full bytes parse, hashes don't match")
 			prefix_bytes = io_bytes.read(db_name, 0, value_start)
-			indexer.invalidate_after_key = True
 			return None, prefix_bytes + value_and_suffix_bytes
 		value_data = orjson.loads(value_bytes)
 		partial_dict = PartialDict(None, key, value_data, value_start, value_end, value_and_suffix_bytes[value_length:])
 
-	print("Got handle on try, hashes match")
 	return PartialFileHandle(db_name, partial_dict, indent_level, indent_with, indexer), None
 
 
