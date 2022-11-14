@@ -127,7 +127,7 @@ class DDBMethodChooser:
 		`force_overwrite` is set to True.
 
 		Args:
-		- `data`: The data to write to the file. If not specified, an empty dict
+		- `data`: The data to write to the file. If not specified, it will be `{}`
 		will be written.
 		- `force_overwrite`: If `True`, will overwrite the file if it already
 		exists, defaults to False (optional).
@@ -206,5 +206,9 @@ class DDBMethodChooser:
 		Args:
 		- `as_type`: If provided, cast the value to the given type.
 		Eg. as_type=str will return str(value).
+
+		Raises:
+		- `FileNotFoundError`: If the file does not exist.
+		- `KeyError`: If a key is specified and it does not exist.
 		"""
 		return DDBSession(self.path, self.op_type, self.key, self.where, as_type)
