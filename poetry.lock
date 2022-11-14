@@ -36,7 +36,7 @@ toml = ["tomli"]
 
 [[package]]
 name = "exceptiongroup"
-version = "1.0.1"
+version = "1.0.2"
 description = "Backport of PEP 654 (exception groups)"
 category = "dev"
 optional = false
@@ -74,7 +74,7 @@ pyparsing = ">=2.0.2,<3.0.5 || >3.0.5"
 
 [[package]]
 name = "path-dict"
-version = "3.0.2"
+version = "3.0.4"
 description = "Extends Python's dict with useful extras"
 category = "dev"
 optional = false
@@ -176,7 +176,7 @@ python-versions = ">=3.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "b0ca3e08555913be6b035a13a4fbfd8df25eb1518350d9ca3d2653f633d90e13"
+content-hash = "fe2e92af093329b60245d13c0867c06024334618ca780a57b4f2a8de24b00b60"
 
 [metadata.files]
 attrs = [
@@ -240,8 +240,8 @@ coverage = [
     {file = "coverage-6.5.0.tar.gz", hash = "sha256:f642e90754ee3e06b0e7e51bce3379590e76b7f76b708e1a71ff043f87025c84"},
 ]
 exceptiongroup = [
-    {file = "exceptiongroup-1.0.1-py3-none-any.whl", hash = "sha256:4d6c0aa6dd825810941c792f53d7b8d71da26f5e5f84f20f9508e8f2d33b140a"},
-    {file = "exceptiongroup-1.0.1.tar.gz", hash = "sha256:73866f7f842ede6cb1daa42c4af078e2035e5f7607f0e2c762cc51bb31bbe7b2"},
+    {file = "exceptiongroup-1.0.2-py3-none-any.whl", hash = "sha256:c22f11ec6a10d2b453871c5c5fe887436c4d1961324ce9090f2ca6ddc4180c27"},
+    {file = "exceptiongroup-1.0.2.tar.gz", hash = "sha256:a31cd183c3dea02e617aab5153588d5f7258a77b51f0ef41b3815ae8a0d0f695"},
 ]
 iniconfig = [
     {file = "iniconfig-1.1.1-py2.py3-none-any.whl", hash = "sha256:011e24c64b7f47f6ebd835bb12a743f2fbe9a26d4cecaa7f53bc4f35ee9da8b3"},
@@ -303,8 +303,8 @@ packaging = [
     {file = "packaging-21.3.tar.gz", hash = "sha256:dd47c42927d89ab911e606518907cc2d3a1f38bbd026385970643f9c5b8ecfeb"},
 ]
 path-dict = [
-    {file = "path_dict-3.0.2-py3-none-any.whl", hash = "sha256:4a592fbe8d0bca34092b1d7d8f4ec503e971c23868eb1b19bb99fb16491b8a94"},
-    {file = "path_dict-3.0.2.tar.gz", hash = "sha256:cd695602112daeb5bd357d83a30e478119a691767131f6aa3f764f924ade5601"},
+    {file = "path_dict-3.0.4-py3-none-any.whl", hash = "sha256:797a3ed0bff0051e22c71f909c9fdafe86e811fe0d64a67b4b90d4a88cd309ef"},
+    {file = "path_dict-3.0.4.tar.gz", hash = "sha256:e38086078f7b10697dfecab55e5415bed447604dd9f9eebae4da81f23f2a5eb0"},
 ]
 pluggy = [
     {file = "pluggy-1.0.0-py2.py3-none-any.whl", hash = "sha256:74134bbf457f031a36d68416e1509f34bd5ccc019f0bcc952c7b909d06b37bd3"},
