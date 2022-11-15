@@ -18,10 +18,18 @@ class DDBSession(Generic[T]):
 		the changes will be lost after exiting the with statement.
 	"""
 
-	in_session: bool = False
+	__slots__ = ("in_session", "db_name", "as_type", "where", "key", "op_type", "data_handle", "write_lock", "partial_handle", "original_data")
+
+	in_session: bool
+	db_name: str
 	as_type: T
+	where: Callable[[Any, Any], bool]
+	key: str
+	op_type: Any
+
 
 	def __init__(self, db_name: str, op_type, key: str = None, where: Callable[[Any, Any], bool] = None, as_type: T = None):
+		self.in_session = False
 		self.db_name = db_name
 		self.as_type = as_type
 		self.where = where

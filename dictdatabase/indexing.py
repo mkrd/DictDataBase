@@ -38,6 +38,8 @@ class Indexer:
 		- value_hash: The hash of the value bytes
 	"""
 
+	__slots__ = ("data", "path")
+
 	def __init__(self, db_name: str):
 		# Make path of index file
 		db_name = db_name.replace("/", "___")

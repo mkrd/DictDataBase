@@ -79,11 +79,15 @@ class AbstractLock:
 		An abstract lock doesn't do anything by itself. A subclass of it needs to
 		call super().__init__(...) and then only exit __init__ when the lock is aquired.
 	"""
+
+	__slots__ = ("id", "time_ns", "db_name", "need_path", "path", "ddb_dir")
+
 	id: str
 	time_ns: int
 	db_name: str
-	need_path: str = None
-	path: str = None
+	need_path: str
+	path: str
+	ddb_dir: str
 
 	def __init__(self, db_name: str):
 		"""
@@ -101,8 +105,7 @@ class AbstractLock:
 	def _unlock(self):
 		for p in ("need_path", "path"):
 			try:
-				path = getattr(self, p, None)
-				if path:
+				if path := getattr(self, p, None):
 					os.unlink(path)
 			except FileNotFoundError:
 				pass

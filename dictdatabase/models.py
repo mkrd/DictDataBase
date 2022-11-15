@@ -81,9 +81,13 @@ def at(*path, key: str = None, where: Callable[[Any, Any], bool] = None) -> DDBM
 
 
 class DDBMethodChooser:
+
+	__slots__ = ("path", "key", "where", "op_type")
+
 	path: str
 	key: str
 	where: Callable[[Any, Any], bool]
+	op_type: OperationType
 
 
 	def __init__(self, path: tuple, key: str = None, where: Callable[[Any, Any], bool] = None):
