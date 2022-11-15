@@ -7,7 +7,7 @@ import hashlib
 from . import config, utils, byte_codes, indexing, io_bytes
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)  # slots=True not supported by python 3.8 and 3.9
 class PartialDict:
 	prefix: bytes
 	key: str
@@ -17,7 +17,7 @@ class PartialDict:
 	suffix: bytes
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)  # slots=True not supported by python 3.8 and 3.9
 class PartialFileHandle:
 	db_name: str
 	partial_dict: PartialDict
