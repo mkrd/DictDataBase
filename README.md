@@ -1,10 +1,10 @@
-![Logo](https://github.com/mkrd/DictDataBase/blob/master/assets/logo.png?raw=true)
+![Logo](https://github.com/mkrd/DictDataBase/blob/main/assets/logo.png?raw=true)
 
 [![Downloads](https://pepy.tech/badge/dictdatabase)](https://pepy.tech/project/dictdatabase)
 [![Downloads](https://pepy.tech/badge/dictdatabase/month)](https://pepy.tech/project/dictdatabase)
 [![Downloads](https://pepy.tech/badge/dictdatabase/week)](https://pepy.tech/project/dictdatabase)
 ![Tests](https://github.com/mkrd/DictDataBase/actions/workflows/test.yml/badge.svg)
-![Coverage](https://github.com/mkrd/DictDataBase/blob/master/assets/coverage.svg?raw=1)
+![Coverage](https://github.com/mkrd/DictDataBase/blob/main/assets/coverage.svg?raw=1)
 
 DictDataBase is a simple and fast database for handling json or compressed json as the underlying storage mechanism. Features:
 - **Multi threading and multi processing safe**. Multiple processes on the same machine can simultaneously read and write to dicts without losing data.
