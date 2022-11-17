@@ -28,7 +28,7 @@ def test_invalid_params(use_test_dir, use_compression, use_orjson, indent):
 
 
 
-def test_read_integrity():
+def test_read_integrity(use_test_dir, use_compression, use_orjson, indent):
 	cases = [
 		r'{"a": "\\", "b": 2}',
 		r'{"a": "\\\\", "b": 2}',
@@ -42,8 +42,7 @@ def test_read_integrity():
 		r'{"a": "\\\"\"", "b": 2}',
 	]
 
-
-	for i, case in enumerate(cases):
+	for case in cases:
 		with open(f"{DDB.config.storage_directory}/test_read_integrity.json", "w") as f:
 			f.write(case)
 		dd = DDB.at("test_read_integrity", key="a").read()

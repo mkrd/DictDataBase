@@ -2,12 +2,20 @@ import dictdatabase as DDB
 from tests import TEST_DIR
 import pytest
 import shutil
+import os
 
 
 @pytest.fixture(scope="session")
 def use_test_dir(request):
 	DDB.config.storage_directory = TEST_DIR
+	os.makedirs(TEST_DIR, exist_ok=True)
 	request.addfinalizer(lambda: shutil.rmtree(TEST_DIR))
+
+
+
+@pytest.fixture(scope="function")
+def name_of_test(request):
+	return request.function.__name__
 
 
 
