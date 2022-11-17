@@ -53,7 +53,7 @@ def try_read_bytes_by_index(indexer: indexing.Indexer, db_name, key):
 	partial_bytes = io_bytes.read(db_name, start_index, end_index)
 	if value_hash != hashlib.sha256(partial_bytes).hexdigest():
 		return None
-	return orjson.loads(partial_bytes)
+	return partial_bytes
 
 
 def partial_read_only(db_name: str, key: str) -> dict | None:
@@ -68,8 +68,8 @@ def partial_read_only(db_name: str, key: str) -> dict | None:
 
 	# Search for key in the index file
 	indexer = indexing.Indexer(db_name)
-	if (value_data := try_read_bytes_by_index(indexer, db_name, key)) is not None:
-		return value_data
+	if (value_bytes := try_read_bytes_by_index(indexer, db_name, key)) is not None:
+		return orjson.loads(value_bytes)
 
 	# Not found in index file, search for key in the entire file
 	file_bytes = io_bytes.read(db_name)
