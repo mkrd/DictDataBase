@@ -124,7 +124,7 @@ def find_outermost_key_in_json_bytes(json_bytes: bytes, key: str):
 	represented as bytes.
 
 	Returns:
-	- A tuple of the key start and end index, or (-1, -1) if the key is not found.
+	- A tuple of the key start and end index, or `(-1, -1)` if the key is not found.
 	"""
 	key = f"\"{key}\":".encode()
 
