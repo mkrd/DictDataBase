@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TypeVar, Any, Callable
 from . import utils, io_safe, config
-from . session import DDBSession
+from . sessions import SessionFileFull, SessionFileKey, SessionFileWhere, SessionDirFull, SessionDirWhere
 
 T = TypeVar("T")
 
@@ -200,7 +200,7 @@ class DDBMethodChooser:
 		return type_cast(data)
 
 
-	def session(self, as_type: T = None) -> DDBSession[T]:
+	def session(self, as_type: T = None) -> SessionFileFull[T] | SessionFileKey[T] | SessionFileWhere[T] | SessionDirFull[T] | SessionDirWhere[T]:
 		"""
 		Opens a session to the selected file(s) or folder, depending on previous
 		`.at(...)` selection. Inside the with block, you have exclusive access
@@ -215,4 +215,13 @@ class DDBMethodChooser:
 		- `FileNotFoundError`: If the file does not exist.
 		- `KeyError`: If a key is specified and it does not exist.
 		"""
-		return DDBSession(self.path, self.op_type, self.key, self.where, as_type)
+		if self.op_type.file_normal:
+			return SessionFileFull(self.path, as_type)
+		if self.op_type.file_key:
+			return SessionFileKey(self.path, self.key, as_type)
+		if self.op_type.file_where:
+			return SessionFileWhere(self.path, self.where, as_type)
+		if self.op_type.dir_normal:
+			return SessionDirFull(self.path, as_type)
+		if self.op_type.dir_where:
+			return SessionDirWhere(self.path, self.where, as_type)
