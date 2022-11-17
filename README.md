@@ -126,6 +126,11 @@ d == user_data_dict # True
 joe = DDB.at("users", key="Joe").read()
 joe == user_data_dict["Joe"] # True
 ```
+
+> Note: Doing a partial read like with `DDB.at("users", key="Joe").read()` will return
+> the value of the key at the outermost indentation level if the key appears in the
+> file multiple times.
+
 It is also possible to only read a subset of keys based on a filter callback:
 
 ```python
@@ -134,11 +139,6 @@ DDB.at("numbers").create({"a", 1, "b", 2, "c": 3})
 above_1 = DDB.at("numbers", where=lambda k, v: v > 1).read()
 >>> above_1 == {"b", 2, "c": 3}
 ```
-
-> Note: Doing a partial read like with `DDB.at("users", key="Joe").read()` will return
-> the value of the key at the outermost indentation level if the key appears in the
-> file multiple times.
-
 
 Write dicts
 ----------------------------------------------------------------------------------------
