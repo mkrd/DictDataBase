@@ -6,20 +6,27 @@
 ![Tests](https://github.com/mkrd/DictDataBase/actions/workflows/test.yml/badge.svg)
 ![Coverage](https://github.com/mkrd/DictDataBase/blob/main/assets/coverage.svg?raw=1)
 
-DictDataBase is a simple and fast database for handling json or compressed json as the underlying storage mechanism. Features:
-- **Multi threading and multi processing safe**. Multiple processes on the same machine can simultaneously read and write to dicts without losing data.
+DictDataBase is a simple and fast database for handling json or compressed json as the
+underlying storage mechanism. Features:
+- **Multi threading and multi processing safe**. Multiple processes on the same machine
+can simultaneously read and write to dicts without losing data.
 - **ACID** compliant. Unlike TinyDB, it is suited for concurrent environments.
-- **No database server** required. Simply import DictDataBase in your project and use it.
-- **Compression**. Configure if the files should be stored as raw json or as json compressed with zlib.
-- **Fast**. A dict can be accessed partially without having to parse the entire file, making the read and writes very efficient.
+- **No database server** required. Simply import DictDataBase in your project and use
+it.
+- **Compression**. Configure if the files should be stored as raw json or as json
+compressed with zlib.
+- **Fast**. A dict can be accessed partially without having to parse the entire file,
+making the read and writes very efficient.
 - **Tested** with 99%+ coverage.
 
 ### Why use DictDataBase
 - For example, have a webserver dispatch database reads and writes concurrently.
 - If spinning up a database server is a bit too much for your application.
     - But you need [ACID](https://en.wikipedia.org/wiki/ACID) guarantees.
-- You have a big database but only want to access single key-value pairs repeatedly. DictDataBase can do this efficiently and quickly.
-- Your use case is suited for working with json data, or you have to work with a lot of json data.
+- You have a big database but only want to access single key-value pairs repeatedly.
+DictDataBase can do this efficiently and quickly.
+- Your use case is suited for working with json data, or you have to work with a lot of
+json data.
 
 ### Why not DictDataBase
 - If your storage is slow.
@@ -45,19 +52,21 @@ DDB.config.storage_directory = "./ddb_storage" # Default value
 
 ### Compression
 If you want to use compressed files, set use_compression to `True`.
-This will make the db files significantly smaller and might improve performance if your disk is slow.
-However, the files will not be human readable.
+This will make the db files significantly smaller and might improve performance if your
+disk is slow. However, the files will not be human readable.
 ```python
 DDB.config.use_compression = False # Default value
 ```
 
 ### Indentation
-Set the way how written json files should be indented. Behaves exactly like `json.dumps(indent=...)`.
-It can be an `int` for the number of spaces, the tab character, or `None` if you don't want the files to be indented.
+Set the way how written json files should be indented. Behaves exactly like
+`json.dumps(indent=...)`. It can be an `int` for the number of spaces, the tab
+character, or `None` if you don't want the files to be indented.
 ```python
 DDB.config.indent = "\t" # Default value
 ```
-Notice: If `DDB.config.use_orjson = True`, then the value can only be 2 (spaces) or 0/None for no indentation.
+Notice: If `DDB.config.use_orjson = True`, then the value can only be 2 (spaces) or
+0/None for no indentation.
 
 ### Use orjson
 You can use the orjson encoder and decoder if you need to.
@@ -125,6 +134,11 @@ DDB.at("numbers").create({"a", 1, "b", 2, "c": 3})
 above_1 = DDB.at("numbers", where=lambda k, v: v > 1).read()
 >>> above_1 == {"b", 2, "c": 3}
 ```
+
+> Note: Doing a partial read like with `DDB.at("users", key="Joe").read()` will return
+> the value of the key at the outermost indentation level if the key appears in the
+> file multiple times.
+
 
 Write dicts
 ----------------------------------------------------------------------------------------
@@ -251,7 +265,8 @@ API Reference
 ### `at(path) -> DDBMethodChooser:`
 Select a file or folder to perform an operation on.
 If you want to select a specific key in a file, use the `key` parameter,
-e.g. `DDB.at("file", key="subkey")`.
+e.g. `DDB.at("file", key="subkey")`. If the key appears multiple times in the file,
+the value of the key at the outermost indentation level will be returned.
 
 If you want to select an entire folder, use the `*` wildcard,
 eg. `DDB.at("folder", "*")`, or `DDB.at("folder/*")`. You can also use
