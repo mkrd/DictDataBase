@@ -56,7 +56,7 @@ def try_read_bytes_using_indexer(indexer: indexing.Indexer, db_name: str, key: s
 	if (index := indexer.get(key)) is None:
 		return None
 	start, end, _, _, value_hash = index
-	partial_bytes = io_bytes.read(db_name, start, end)
+	partial_bytes = io_bytes.read(db_name, start=start, end=end)
 	if value_hash != hashlib.sha256(partial_bytes).hexdigest():
 		return None
 	return partial_bytes
@@ -155,12 +155,12 @@ def try_get_parial_file_handle_by_index(indexer: indexing.Indexer, db_name, key)
 
 	# If compression is disabled, only the value and suffix have to be read
 	else:
-		value_and_suffix_bytes = io_bytes.read(db_name, start)
+		value_and_suffix_bytes = io_bytes.read(db_name, start=start)
 		value_length = end - start
 		value_bytes = value_and_suffix_bytes[:value_length]
 		if value_hash != hashlib.sha256(value_bytes).hexdigest():
 			# If the hashes don't match, read the prefix to concat the full file bytes
-			prefix_bytes = io_bytes.read(db_name, 0, start)
+			prefix_bytes = io_bytes.read(db_name, end=start)
 			return None, prefix_bytes + value_and_suffix_bytes
 		value_data = orjson.loads(value_bytes)
 		partial_dict = PartialDict(None, key, value_data, start, end, value_and_suffix_bytes[value_length:])
