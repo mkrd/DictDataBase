@@ -4,7 +4,7 @@ from . import config, utils
 
 
 
-def read(db_name: str, start=None, end=None) -> bytes:
+def read(db_name: str, start: int = None, end: int = None) -> bytes:
 	"""
 		Read the content of a file as bytes. Reading works even when the config
 		changes, so a compressed ddb file can also be read if compression is
@@ -13,10 +13,11 @@ def read(db_name: str, start=None, end=None) -> bytes:
 		Note: Only specify either both start and end, or none of them.
 
 		Args:
-		- `db_name`: The name of the database to read from.
-		- `start`: The start index to read from.
-		- `end`: The end index to read up to (not included).
+		- `db_name`: The name of the database file to read from.
+		- `start`: The start byte index to read from.
+		- `end`: The end byte index to read up to (not included).
 	"""
+
 	json_path, json_exists, ddb_path, ddb_exists = utils.file_info(db_name)
 
 	if json_exists:
@@ -39,7 +40,7 @@ def read(db_name: str, start=None, end=None) -> bytes:
 
 
 
-def write(db_name: str, dump: bytes, start=None):
+def write(db_name: str, dump: bytes, start: int = None):
 	"""
 		Write the bytes to the file of the db_path. If the db was compressed but no
 		compression is enabled, remove the compressed file, and vice versa.
@@ -48,6 +49,8 @@ def write(db_name: str, dump: bytes, start=None):
 		- `db_name`: The name of the database to write to.
 		- `dump`: The bytes to write to the file, representing correct JSON when
 		decoded.
+		- `start`: The start byte index to write to. If None, the whole file is overwritten.
+		If the original content was longer, the rest truncated.
 	"""
 
 	json_path, json_exists, ddb_path, ddb_exists = utils.file_info(db_name)
