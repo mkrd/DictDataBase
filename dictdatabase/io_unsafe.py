@@ -9,7 +9,7 @@ from . import config, utils, byte_codes, indexing, io_bytes
 
 @dataclass(frozen=True)  # slots=True not supported by python 3.8 and 3.9
 class PartialDict:
-	prefix: bytes
+	prefix: bytes | None
 	key: str
 	value: dict
 	value_start: int

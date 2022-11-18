@@ -3,7 +3,7 @@ from . import config, utils, io_unsafe, locking
 
 
 
-def read(file_name: str) -> dict:
+def read(file_name: str) -> dict | None:
 	"""
 		Read the content of a file as a dict.
 
@@ -21,7 +21,7 @@ def read(file_name: str) -> dict:
 
 
 
-def partial_read(file_name: str, key: str) -> dict:
+def partial_read(file_name: str, key: str) -> dict | None:
 	"""
 		Read only the value of a key-value pair from a file.
 
