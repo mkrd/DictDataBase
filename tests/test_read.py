@@ -30,23 +30,26 @@ def test_invalid_params(use_test_dir, use_compression, use_orjson, indent):
 
 def test_read_integrity(use_test_dir, use_compression, use_orjson, indent):
 	cases = [
-		r'{"a": "\\", "b": 2}',
-		r'{"a": "\\\\", "b": 2}',
-		r'{"a": "\\\\\"", "b": 2}',
-		r'{"a": "\\\"\\", "b": 2}',
-		r'{"a": "\"\\\\", "b": 2}',
-		r'{"a": "\"", "b": 2}',
-		r'{"a": "\"\"", "b": 2}',
-		r'{"a": "\"\"\\", "b": 2}',
-		r'{"a": "\"\\\"", "b": 2}',
-		r'{"a": "\\\"\"", "b": 2}',
+		r'{"a": "\\", "b": 0}',
+		r'{"a": "\\\\", "b": 1234}',
+		r'{"a": "\\\\\"", "b": 1234}',
+		r'{"a": "\\\"\\", "b": 1234}',
+		r'{"a": "\"\\\\", "b": 1234}',
+		r'{"a": "\"", "b": 1234}',
+		r'{"a": "\"\"", "b": 1234}',
+		r'{"a": "\"\"\\", "b": 1234}',
+		r'{"a": "\"\\\"", "b": 1234}',
+		r'{"a": "\\\"\"", "b": 1234}',
 	]
 
 	for case in cases:
 		with open(f"{DDB.config.storage_directory}/test_read_integrity.json", "w") as f:
 			f.write(case)
-		dd = DDB.at("test_read_integrity", key="a").read()
-		assert dd == json.loads(case)["a"]
+		key_a = DDB.at("test_read_integrity", key="a").read()
+		key_b = DDB.at("test_read_integrity", key="b").read()
+		assert key_a == json.loads(case)["a"]
+		assert key_b == json.loads(case)["b"]
+
 
 
 

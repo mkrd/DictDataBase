@@ -52,32 +52,47 @@ def seek_index_through_value_bytes(json_bytes: bytes, index: int) -> int:
 
 	# See https://www.json.org/json-en.html for the JSON syntax
 
-	skip_next, in_str, list_depth, dict_depth = False, False, 0, 0
+	in_str, list_depth, dict_depth, i, len_json_bytes = False, 0, 0, index, len(json_bytes)
 
-	for i in range(index, len(json_bytes)):
-		if skip_next:
-			skip_next = False
-			continue
+	while i < len_json_bytes:
 		current = json_bytes[i]
+		# If backslash, skip the next character
 		if current == byte_codes.BACKSLASH:
-			skip_next = True
-			continue
-		if current == byte_codes.QUOTE:
+			i += 1
+		# If quote, toggle in_str
+		elif current == byte_codes.QUOTE:
 			in_str = not in_str
-		if in_str or current == byte_codes.SPACE:
-			continue
-		if current == byte_codes.OPEN_SQUARE:
+			# Possible exit point where string ends and nesting is zero
+			if not in_str and list_depth == 0 and dict_depth == 0:
+				return i + 1
+		# If in string, skip
+		elif in_str:
+			pass
+
+		# Invariant: Not in_str, not escaped
+
+		# Handle opening brackets
+		elif current == byte_codes.OPEN_SQUARE:
 			list_depth += 1
-		elif current == byte_codes.CLOSE_SQUARE:
-			list_depth -= 1
 		elif current == byte_codes.OPEN_CURLY:
 			dict_depth += 1
-		elif current == byte_codes.CLOSE_CURLY:
-			dict_depth -= 1
-		if list_depth == 0 and dict_depth == 0:
-			return i + 1
+		# Handle closing brackets
+		elif current in [byte_codes.CLOSE_SQUARE, byte_codes.CLOSE_CURLY]:
+			if current == byte_codes.CLOSE_SQUARE:
+				list_depth -= 1
+			if current == byte_codes.CLOSE_CURLY:
+				dict_depth -= 1
+			if list_depth == 0:
+				if dict_depth == 0:
+					return i + 1
+				if dict_depth == -1:
+					return i  # Case: {"a": {}}
+		elif list_depth == 0 and ((dict_depth == 0 and current in [byte_codes.COMMA, byte_codes.NEWLINE]) or dict_depth == -1):
+			# Handle commas and newline as exit points
+			return i
+		i += 1
 
-	raise TypeError("Invalid JSON syntax")
+	raise TypeError("Invalid JSON")
 
 
 def count_nesting_in_bytes(json_bytes: bytes, start: int, end: int) -> int:
@@ -90,23 +105,20 @@ def count_nesting_in_bytes(json_bytes: bytes, start: int, end: int) -> int:
 	- `json_bytes`: A bytes object containing valid JSON when decoded
 	"""
 
-	skip_next, in_str, nesting = False, False, 0
-	for i in range(start, end):
-		if skip_next:
-			skip_next = False
-			continue
-		current = json_bytes[i]
-		if current == byte_codes.BACKSLASH:
-			skip_next = True
-			continue
-		if current == byte_codes.QUOTE:
+	in_str, nesting, i = False, 0, start
+	while i < end:
+		byte_i = json_bytes[i]
+		if byte_i == byte_codes.BACKSLASH:
+			i += 1
+		elif byte_i == byte_codes.QUOTE:
 			in_str = not in_str
-		if in_str or current == byte_codes.SPACE:
-			continue
-		elif current == byte_codes.OPEN_CURLY:
+		elif in_str:
+			pass
+		elif byte_i == byte_codes.OPEN_CURLY:
 			nesting += 1
-		elif current == byte_codes.CLOSE_CURLY:
+		elif byte_i == byte_codes.CLOSE_CURLY:
 			nesting -= 1
+		i += 1
 	return nesting
 
 
