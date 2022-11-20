@@ -91,7 +91,7 @@ Create a file
 This library is called DictDataBase, but you can actually use any json serializable object.
 ```python
 users_dict = {
-   "u1": { "name" : ""Ben, "age": 30, "job": "Software Engineer" },
+   "u1": { "name" : "Ben", "age": 30, "job": "Software Engineer" },
    "u2": { "name" : "Sue", "age": 21, "job": "Architect" },
    "u3": { "name" : "Joe", "age": 50, "job": "Manager" },
 }
