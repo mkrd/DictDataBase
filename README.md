@@ -90,28 +90,26 @@ Create a file
 ----------------------------------------------------------------------------------------
 This library is called DictDataBase, but you can actually use any json serializable object.
 ```python
-user_data_dict = {
-    "users": {
-        "Ben": { "age": 30, "job": "Software Engineer" },
-        "Sue": { "age": 21, "job": "Architect" },
-        "Joe": { "age": 50, "job": "Manager" }
-    },
-    "follows": [["Ben", "Sue"], ["Joe", "Ben"]]
+users_dict = {
+   "u1": { "name" : ""Ben, "age": 30, "job": "Software Engineer" },
+   "u2": { "name" : "Sue", "age": 21, "job": "Architect" },
+   "u3": { "name" : "Joe", "age": 50, "job": "Manager" },
 }
 DDB.at("users").create(user_data_dict)
-
-# There is now a file called users.json (or user_data.ddb if you use compression)
-# in your specified storage directory.
 ```
+There is now a file called `users.json` or `users.ddb` in your specified storage 
+directory depending on if you use compression.
+
 
 Check if file or sub-key exists
 ----------------------------------------------------------------------------------------
 ```python
-DDB.at("users").exists()  # True
-DDB.at("users", key="none").exists()  # False
-# Also works on nested keys
-DDB.at("users", key="Ben").exists()  # True
-DDB.at("users", key="Sam").exists()  # False
+DDB.at("users").exists()
+>>> True  # File exists
+DDB.at("users", key="u10").exists() 
+>>> False # Key "u10" not in users 
+DDB.at("users", key="u2").exists() 
+>>> True
 ```
 
 Read dicts
@@ -119,12 +117,11 @@ Read dicts
 
 ```python
 d = DDB.at("users").read()
-# You now have a copy of the json file named "users"
-d == user_data_dict # True
+d == users_dict # True
 
 # Only partially read Joe
-joe = DDB.at("users", key="Joe").read()
-joe == user_data_dict["Joe"] # True
+joe = DDB.at("users", key="u3").read()
+joe == users_dict["Joe"] # True
 ```
 
 > Note: Doing a partial read like with `DDB.at("users", key="Joe").read()` will return
@@ -139,24 +136,19 @@ DDB.at("numbers").create({"a", 1, "b", 2, "c": 3})
 above_1 = DDB.at("numbers", where=lambda k, v: v > 1).read()
 >>> above_1 == {"b", 2, "c": 3}
 ```
+> The `where` callback is a function that takes two parameters, the key and the value.
+
 
 Write dicts
 ----------------------------------------------------------------------------------------
 
 ```python
 with DDB.at("users").session() as (session, users):
-    # You now have a copy of the json file users as the variable users
-    # Inside the with statement, the file of user_data will be locked, and no other
-    # processes will be able to interfere.
-    users["follows"].append(["Sue", "Ben"])
-    session.write()
-    # session.write() must be called to save the changes!
-print(DDB.at("user_data").read()["follows"])
->>> [["Ben", "Sue"], ["Joe", "Ben"], ["Sue", "Ben"]]
+   users["u3"]["age"] = 99
+print(DDB.at("users", key="u3").read()["age])
+>>> 99
 ```
-
-If you do not call session.write(), changes will not be written to disk!
-
+> If you do not call session.write(), changes will not be written to disk!
 
 Partial writing
 ----------------------------------------------------------------------------------------
