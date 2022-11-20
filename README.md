@@ -42,7 +42,7 @@ pip install dictdatabase
 
 Configuration
 ========================================================================================
-There are the following configuration options:
+The following configuration parameters can be modified using `DDB.config`:
 
 ### Storage directory
 Set storage_directory to the path of the directory that will contain your json files:
