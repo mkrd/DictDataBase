@@ -30,7 +30,7 @@ json data.
 
 ### Why not DictDataBase
 - If your storage is slow.
-- Your use cases requires repeatedly modifying or writing data to a single very large json file
+- Your use cases requires repeatedly modifying or writing data in a single very large json file
 - If a relational database is better suited for your use case.
 - If you need to read files that are larger than your system's RAM.
 
