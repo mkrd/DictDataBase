@@ -54,30 +54,51 @@ def seek_index_through_value_bytes(json_bytes: bytes, index: int) -> int:
 
 	skip_next, in_str, list_depth, dict_depth = False, False, 0, 0
 
-	for i in range(index, len(json_bytes)):
-		if skip_next:
-			skip_next = False
-			continue
+
+	i = index
+	while i < len(json_bytes):
 		current = json_bytes[i]
+
+		# If backslash, skip the next character
 		if current == byte_codes.BACKSLASH:
-			skip_next = True
-			continue
-		if current == byte_codes.QUOTE:
+			i += 1
+		# If quote, toggle in_str
+		elif current == byte_codes.QUOTE:
+			# Possible exit point where string ends and nesting is zero
 			in_str = not in_str
-		if in_str or current == byte_codes.SPACE:
-			continue
-		if current == byte_codes.OPEN_SQUARE:
+			if not in_str and list_depth == 0 and dict_depth == 0:
+				return i + 1
+		# If in string, skip
+		elif in_str:
+			pass
+
+		# Invariant: Not in_str, not escaped
+
+		# Handle opening brackets
+		elif current == byte_codes.OPEN_SQUARE:
 			list_depth += 1
-		elif current == byte_codes.CLOSE_SQUARE:
-			list_depth -= 1
 		elif current == byte_codes.OPEN_CURLY:
 			dict_depth += 1
-		elif current == byte_codes.CLOSE_CURLY:
-			dict_depth -= 1
-		if list_depth == 0 and dict_depth == 0:
-			return i + 1
 
-	raise TypeError("Invalid JSON syntax")
+		# Handle closing brackets
+		elif current in [byte_codes.CLOSE_SQUARE, byte_codes.CLOSE_CURLY]:
+			if current == byte_codes.CLOSE_SQUARE:
+				list_depth -= 1
+			if current == byte_codes.CLOSE_CURLY:
+				dict_depth -= 1
+			if list_depth == 0 and dict_depth == 0:
+				return i + 1
+			if list_depth == 0 and dict_depth == -1:
+				return i
+
+		elif current == byte_codes.COMMA or current == byte_codes.NEWLINE:
+			if list_depth == 0 and dict_depth == 0:
+				return i
+		elif list_depth == 0 and dict_depth == -1:
+			return i
+		i += 1
+
+	raise TypeError("Invalid JSON")
 
 
 def count_nesting_in_bytes(json_bytes: bytes, start: int, end: int) -> int:
