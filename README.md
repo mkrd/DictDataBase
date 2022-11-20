@@ -20,7 +20,7 @@ making the read and writes very efficient.
 - **Tested** with 99%+ coverage.
 
 ### Why use DictDataBase
-- You have a webserver that concurrently reads and writes data from multiple processes or threads.
+- Your application concurrently reads and writes data from multiple processes or threads.
 - Using database server is a bit too much for your application.
     - But you need [ACID](https://en.wikipedia.org/wiki/ACID) guarantees.
 - Your use case requires reading key-value pairs from very large json files repeatedly. (For example, DictDataBase can handle about 2000 reads per second when reading single key-value pairs from a 2.5GB json file with 20000 key-value pairs.)
