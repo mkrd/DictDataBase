@@ -1,3 +1,4 @@
+# See: https://www.charset.org/utf-8
 BACKSLASH = 92
 QUOTE = 34
 OPEN_SQUARE = 91
@@ -7,8 +8,4 @@ CLOSE_CURLY = 125
 SPACE = 32
 TAB = 9
 NEWLINE = 10
-DIGIT_0 = 48
-DIGIT_9 = 57
-DOT = 46
-MINUS = 45
 COMMA = 44

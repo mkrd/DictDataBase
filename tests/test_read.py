@@ -48,7 +48,7 @@ def test_read_integrity(use_test_dir, use_compression, use_orjson, indent):
 		key_a = DDB.at("test_read_integrity", key="a").read()
 		key_b = DDB.at("test_read_integrity", key="b").read()
 		assert key_a == json.loads(case)["a"]
-		# assert key_b == json.loads(case)["b"]
+		assert key_b == json.loads(case)["b"]
 
 
 

@@ -20,9 +20,6 @@ def test_seek_index_through_value_bytes(use_test_dir):
 	assert utils.seek_index_through_value_bytes(n, 6) == 10
 
 
-test_seek_index_through_value_bytes(0)
-
-
 
 
 
@@ -115,7 +112,3 @@ def test_seek_index_through_value_bytes_2(use_test_dir):
 		# print("b_from_orjson", b_from_orjson)
 		# print("b_from_seeker", b_from_seeker)
 		assert b_from_orjson == b_from_seeker
-
-
-
-test_seek_index_through_value_bytes_2(0)
