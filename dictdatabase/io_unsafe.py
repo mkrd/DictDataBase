@@ -5,6 +5,8 @@ import orjson
 import json
 import hashlib
 from . import config, utils, byte_codes, indexing, io_bytes
+from .index_manager import IndexManager
+from .searching import Searcher
 
 
 @dataclass(frozen=True)  # slots=True not supported by python 3.8 and 3.9
@@ -79,21 +81,12 @@ def partial_read_only(db_name: str, key: str) -> dict | None:
 
 	# Not found in index file, search for key in the entire file
 	all_file_bytes = io_bytes.read(db_name)
-	key_start, key_end = utils.find_outermost_key_in_json_bytes(all_file_bytes, key)
-
-	if key_end == -1:
+	start, end, found = Searcher().search(all_file_bytes, key)
+	if not found:
 		return None
-
-	# Key found, now determine the bounding byte indices of the value
-	start = key_end + (1 if all_file_bytes[key_end] == byte_codes.SPACE else 0)
-	end = utils.seek_index_through_value_bytes(all_file_bytes, start)
-
-	indent_level, indent_with  = utils.detect_indentation_in_json_bytes(all_file_bytes, key_start)
 	value_bytes = all_file_bytes[start:end]
-	value_hash = hashlib.sha256(value_bytes).hexdigest()
-
 	# Write key info to index file
-	indexer.write(key, start, end, indent_level, indent_with, value_hash, end)
+	indexer.write(*IndexManager.create_index(all_file_bytes, key, start, end))
 	return orjson.loads(value_bytes)
 
 
