@@ -1,6 +1,9 @@
-import orjson
 import os
+
+import orjson
+
 from . import config
+
 
 # Problem: Multiple read processes will concurrently read and write the same file
 # In some cases this will result in a empty read error, thats why the try-except exists
