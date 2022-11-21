@@ -1,10 +1,17 @@
 from __future__ import annotations
-from typing import Tuple
-from dataclasses import dataclass
-import orjson
-import json
+
 import hashlib
-from . import config, utils, byte_codes, indexing, io_bytes
+import json
+from dataclasses import dataclass
+from typing import Tuple
+
+import orjson
+
+from . import byte_codes
+from . import config
+from . import indexing
+from . import io_bytes
+from . import utils
 from .index_manager import IndexManager
 from .searching import Searcher
 
