@@ -1,10 +1,12 @@
+from typing import Tuple
+
 from dictdatabase import byte_codes
 from dictdatabase import utils
 
 
 class Searcher:
     @staticmethod
-    def find_start_end_in_bytes(file: bytes, key: str) -> tuple[int, int, bool]:
+    def find_start_end_in_bytes(file: bytes, key: str) -> Tuple[int, int, bool]:
         """
         It finds the start and end indices of the value of a key in a JSON file
 
@@ -24,7 +26,7 @@ class Searcher:
 
     def search(
         self, all_file_bytes: bytes, key: str, glom_searching=True
-    ) -> tuple[int, int, bool]:
+    ) -> Tuple[int, int, bool]:
         """
         It takes a byte string, a key, and a boolean, and returns a tuple of three integers
 
