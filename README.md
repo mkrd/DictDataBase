@@ -6,8 +6,7 @@
 ![Tests](https://github.com/mkrd/DictDataBase/actions/workflows/test.yml/badge.svg)
 ![Coverage](https://github.com/mkrd/DictDataBase/blob/main/assets/coverage.svg?raw=1)
 
-DictDataBase is a fast database for handling json or compressed json as the
-underlying storage mechanism.
+DictDataBase is a fast document-based database that uses json files or compressed json files for storage.
 - **Multi threading and multi processing safe**. Multiple processes on the same machine
 can simultaneously read and write to dicts without losing data.
 - **ACID** compliant. Unlike TinyDB, it is suited for concurrent environments.
