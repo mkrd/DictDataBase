@@ -4,7 +4,7 @@ from dictdatabase import byte_codes
 from dictdatabase import utils
 
 
-class Searcher:
+class KeySearcher:
     @staticmethod
     def find_start_end_in_bytes(file: bytes, key: str) -> Tuple[int, int, bool]:
         """

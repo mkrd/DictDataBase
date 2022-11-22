@@ -13,7 +13,7 @@ from . import indexing
 from . import io_bytes
 from . import utils
 from .index_manager import IndexManager
-from .searching import Searcher
+from .searching import KeySearcher
 
 
 @dataclass(frozen=True)  # slots=True not supported by python 3.8 and 3.9
@@ -88,7 +88,7 @@ def partial_read_only(db_name: str, key: str) -> dict | None:
 
 	# Not found in index file, search for key in the entire file
 	all_file_bytes = io_bytes.read(db_name)
-	start, end, found = Searcher().search(all_file_bytes, key)
+	start, end, found = KeySearcher().search(all_file_bytes, key)
 	if not found:
 		return None
 	value_bytes = all_file_bytes[start:end]
