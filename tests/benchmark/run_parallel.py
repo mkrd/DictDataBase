@@ -89,9 +89,9 @@ class Scenario:
 	ops: int = 10
 
 	def print(self):
-		res = f"✨ Scenario: {'🔹' * self.readers}{'🔻' * self.writers} ({self.readers}r{self.writers}w)"
-		res += ", 🔸 compression" if self.use_compression else ""
-		res += ", 💎 big file" if self.big_file else ""
+		res = f"Scenario: {'*' * self.readers}{'#' * self.writers} ({self.readers}r{self.writers}w)"
+		res += ", [] compression" if self.use_compression else ""
+		res += ", {} big file" if self.big_file else ""
 		print(res)
 
 
