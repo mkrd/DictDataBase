@@ -185,16 +185,16 @@ def get_partial_file_handle(db_name: str, key: str) -> PartialFileHandle:
 		return partial_handle
 
 	# Not found in index file, search for key in the entire file
-	key_start, key_end, found = searching.search_key_position_in_db(all_file_bytes, key)
+	position = searching.search_key_position_in_db(all_file_bytes, key)
 
-	if not found:
+	if not position.found:
 		raise KeyError(f"Key \"{key}\" not found in db \"{db_name}\"")
 
 	# Key found, now determine the bounding byte indices of the value
-	start = key_end + (1 if all_file_bytes[key_end] == byte_codes.SPACE else 0)
+	start = position.end_byte + (1 if all_file_bytes[position.end_byte] == byte_codes.SPACE else 0)
 	end = utils.seek_index_through_value_bytes(all_file_bytes, start)
 
-	indent_level, indent_with  = utils.detect_indentation_in_json_bytes(all_file_bytes, key_start)
+	indent_level, indent_with = utils.detect_indentation_in_json_bytes(all_file_bytes, position.start_byte)
 
 	partial_value = orjson.loads(all_file_bytes[start:end])
 	prefix_bytes = all_file_bytes[:start] if config.use_compression else None
