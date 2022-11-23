@@ -11,9 +11,9 @@ from . import byte_codes
 from . import config
 from . import indexing
 from . import io_bytes
+from . import searching
 from . import utils
 from .index_manager import IndexManager
-from .searching import Searcher
 
 
 @dataclass(frozen=True)  # slots=True not supported by python 3.8 and 3.9
@@ -88,7 +88,7 @@ def partial_read_only(db_name: str, key: str) -> dict | None:
 
 	# Not found in index file, search for key in the entire file
 	all_file_bytes = io_bytes.read(db_name)
-	start, end, found = Searcher().search(all_file_bytes, key)
+	start, end, found = searching.search_value_position_in_db(all_file_bytes, key)
 	if not found:
 		return None
 	value_bytes = all_file_bytes[start:end]
@@ -185,9 +185,9 @@ def get_partial_file_handle(db_name: str, key: str) -> PartialFileHandle:
 		return partial_handle
 
 	# Not found in index file, search for key in the entire file
-	key_start, key_end = utils.find_outermost_key_in_json_bytes(all_file_bytes, key)
+	key_start, key_end, found = searching.search_key_position_in_db(all_file_bytes, key)
 
-	if key_end == -1:
+	if not found:
 		raise KeyError(f"Key \"{key}\" not found in db \"{db_name}\"")
 
 	# Key found, now determine the bounding byte indices of the value
