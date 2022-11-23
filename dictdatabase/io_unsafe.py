@@ -88,7 +88,7 @@ def partial_read_only(db_name: str, key: str) -> dict | None:
 
 	# Not found in index file, search for key in the entire file
 	all_file_bytes = io_bytes.read(db_name)
-	start, end, found = searching.search_value_by_key(all_file_bytes, key)
+	start, end, found = searching.search_value_position_in_db(all_file_bytes, key)
 	if not found:
 		return None
 	value_bytes = all_file_bytes[start:end]
@@ -185,7 +185,7 @@ def get_partial_file_handle(db_name: str, key: str) -> PartialFileHandle:
 		return partial_handle
 
 	# Not found in index file, search for key in the entire file
-	key_start, key_end, found = searching.search_key(all_file_bytes, key)
+	key_start, key_end, found = searching.search_key_position_in_db(all_file_bytes, key)
 
 	if not found:
 		raise KeyError(f"Key \"{key}\" not found in db \"{db_name}\"")
