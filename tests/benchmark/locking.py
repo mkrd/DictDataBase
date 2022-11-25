@@ -10,6 +10,7 @@ path.mkdir(exist_ok=True, parents=True)
 
 
 # 05.11.22: 4520ms
+# 25.11.22: 4156ms
 with profiler.Profiler() as p:
     for _ in range(25_000):
         l = locking.ReadLock("db")
@@ -19,6 +20,7 @@ p.open_in_browser()
 
 
 # 05.11.22: 4884ms
+# 25.11.22: 4159ms
 with profiler.Profiler() as p:
     for _ in range(25_000):
         l = locking.WriteLock("db")
