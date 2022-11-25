@@ -76,7 +76,7 @@ class FileLocksSnapshot:
 				lock_age = time.monotonic_ns() - int(lock_meta.time_ns)
 				if lock_age > LOCK_TIMEOUT * 1_000_000_000:
 					os.unlink(lock_meta.path)
-					print(f"Remove orphaned lock ({lock_meta.path})")
+					print(f"Removed orphaned lock ({lock_meta.path})")
 					continue
 
 			self.locks.append(lock_meta)
