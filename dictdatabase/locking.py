@@ -35,9 +35,6 @@ class LockFileMeta:
 	mode: str
 	path: str
 
-	def __repr__(self) -> str:
-		return f"LockFileMeta({self.ddb_dir}, {self.name}, {self.id}, {self.time_ns}, {self.stage}, {self.mode})"
-
 	def __init__(self, ddb_dir, name, id, time_ns, stage, mode):
 		self.ddb_dir, self.name, self.id = ddb_dir, name, id
 		self.time_ns, self.stage, self.mode = time_ns, stage, mode
