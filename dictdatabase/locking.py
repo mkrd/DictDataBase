@@ -35,10 +35,8 @@ class LockFileMeta:
 	mode: str
 	path: str
 
-
 	def __repr__(self) -> str:
 		return f"LockFileMeta({self.ddb_dir}, {self.name}, {self.id}, {self.time_ns}, {self.stage}, {self.mode})"
-
 
 	def __init__(self, ddb_dir, name, id, time_ns, stage, mode):
 		self.ddb_dir, self.name, self.id = ddb_dir, name, id
@@ -163,9 +161,9 @@ class ReadLock(AbstractLock):
 	def _lock(self):
 		# Instantly signal that we need to read
 		os_touch(self.need_lock.path)
+		self.snapshot = FileLocksSnapshot(self.need_lock)
 
 		# Except if current thread already has a read lock
-		self.snapshot = FileLocksSnapshot(self.need_lock)
 		if self.snapshot.exists(self.has_lock):
 			os.unlink(self.need_lock.path)
 			raise RuntimeError("Thread already has a read lock. Do not try to obtain a read lock twice.")
@@ -195,7 +193,6 @@ class WriteLock(AbstractLock):
 	def _lock(self):
 		# Instantly signal that we need to write
 		os_touch(self.need_lock.path)
-
 		self.snapshot = FileLocksSnapshot(self.need_lock)
 
 		# Except if current thread already has a write lock
