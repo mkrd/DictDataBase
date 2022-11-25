@@ -6,7 +6,6 @@ import shutil
 import time
 import os
 from dataclasses import dataclass
-from pyinstrument import Profiler
 import random
 from path_dict import PathDict
 
