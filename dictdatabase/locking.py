@@ -23,21 +23,6 @@ def os_touch(path: str):
 	os.close(fd)
 
 
-def lock_file_exists(ddb_dir: str, db_name: str, id: str, stage: str, mode: str) -> bool:
-	"""
-		Like get_lock_file_names, but returns True if there is at least one
-		lock file with the given arguments.
-	"""
-	for x in os.listdir(ddb_dir):
-		if not x.endswith(".lock"):
-			continue
-		f_name, f_id, _, f_stage, f_mode, _ = x.split(".")
-		if f_name != db_name or f_id != id or f_stage != stage or f_mode != mode:
-			continue
-		return True
-	return False
-
-
 class LockFileMeta:
 
 	__slots__ = ("ddb_dir", "name", "id", "time_ns", "stage", "mode")
@@ -49,13 +34,13 @@ class LockFileMeta:
 	stage: str
 	mode: str
 
-	def __init__(self, ddb_dir, f_name, f_id, f_time_ns, f_stage, f_mode):
+	def __init__(self, ddb_dir, name, id, time_ns, stage, mode):
 		self.ddb_dir = ddb_dir
-		self.name = f_name
-		self.id = f_id
-		self.time_ns = f_time_ns
-		self.stage = f_stage
-		self.mode = f_mode
+		self.name = name
+		self.id = id
+		self.time_ns = time_ns
+		self.stage = stage
+		self.mode = mode
 
 	@property
 	def path(self):
@@ -65,13 +50,18 @@ class LockFileMeta:
 
 class FileLocksSnapshot:
 
-	__slots__ = ("has_lock_count", "has_write_lock_count", "write_lock_count", "lock_files")
+	__slots__ = ("any_has_locks", "any_write_locks", "any_has_write_locks", "locks")
+
+	any_has_locks: bool
+	any_write_locks: bool
+	any_has_write_locks: bool
+	locks: list[LockFileMeta]
 
 	def __init__(self, ddb_dir, db_name, ignore_during_orphan_check):
-		self.has_lock_count = 0
-		self.has_write_lock_count = 0
-		self.write_lock_count = 0
-		self.lock_files = []
+		self.any_has_locks = False
+		self.any_write_locks = False
+		self.any_has_write_locks = False
+		self.locks = []
 
 		for x in os.listdir(ddb_dir):
 			if not x.endswith(".lock"):
@@ -82,6 +72,7 @@ class FileLocksSnapshot:
 
 			lock_meta = LockFileMeta(ddb_dir, f_name, f_id, f_time_ns, f_stage, f_mode)
 
+			# Remove orphaned locks
 			if lock_meta.path != ignore_during_orphan_check:
 				lock_age = time.monotonic_ns() - int(lock_meta.time_ns)
 				if lock_age > LOCK_TIMEOUT * 1_000_000_000:
@@ -89,18 +80,21 @@ class FileLocksSnapshot:
 					print(f"Found orphaned lock ({lock_meta.path}). Remove")
 					continue
 
+			self.locks.append(lock_meta)
+
+			# Lock existence
 			if lock_meta.stage == "has":
-				self.has_lock_count += 1
+				self.any_has_locks = True
 				if lock_meta.mode == "write":
-					self.has_write_lock_count += 1
+					self.any_has_write_locks = True
 			if lock_meta.mode == "write":
-				self.write_lock_count += 1
+				self.any_write_locks = True
 
-			self.lock_files.append(lock_meta)
-
+	def lock_exists(self, id: str, stage: str, mode: str) -> bool:
+		return any(x.id == id and x.stage == stage and x.mode == mode for x in self.locks)
 
 	def get_need_locks(self) -> list[LockFileMeta]:
-		return [l for l in self.lock_files if l.stage == "need"]
+		return [l for l in self.locks if l.stage == "need"]
 
 
 class AbstractLock:
@@ -109,7 +103,7 @@ class AbstractLock:
 		call super().__init__(...) and then only exit __init__ when the lock is aquired.
 	"""
 
-	__slots__ = ("id", "time_ns", "db_name", "need_path", "path", "ddb_dir", "locks_snapshot")
+	__slots__ = ("id", "time_ns", "db_name", "need_path", "path", "ddb_dir", "snapshot")
 
 	id: str
 	time_ns: int
@@ -117,7 +111,7 @@ class AbstractLock:
 	need_path: str
 	path: str
 	ddb_dir: str
-	locks_snapshot: FileLocksSnapshot
+	snapshot: FileLocksSnapshot
 
 	def __init__(self, db_name: str):
 		"""
@@ -155,12 +149,11 @@ class AbstractLock:
 
 	def is_oldest_need_lock(self) -> bool:
 		# len(need_locks) is at least 1 since this function is only called if there is a need_lock
-		need_locks = self.locks_snapshot.get_need_locks()
+		need_locks = self.snapshot.get_need_locks()
 		# Sort by time_ns. If multiple, the the one with the smaller id is first
 		need_locks = sorted(need_locks, key=lambda l: int(l.id))
 		need_locks = sorted(need_locks, key=lambda l: int(l.time_ns))
 		return need_locks[0].id == self.id
-
 
 
 class ReadLock(AbstractLock):
@@ -170,7 +163,8 @@ class ReadLock(AbstractLock):
 		os_touch(self.need_path)
 
 		# Except if current thread already has a read lock
-		if lock_file_exists(self.ddb_dir, self.db_name, self.id, "has", "read"):
+		self.snapshot = FileLocksSnapshot(self.ddb_dir, self.db_name, self.need_path)
+		if self.snapshot.lock_exists(self.id, "has", "read"):
 			os.unlink(self.need_path)
 			raise RuntimeError("Thread already has a read lock. Do not try to obtain a read lock twice.")
 
@@ -179,40 +173,38 @@ class ReadLock(AbstractLock):
 
 		# Iterate until this is the oldest need* lock and no haswrite locks exist, or no *write locks exist
 		while True:
-			self.locks_snapshot = FileLocksSnapshot(self.ddb_dir, self.db_name, self.need_path)
 			# If no writing is happening, allow unlimited reading
-			if self.locks_snapshot.write_lock_count == 0:
+			if not self.snapshot.any_write_locks:
 				os_touch(self.path)
 				os.unlink(self.need_path)
 				return
 			# A needwrite or haswrite lock exists
-			if self.is_oldest_need_lock() and self.locks_snapshot.has_write_lock_count == 0:
+			if not self.snapshot.any_has_write_locks and self.is_oldest_need_lock():
 				os_touch(self.path)
 				os.unlink(self.need_path)
 				return
 			time.sleep(SLEEP_TIMEOUT)
-
+			self.snapshot = FileLocksSnapshot(self.ddb_dir, self.db_name, self.need_path)
 
 
 class WriteLock(AbstractLock):
 	def _lock(self):
 		# Instantly signal that we need to write
+		self.path = self.make_lock_path("has", "write")
 		self.need_path = self.make_lock_path("need", "write")
 		os_touch(self.need_path)
 
 		# Except if current thread already has a write lock
-		if lock_file_exists(self.ddb_dir, self.db_name, self.id, "has", "write"):
+		self.snapshot = FileLocksSnapshot(self.ddb_dir, self.db_name, self.need_path)
+		if self.snapshot.lock_exists(self.id, "has", "write"):
 			os.unlink(self.need_path)
 			raise RuntimeError("Thread already has a write lock. Do try to obtain a write lock twice.")
 
-		# Make path of the hyptoetical haswrite lock
-		self.path = self.make_lock_path("has", "write")
-
 		# Iterate until this is the oldest need* lock and no has* locks exist
 		while True:
-			self.locks_snapshot = FileLocksSnapshot(self.ddb_dir, self.db_name, self.need_path)
-			if self.is_oldest_need_lock() and self.locks_snapshot.has_lock_count == 0:
+			if not self.snapshot.any_has_locks and self.is_oldest_need_lock():
 				os_touch(self.path)
 				os.unlink(self.need_path)
 				return
 			time.sleep(SLEEP_TIMEOUT)
+			self.snapshot = FileLocksSnapshot(self.ddb_dir, self.db_name, self.need_path)
