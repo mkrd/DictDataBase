@@ -38,15 +38,8 @@ class LockFileMeta:
 	def __init__(self, ddb_dir, name, id, time_ns, stage, mode):
 		self.ddb_dir, self.name, self.id = ddb_dir, name, id
 		self.time_ns, self.stage, self.mode = time_ns, stage, mode
-		self._compute_path()
-
-	def _compute_path(self):
-		lock_file = f"{self.name}.{self.id}.{self.time_ns}.{self.stage}.{self.mode}.lock"
-		self.path = os.path.join(self.ddb_dir, lock_file)
-
-	def set_mode(self, mode):
-		self.mode = mode
-		self._compute_path()
+		lock_file = f"{name}.{id}.{time_ns}.{stage}.{mode}.lock"
+		self.path = os.path.join(ddb_dir, lock_file)
 
 
 class FileLocksSnapshot:
@@ -103,31 +96,30 @@ class FileLocksSnapshot:
 
 class AbstractLock:
 	"""
-		An abstract lock doesn't do anything by itself. A subclass of it needs to
-		call super().__init__(...) and then only exit __init__ when the lock is aquired.
+		An abstract lock doesn't do anything by itself.
+		A subclass should implement _lock and call _init_lock_file in its __init__.
 	"""
 
-	__slots__ = ("need_lock", "has_lock", "snapshot")
+	__slots__ = ("db_name", "need_lock", "has_lock", "snapshot")
 
+	db_name: str
 	need_lock: LockFileMeta
 	has_lock: LockFileMeta
 	snapshot: FileLocksSnapshot
 
 	def __init__(self, db_name: str):
-		"""
-			Create a lock, with the current thread id as the lock id,
-			and the current time in nanoseconds as the time.
-		"""
-		thread_id = str(threading.get_native_id())
+		self.db_name = db_name.replace("/", "___").replace(".", "____")
+
+	def _init_lockfiles(self, mode: str):
 		time_ns = time.monotonic_ns()
-		name = db_name.replace("/", "___").replace(".", "____")
-		ddb_dir = os.path.join(config.storage_directory, ".ddb")
+		t_id = str(threading.get_native_id())
+		dir = os.path.join(config.storage_directory, ".ddb")
 
-		self.need_lock = LockFileMeta(ddb_dir, name, thread_id, time_ns, "need", None)
-		self.has_lock = LockFileMeta(ddb_dir, name, thread_id, time_ns, "has", None)
+		self.need_lock = LockFileMeta(dir, self.db_name, t_id, time_ns, "need", mode)
+		self.has_lock = LockFileMeta(dir, self.db_name, t_id, time_ns, "has", mode)
 
-		if not os.path.isdir(ddb_dir):
-			os.mkdir(ddb_dir)
+		if not os.path.isdir(dir):
+			os.mkdir(dir)
 
 	def _lock(self):
 		raise NotImplementedError
@@ -152,8 +144,7 @@ class AbstractLock:
 class ReadLock(AbstractLock):
 	def __init__(self, db_name: str):
 		super().__init__(db_name)
-		self.need_lock.set_mode("read")
-		self.has_lock.set_mode("read")
+		self._init_lockfiles("read")
 
 	def _lock(self):
 		# Instantly signal that we need to read
@@ -184,8 +175,7 @@ class ReadLock(AbstractLock):
 class WriteLock(AbstractLock):
 	def __init__(self, db_name: str):
 		super().__init__(db_name)
-		self.need_lock.set_mode("write")
-		self.has_lock.set_mode("write")
+		self._init_lockfiles("write")
 
 	def _lock(self):
 		# Instantly signal that we need to write
