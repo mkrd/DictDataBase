@@ -32,7 +32,7 @@ def read(file_meta: DBFileMeta, *, start: int = None, end: int = None) -> bytes:
 	if file_meta.json_exists:
 		if file_meta.ddb_exists:
 			raise FileExistsError(
-				f"Inconsistent: \"{db_name}\" exists as .json and .ddb."
+				f"Inconsistent: \"{file_meta.path}\" exists as .json and .ddb."
 				"Please remove one of them."
 			)
 		with open(file_meta.json_path, "rb") as f:
