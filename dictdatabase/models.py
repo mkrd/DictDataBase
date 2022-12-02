@@ -53,6 +53,12 @@ class OperationType:
 		return self.dir and self.where and not self.key
 
 
+def create_path_from_tuple(path: tuple) -> str:
+	pc = []
+	for p in path:
+		pc += p if isinstance(p,  list) else [p]
+	return "/".join([str(p) for p in pc])
+
 
 def at(*path, key: str = None, where: Callable[[Any, Any], bool] = None) -> DDBMethodChooser:
 	"""
@@ -91,10 +97,7 @@ class DDBMethodChooser:
 
 
 	def __init__(self, path: tuple, key: str = None, where: Callable[[Any, Any], bool] = None):
-		pc = []
-		for p in path:
-			pc += p if isinstance(p,  list) else [p]
-		self.path = "/".join([str(p) for p in pc])
+		self.path = create_path_from_tuple(path)
 		self.key = key
 		self.where = where
 		self.op_type = OperationType(self.path, self.key, self.where)

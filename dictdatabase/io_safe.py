@@ -1,6 +1,8 @@
 import os
 from . import config, utils, io_unsafe, locking
 
+from .file_meta import DBFileMeta
+
 
 
 def read(file_name: str) -> dict:
@@ -11,13 +13,12 @@ def read(file_name: str) -> dict:
 		- `file_name`: The name of the file to read from.
 	"""
 
-	_, json_exists, _, ddb_exists = utils.file_info(file_name)
-
-	if not json_exists and not ddb_exists:
+	file_meta = DBFileMeta(file_name)
+	if not file_meta.exists:
 		return None
 
-	with locking.ReadLock(file_name):
-		return io_unsafe.read(file_name)
+	with locking.ReadLock(file_meta.path):
+		return io_unsafe.read(file_meta)
 
 
 
@@ -30,13 +31,12 @@ def partial_read(file_name: str, key: str) -> dict:
 		- `key`: The key to read the value of.
 	"""
 
-	_, json_exists, _, ddb_exists = utils.file_info(file_name)
-
-	if not json_exists and not ddb_exists:
+	file_meta = DBFileMeta(file_name)
+	if not file_meta.exists:
 		return None
 
 	with locking.ReadLock(file_name):
-		return io_unsafe.partial_read_only(file_name, key)
+		return io_unsafe.partial_read_only(file_meta, key)
 
 
 
@@ -65,13 +65,12 @@ def delete(file_name: str):
 		- `file_name`: The name of the file to delete.
 	"""
 
-	json_path, json_exists, ddb_path, ddb_exists = utils.file_info(file_name)
-
-	if not json_exists and not ddb_exists:
-		return
+	file_meta = DBFileMeta(file_name)
+	if not file_meta.exists:
+		return None
 
 	with locking.WriteLock(file_name):
-		if json_exists:
-			os.remove(json_path)
-		if ddb_exists:
-			os.remove(ddb_path)
+		if file_meta.json_exists:
+			os.remove(file_meta.json_path)
+		if file_meta.ddb_exists:
+			os.remove(file_meta.ddb_path)

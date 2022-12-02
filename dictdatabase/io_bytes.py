@@ -1,10 +1,10 @@
 import zlib
 import os
 from . import config, utils
+from .file_meta import DBFileMeta
 
 
-
-def read(db_name: str, *, start: int = None, end: int = None) -> bytes:
+def read(file_meta: DBFileMeta, *, start: int = None, end: int = None) -> bytes:
 	"""
 		Read the content of a file as bytes. Reading works even when the config
 		changes, so a compressed ddb file can also be read if compression is
@@ -29,15 +29,13 @@ def read(db_name: str, *, start: int = None, end: int = None) -> bytes:
 		- `FileExistsError`: If the file exists as .json and .ddb.
 	"""
 
-	json_path, json_exists, ddb_path, ddb_exists = utils.file_info(db_name)
-
-	if json_exists:
-		if ddb_exists:
+	if file_meta.json_exists:
+		if file_meta.ddb_exists:
 			raise FileExistsError(
 				f"Inconsistent: \"{db_name}\" exists as .json and .ddb."
 				"Please remove one of them."
 			)
-		with open(json_path, "rb") as f:
+		with open(file_meta.json_path, "rb") as f:
 			if start is None and end is None:
 				return f.read()
 			start = start or 0
@@ -45,9 +43,9 @@ def read(db_name: str, *, start: int = None, end: int = None) -> bytes:
 			if end is None:
 				return f.read()
 			return f.read(end - start)
-	if not ddb_exists:
-		raise FileNotFoundError(f"No database file exists for \"{db_name}\"")
-	with open(ddb_path, "rb") as f:
+	if not file_meta.ddb_exists:
+		raise FileNotFoundError(f"No database file exists for \"{file_meta.path}\"")
+	with open(file_meta.ddb_path, "rb") as f:
 		json_bytes = zlib.decompress(f.read())
 		if start is None and end is None:
 			return json_bytes

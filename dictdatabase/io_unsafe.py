@@ -5,6 +5,7 @@ import orjson
 import json
 import hashlib
 from . import config, utils, byte_codes, indexing, io_bytes
+from .file_meta import DBFileMeta
 
 
 @dataclass(frozen=True)  # slots=True not supported by python 3.8 and 3.9
@@ -31,14 +32,14 @@ class PartialFileHandle:
 ########################################################################################
 
 
-def read(db_name: str) -> dict:
+def read(file_meta: DBFileMeta) -> dict:
 	"""
 		Read the file at db_path from the configured storage directory.
 		Make sure the file exists. If it does notnot a FileNotFoundError is
 		raised.
 	"""
 	# Always use orjson to read the file, because it is faster
-	return orjson.loads(io_bytes.read(db_name))
+	return orjson.loads(io_bytes.read(file_meta))
 
 
 ########################################################################################
@@ -46,7 +47,7 @@ def read(db_name: str) -> dict:
 ########################################################################################
 
 
-def try_read_bytes_using_indexer(indexer: indexing.Indexer, db_name: str, key: str) -> bytes | None:
+def try_read_bytes_using_indexer(indexer: indexing.Indexer, file_meta: DBFileMeta, key: str) -> bytes | None:
 	"""
 		Check if the key info is saved in the file's index file.
 		If it is and the value has not changed, return the value bytes.
@@ -56,13 +57,13 @@ def try_read_bytes_using_indexer(indexer: indexing.Indexer, db_name: str, key: s
 	if (index := indexer.get(key)) is None:
 		return None
 	start, end, _, _, value_hash = index
-	partial_bytes = io_bytes.read(db_name, start=start, end=end)
+	partial_bytes = io_bytes.read(file_meta, start=start, end=end)
 	if value_hash != hashlib.sha256(partial_bytes).hexdigest():
 		return None
 	return partial_bytes
 
 
-def partial_read_only(db_name: str, key: str) -> dict | None:
+def partial_read_only(file_meta: DBFileMeta, key: str) -> dict | None:
 	"""
 		Partially read a key from a db.
 		The key MUST be unique in the entire db, otherwise the behavior is undefined.
@@ -73,12 +74,12 @@ def partial_read_only(db_name: str, key: str) -> dict | None:
 	"""
 
 	# Search for key in the index file
-	indexer = indexing.Indexer(db_name)
-	if (value_bytes := try_read_bytes_using_indexer(indexer, db_name, key)) is not None:
+	indexer = indexing.Indexer(file_meta.path)
+	if (value_bytes := try_read_bytes_using_indexer(indexer, file_meta, key)) is not None:
 		return orjson.loads(value_bytes)
 
 	# Not found in index file, search for key in the entire file
-	all_file_bytes = io_bytes.read(db_name)
+	all_file_bytes = io_bytes.read(file_meta)
 	key_start, key_end = utils.find_outermost_key_in_json_bytes(all_file_bytes, key)
 
 	if key_end == -1:
