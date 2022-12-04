@@ -49,8 +49,8 @@ def write(file_name: str, data: dict):
 		- `data`: The data to write to the file.
 	"""
 
-	dirname = os.path.dirname(f"{config.storage_directory}/{file_name}.any")
-	os.makedirs(dirname, exist_ok=True)
+	file_path = os.path.join(config.storage_directory, f"{file_name}.any")
+	os.makedirs(os.path.dirname(file_path), exist_ok=True)
 
 	with locking.WriteLock(file_name):
 		io_unsafe.write(file_name, data)

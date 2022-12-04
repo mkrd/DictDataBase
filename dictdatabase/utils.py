@@ -18,7 +18,7 @@ def file_info(db_name: str) -> Tuple[str, bool, str, bool]:
 	"""
 	base = f"{config.storage_directory}/{db_name}"
 	j, d = f"{base}.json", f"{base}.ddb"
-	return j, os.path.exists(j), d, os.path.exists(d)
+	return j, os.path.isfile(j), d, os.path.isfile(d)
 
 
 def find_all(file_name: str) -> list[str]:

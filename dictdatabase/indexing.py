@@ -41,11 +41,14 @@ class Indexer:
 	__slots__ = ("data", "path")
 
 	def __init__(self, db_name: str):
+		# Create dirs if they don't exist
+		ddb_folder = os.path.join(config.storage_directory, ".ddb")
+		os.makedirs(ddb_folder, exist_ok=True)
+
 		# Make path of index file
 		db_name = db_name.replace("/", "___")
-		self.path = os.path.join(config.storage_directory, ".ddb", f"{db_name}.index")
+		self.path = os.path.join(ddb_folder, f"{db_name}.index")
 
-		os.makedirs(os.path.dirname(self.path), exist_ok=True)
 		if not os.path.exists(self.path):
 			self.data = {}
 			return
