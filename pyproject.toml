@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dictdatabase"
-version = "2.4.1"
+version = "2.4.2"
 repository = "https://github.com/mkrd/DictDataBase"
 description = "Easy-to-use database using dicts"
 authors = ["Marcel Kröker <kroeker.marcel@gmail.com>"]
