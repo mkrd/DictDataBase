@@ -1,6 +1,7 @@
+from dataclasses import dataclass
 import orjson
 import os
-from . import config
+from . import config, utils, byte_codes, io_bytes
 
 # Problem: Multiple read processes will concurrently read and write the same file
 # In some cases this will result in a empty read error, thats why the try-except exists
@@ -19,6 +20,42 @@ from . import config
 
 # Idea 3:
 # - Leave everything as is. While not ideal, it works. When empty read error occurs, don't use the index for that read
+
+
+
+
+
+
+@dataclass
+class KeyFinderState:
+	skip_next = False
+	in_str = False
+	list_depth = 0
+	dict_depth = 1
+	key_start = None
+	key_end = None
+	value_end = None
+	indices = []
+	i = 1
+
+
+def batched_find_all_top_level_keys(db_name):
+	state, b = KeyFinderState(), 0
+	while True:
+		batch_start = b * 10_000_000
+		batch_end = batch_start + 10_000_000
+
+		batch_bytes = io_bytes.read_bytes(db_name, batch_start, batch_end)
+
+		if batch_start == 0 and batch_bytes[0] != byte_codes.OPEN_CURLY:
+			raise ValueError("The first byte of the database file must be an opening curly brace")
+		if len(batch_bytes) == 0:
+			break
+		utils.find_all_top_level_keys(batch_bytes, state, len(batch_bytes))
+	return state.indices
+
+
+
 
 
 class Indexer:
@@ -55,6 +92,7 @@ class Indexer:
 				self.data = orjson.loads(f.read())
 		except orjson.JSONDecodeError:
 			self.data = {}
+
 
 
 	def get(self, key):

@@ -1,8 +1,10 @@
 from __future__ import annotations
+from dataclasses import dataclass
 from typing import Tuple
 import os
 import glob
 from . import config, byte_codes
+from . indexing import KeyFinderState
 
 
 def file_info(db_name: str) -> Tuple[str, bool, str, bool]:
@@ -37,17 +39,70 @@ def find_all(file_name: str) -> list[str]:
 	return files_all
 
 
+
+def find_all_top_level_keys(json_bytes: bytes, state: KeyFinderState, batch_size: int) -> KeyFinderState:
+	"""
+		In the bytes of the json object find all top level keys and the start and end
+		indices of their values.
+	"""
+
+	while state.i < batch_size:
+		current = json_bytes[state.i]
+		if state.skip_next:
+			state.skip_next = False
+		elif current == byte_codes.BACKSLASH:
+			state.skip_next = True
+		elif current == byte_codes.QUOTE:
+			if state.dict_depth == 1 and state.list_depth == 0:
+				if state.in_str:
+					state.key_end = state.i
+					state.i += 1
+					while json_bytes[state.i] in [byte_codes.SPACE, byte_codes.COLON]:
+						state.i += 1
+					state.value_start = state.i
+				else:
+					state.key_start = state.i + 1
+			state.in_str = not state.in_str
+		elif state.in_str or current in [byte_codes.SPACE, byte_codes.TAB, byte_codes.NEWLINE]:
+			pass
+		elif current == byte_codes.OPEN_SQUARE:
+			state.list_depth += 1
+		elif current == byte_codes.CLOSE_SQUARE:
+			state.list_depth -= 1
+		elif current == byte_codes.OPEN_CURLY:
+			state.dict_depth += 1
+		elif current == byte_codes.CLOSE_CURLY:
+			state.dict_depth -= 1
+		elif state.list_depth == 0 and state.dict_depth == 1:
+			state.indices.append((json_bytes[state.key_start:state.key_end].decode(), state.value_start, state.i + 1))
+		state.i += 1
+
+
+
+
+
+
+
 def seek_index_through_value_bytes(json_bytes: bytes, index: int) -> int:
 	"""
 	Finds the index of the next comma or closing bracket/brace after the value
 	of a key-value pair in a bytes object containing valid JSON when decoded.
+
+	Valid start indices are the index after the colon or the index after that.
+
+	Example:
+
+	01234567
+	"2": {},
+
+	Valid start indices are 4 and 5. Returns 7.
 
 	Args:
 	- `json_bytes`: A bytes object containing valid JSON when decoded
 	- `index`: The start index in json_bytes
 
 	Returns:
-	- The end index of the value.
+	- The end index of the first byte right after the value's bytes.
 	"""
 
 	# See https://www.json.org/json-en.html for the JSON syntax
