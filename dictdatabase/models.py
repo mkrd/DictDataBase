@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TypeVar, Any, Callable
+from typing import TypeVar, Type, Any, Callable
 from . import utils, io_safe, config
 from . sessions import SessionFileFull, SessionFileKey, SessionFileWhere, SessionDirFull, SessionDirWhere
 
@@ -157,7 +157,7 @@ class DDBMethodChooser:
 		io_safe.delete(self.path)
 
 
-	def read(self, as_type: T = None) -> dict | T | None:
+	def read(self, as_type: Type[T] = None) -> dict | T | None:
 		"""
 		Reads a file or folder depending on previous `.at(...)` selection.
 
@@ -200,7 +200,7 @@ class DDBMethodChooser:
 		return type_cast(data)
 
 
-	def session(self, as_type: T = None) -> SessionFileFull[T] | SessionFileKey[T] | SessionFileWhere[T] | SessionDirFull[T] | SessionDirWhere[T]:
+	def session(self, as_type: Type[T] = None) -> SessionFileFull[T] | SessionFileKey[T] | SessionFileWhere[T] | SessionDirFull[T] | SessionDirWhere[T]:
 		"""
 		Opens a session to the selected file(s) or folder, depending on previous
 		`.at(...)` selection. Inside the with block, you have exclusive access
