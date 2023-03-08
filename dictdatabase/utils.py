@@ -138,28 +138,28 @@ def find_outermost_key_in_json_bytes(json_bytes: bytes, key: str):
 	Returns:
 	- A tuple of the key start and end index, or `(-1, -1)` if the key is not found.
 	"""
-	key = f"\"{key}\":".encode()
+	key_bytes = f"\"{key}\":".encode()
 
-	if (curr_i := json_bytes.find(key, 0)) == -1:
+	if (curr_i := json_bytes.find(key_bytes, 0)) == -1:
 		return -1, -1
 
-	key_nest = [(curr_i, 0)]  # (key, nesting)
+	key_nest: list[tuple[int, int]] = [(curr_i, 0)]  # (key, nesting)
 
-	while (next_i := json_bytes.find(key, curr_i + len(key))) != -1:
-		nesting = count_nesting_in_bytes(json_bytes, curr_i + len(key), next_i)
+	while (next_i := json_bytes.find(key_bytes, curr_i + len(key_bytes))) != -1:
+		nesting = count_nesting_in_bytes(json_bytes, curr_i + len(key_bytes), next_i)
 		key_nest.append((next_i, nesting))
 		curr_i = next_i
 
 	# Early exit if there is only one key
 	if len(key_nest) == 1:
-		return key_nest[0][0], key_nest[0][0] + len(key)
+		return key_nest[0][0], key_nest[0][0] + len(key_bytes)
 
 	# Relative to total nesting
 	for i in range(1, len(key_nest)):
 		key_nest[i] = (key_nest[i][0], key_nest[i - 1][1] + key_nest[i][1])
 
 	start_index = min(key_nest, key=lambda x: x[1])[0]
-	end_index = start_index + len(key)
+	end_index = start_index + len(key_bytes)
 	return start_index, end_index
 
 

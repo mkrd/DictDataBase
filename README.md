@@ -202,6 +202,85 @@ assert ress == {"8": {"a": 8}, "9": {"a": 9}} # True
 ```
 
 
+Object Mapper
+========================================================================================
+
+DictDataBase provides object mappers to model your data as classes and benefit from
+type hints and type checking.
+
+
+Mapping key-value items in one File
+----------------------------------------------------------------------------------------
+
+In this example, we will have a file called `users.json`, inside your storage directory
+(`DDB.config.storage_directory`) which contains the following data:
+```json
+{
+    "u1": {
+		"first_name": "John",
+		"last_name": "Doe",
+        "age": 21
+	},
+	"u2": {
+		"first_name": "Jane",
+		"last_name": "Smith",
+        "age": 30,
+        "phone": "0123456"
+	},
+}
+```
+
+We will now map the data to classes:
+
+```python
+from dictdatabase.object_mapper import FileDictModel, FileDictItemModel
+
+class User(FileDictItemModel):
+    first_name: str
+    last_name: str
+    age: int
+    phone: str | None
+
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
+
+class Users(FileDictModel[User]):
+    __file__ = "users"
+```
+
+A few important things are happening here:
+- `FileDictItemModel` models a key-value item inside the file.
+- The attributes `first_name` and `last_name` and `age` of `User` are required. If they miss in the file, a `KeyError` is raised.
+- The attribute `phone` is optional, and will be `None` if it does not exist in the file.
+- When defining `Users`, the `FileDictModel` must specify it's item model type as a type argument (`FileDictModel[User]`)
+- `Users` only has to specify the file it refers to by passing the file name without the ending (`__file__ = "users"`)
+
+
+Now, the models can be used:
+
+```python
+# Get user by id
+u1: User = Users.get_at_key("u1")
+print(u1.full_name())
+>>> "John Doe"
+
+# Iterate all users:
+for uid, user in Users.items():
+    print(user.last_name, user.age, user.phone)
+>>> "Doe", 21, None
+>>> "Smith", 30, "0123456"
+
+# Filter
+u_over_25: dict[str, User] = Users.get_where(lambda uid, user: user.age > 25)
+```
+
+
+
+
+
+
+
 
 Performance
 ========================================================================================
