@@ -29,3 +29,25 @@ path-dict = "^3.0.4"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+
+[tool.ruff]
+show-fixes = true
+select = [
+	"ANN", # annotations
+    "B", # bugbear
+    "C", # comprehensions
+    "E", # style errors
+    "F", # flakes
+    "I", # import sorting
+    "M", # meta
+    "N", # naming
+    "U", # upgrade
+    "W", # style warnings
+    "YTT", # sys.version
+]
+ignore = [
+	"ANN101", # missing type annotation for self
+	"E501", # line length
+	"UP007", # use X | Y for union (not possible in python 3.8)
+]
