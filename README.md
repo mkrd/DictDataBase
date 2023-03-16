@@ -8,7 +8,7 @@ DictDataBase is a fast document-based database that uses json files or compresse
 - **Multi threading and multi processing safe**. Multiple processes on the same machine
 can simultaneously read and write to dicts without losing data.
 - **ACID** compliant. Unlike TinyDB, it is suited for concurrent environments.
-- **No Conflict resolution** required. Unlike with ZODB, lock-based access control is used, so that conflicts never occur.
+- **No Conflict resolution** required. Unlike with ZODB, lock-based access control is used, such that conflicts never occur.
 - **No database server** required. Simply import DictDataBase in your project and use
 it.
 - **Compression**. Configure if the files should be stored as raw json or as json
