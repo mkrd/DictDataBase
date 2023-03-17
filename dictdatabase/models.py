@@ -167,9 +167,7 @@ class DDBMethodChooser:
 		"""
 
 		def type_cast(value):
-			if as_type is None:
-				return value
-			return as_type(value)
+			return value if as_type is None else as_type(value)
 
 		data = {}
 

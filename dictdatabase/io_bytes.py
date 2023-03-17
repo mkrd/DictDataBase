@@ -42,9 +42,7 @@ def read(db_name: str, *, start: int = None, end: int = None) -> bytes:
 				return f.read()
 			start = start or 0
 			f.seek(start)
-			if end is None:
-				return f.read()
-			return f.read(end - start)
+			return f.read() if end is None else f.read(end - start)
 	if not ddb_exists:
 		raise FileNotFoundError(f"No database file exists for \"{db_name}\"")
 	with open(ddb_path, "rb") as f:

@@ -139,11 +139,11 @@ def parallel_stressor(scenario: Scenario):
 			db = {"counter": {"counter": 0}}
 		DDB.at(f"incr{t}").create(db, force_overwrite=True)
 
-	# Execute process pool running incrementor as the target task
-	res = []
 	pool = Pool(processes=scenario.readers + scenario.writers)
-	for mode in "w" * scenario.writers + "r" * scenario.readers:
-		res.append(pool.apply_async(process_job, args=(mode, scenario, DDB.config)))
+	res = [
+		pool.apply_async(process_job, args=(mode, scenario, DDB.config))
+		for mode in "w" * scenario.writers + "r" * scenario.readers
+	]
 	pool.close()
 	pool.join()
 

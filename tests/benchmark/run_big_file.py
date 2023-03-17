@@ -19,16 +19,18 @@ def make_random_posts(count):
 
 
 def make_users(count):
-    all_users = {}
-    for i in range(count):
-        all_users[str(i)] = {
+    return {
+        str(i): {
             "id": str(i),
             "name": "".join(random.choices("abcdefghijklmnopqrstuvwxyz", k=5)),
-            "surname": "".join(random.choices("abcdefghijklmnopqrstuvwxyz", k=20)),
+            "surname": "".join(
+                random.choices("abcdefghijklmnopqrstuvwxyz", k=20)
+            ),
             "age": random.randint(20, 80),
             "posts": make_random_posts(random.randint(200, 300)),
         }
-    return all_users
+        for i in range(count)
+    }
 
 
 
