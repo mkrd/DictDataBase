@@ -138,7 +138,7 @@ def find_outermost_key_in_json_bytes(json_bytes: bytes, key: str) -> Tuple[int, 
 	"""
 
 	# TODO: Very strict. the key must have a colon directly after it
-	# For example {"a": 1} will work, but {"a" : 1} will not work
+	# For example {"a": 1} will work, but {"a" : 1} will not work!
 
 	key = f"\"{key}\":".encode()
 
