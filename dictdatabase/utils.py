@@ -50,6 +50,9 @@ def seek_index_through_value_bytes(json_bytes: bytes, index: int) -> int:
 	- The end index of the value.
 	"""
 
+	# TODO: Try to implement this using bytes.find() instead of a loop
+	# This make count_nesting a lot faster
+
 	# See https://www.json.org/json-en.html for the JSON syntax
 
 	in_str, list_depth, dict_depth, i, len_json_bytes = False, 0, 0, index, len(json_bytes)
@@ -104,19 +107,18 @@ def count_nesting_in_bytes(json_bytes: bytes, start: int, end: int) -> int:
 	Args:
 	- `json_bytes`: A bytes object containing valid JSON when decoded
 	"""
-
-	nesting, i, j = 0, start, start
-
+	nesting, i = 0, start
+	# Find the number of opening curly braces
 	while (i := json_bytes.find(byte_codes.OPEN_CURLY, i, end)) != -1:
 		if i == 0 or json_bytes[i - 1] != byte_codes.BACKSLASH:
 			nesting += 1
 		i += 1
-
-	while (j := json_bytes.find(byte_codes.CLOSE_CURLY, j, end)) != -1:
-		if j == 0 or json_bytes[j - 1] != byte_codes.BACKSLASH:
+	i = start
+	# Find the number of closing curly braces
+	while (i := json_bytes.find(byte_codes.CLOSE_CURLY, i, end)) != -1:
+		if i == 0 or json_bytes[i - 1] != byte_codes.BACKSLASH:
 			nesting -= 1
-		j += 1
-
+		i += 1
 	return nesting
 
 
@@ -168,17 +170,11 @@ def find_outermost_key_in_json_bytes(json_bytes: bytes, key: str) -> Tuple[int, 
 	for i in range(1, len(key_nest)):
 		key_nest[i] = (key_nest[i][0], key_nest[i - 1][1] + key_nest[i][1])
 
-
 	filtered_by_nesting = [i for (i, level) in key_nest if level == 1]
 	if len(filtered_by_nesting) != 1:
 		return -1, -1
-	return filtered_by_nesting[0], filtered_by_nesting[0] + len(key)
-
-	# print(key_nest)
-
-	# start_index = min(key_nest, key=lambda x: x[1])[0]
-	# end_index = start_index + len(key)
-	# return start_index, end_index
+	i = filtered_by_nesting[0]
+	return i, i + len(key)
 
 
 def detect_indentation_in_json_bytes(json_bytes: bytes, index: int) -> Tuple[int, str]:
