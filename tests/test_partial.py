@@ -50,7 +50,8 @@ def test_subwrite(use_test_dir, use_compression, use_orjson, indent):
 	with DDB.at(name, key="b").session(as_type=pd) as (session, task):
 		task["f"] = lambda x: (x or 0) + 2
 		session.write()
-	assert DDB.at(name, key="f").read() == 2
+
+	assert DDB.at(name, key="f").read() is None
 
 	with pytest.raises(KeyError):
 		with DDB.at(name, key="none").session() as (session, key):
