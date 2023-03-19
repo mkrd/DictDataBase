@@ -105,20 +105,18 @@ def count_nesting_in_bytes(json_bytes: bytes, start: int, end: int) -> int:
 	- `json_bytes`: A bytes object containing valid JSON when decoded
 	"""
 
-	in_str, nesting, i = False, 0, start
-	while i < end:
-		byte_i = json_bytes[i]
-		if byte_i == byte_codes.BACKSLASH:
-			i += 1
-		elif byte_i == byte_codes.QUOTE:
-			in_str = not in_str
-		elif in_str:
-			pass
-		elif byte_i == byte_codes.OPEN_CURLY:
+	nesting, i, j = 0, start, start
+
+	while (i := json_bytes.find(byte_codes.OPEN_CURLY, i, end)) != -1:
+		if i == 0 or json_bytes[i - 1] != byte_codes.BACKSLASH:
 			nesting += 1
-		elif byte_i == byte_codes.CLOSE_CURLY:
-			nesting -= 1
 		i += 1
+
+	while (j := json_bytes.find(byte_codes.CLOSE_CURLY, j, end)) != -1:
+		if j == 0 or json_bytes[j - 1] != byte_codes.BACKSLASH:
+			nesting -= 1
+		j += 1
+
 	return nesting
 
 
