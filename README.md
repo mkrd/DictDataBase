@@ -95,7 +95,7 @@ users_dict = {
 }
 DDB.at("users").create(user_data_dict)
 ```
-There is now a file called `users.json` or `users.ddb` in your specified storage 
+There is now a file called `users.json` or `users.ddb` in your specified storage
 directory depending on if you use compression.
 
 
@@ -104,9 +104,9 @@ Check if file or sub-key exists
 ```python
 DDB.at("users").exists()
 >>> True  # File exists
-DDB.at("users", key="u10").exists() 
->>> False # Key "u10" not in users 
-DDB.at("users", key="u2").exists() 
+DDB.at("users", key="u10").exists()
+>>> False # Key "u10" not in users
+DDB.at("users", key="u2").exists()
 >>> True
 ```
 
@@ -122,9 +122,9 @@ joe = DDB.at("users", key="u3").read()
 joe == users_dict["Joe"] # True
 ```
 
-> Note: Doing a partial read like with `DDB.at("users", key="Joe").read()` will return
-> the value of the key at the outermost indentation level if the key appears in the
-> file multiple times.
+> Note: Doing a partial read like with `DDB.at("users", key="Joe").read()` will only
+> return the value of the key if the key is at the root indentation level.
+> Example: You can get "a" from {"a" : 3}, but not from {"b": {"a": 3}}.
 
 It is also possible to only read a subset of keys based on a filter callback:
 
@@ -255,8 +255,8 @@ API Reference
 ### `at(path) -> DDBMethodChooser:`
 Select a file or folder to perform an operation on.
 If you want to select a specific key in a file, use the `key` parameter,
-e.g. `DDB.at("file", key="subkey")`. If the key appears multiple times in the file,
-the value of the key at the outermost indentation level will be returned.
+e.g. `DDB.at("file", key="subkey")`. The key value is only returned if the key
+is at the root level of the json object.
 
 If you want to select an entire folder, use the `*` wildcard,
 eg. `DDB.at("folder", "*")`, or `DDB.at("folder/*")`. You can also use
