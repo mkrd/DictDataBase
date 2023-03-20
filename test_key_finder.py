@@ -24,3 +24,7 @@ index = utils.find_outermost_key_in_json_bytes(json_bytes, "a")
 print("lel")
 print(index)
 print(json_bytes[index[0]:index[1]])
+
+
+
+print(b"00111000".find(b"111", 0, 20))

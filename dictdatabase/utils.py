@@ -1,8 +1,10 @@
 from __future__ import annotations
-from typing import Tuple
-import os
+
 import glob
-from . import config, byte_codes
+import os
+from typing import Tuple
+
+from . import byte_codes, config
 
 
 def file_info(db_name: str) -> Tuple[str, bool, str, bool]:
@@ -100,14 +102,16 @@ def seek_index_through_value_bytes(json_bytes: bytes, index: int) -> int:
 
 def count_nesting_in_bytes(json_bytes: bytes, start: int, end: int) -> int:
 	"""
-	Returns the number of nesting levels between the start and end indices.
+	Returns the number of nesting levels.
+	Considered bytes are from `start` inclusive to `end` exclusive.
+
 	The nesting is counted by the number of opening and closing brackets/braces
 	that are not in a string or escaped with a backslash.
 
 	Args:
 	- `json_bytes`: A bytes object containing valid JSON when decoded
 	"""
-	nesting, i = 0, start
+	i, nesting = start, 0
 	# Find the number of opening curly braces
 	while (i := json_bytes.find(byte_codes.OPEN_CURLY, i, end)) != -1:
 		if i == 0 or json_bytes[i - 1] != byte_codes.BACKSLASH:
@@ -136,7 +140,8 @@ def find_outermost_key_in_json_bytes(json_bytes: bytes, key: str) -> Tuple[int, 
 	represented as bytes.
 
 	Returns:
-	- A tuple of the key start and end index, or `(-1, -1)` if the key is not found.
+	- A tuple of the key start (inclusive) and end (exclusive) index,
+	or `(-1, -1)` if the key is not found.
 	"""
 
 	# TODO: Very strict. the key must have a colon directly after it
@@ -145,36 +150,36 @@ def find_outermost_key_in_json_bytes(json_bytes: bytes, key: str) -> Tuple[int, 
 	key = f"\"{key}\":".encode()
 
 	if (curr_i := json_bytes.find(key, 0)) == -1:
-		return -1, -1
+		return (-1, -1)
 
-	nest_level = count_nesting_in_bytes(json_bytes, 0, curr_i)
+	# Assert: Key was found and curr_i is the index of the first character of the key
 
-	key_nest = [(curr_i, nest_level)]  # (key, nesting)
+	# Keep track of all found keys and their nesting level
+	key_nest = [(curr_i, count_nesting_in_bytes(json_bytes, 0, curr_i))]
 
+	# As long as more keys are found, keep track of them and their nesting level
 	while (next_i := json_bytes.find(key, curr_i + len(key))) != -1:
 		nesting = count_nesting_in_bytes(json_bytes, curr_i + len(key), next_i)
 		key_nest.append((next_i, nesting))
 		curr_i = next_i
 
+	# Assert: all keys have been found, and their nesting relative to each other is
+	# stored in key_nest, whose length is at least 1.
 
 	# Early exit if there is only one key
 	if len(key_nest) == 1:
-		if key_nest[0][1] <= 1:
-			# Nesting level is 1
-			return key_nest[0][0], key_nest[0][0] + len(key)
-		else:
-			# Nesting is 2 or more
-			return -1, -1
+		index, level = key_nest[0]
+		return (index, index + len(key)) if level == 1 else (-1, -1)
 
 	# Relative to total nesting
 	for i in range(1, len(key_nest)):
 		key_nest[i] = (key_nest[i][0], key_nest[i - 1][1] + key_nest[i][1])
 
-	filtered_by_nesting = [i for (i, level) in key_nest if level == 1]
-	if len(filtered_by_nesting) != 1:
-		return -1, -1
-	i = filtered_by_nesting[0]
-	return i, i + len(key)
+	# Filter out all keys that are not at the outermost nesting level
+	indices_at_index_one = [i for i, level in key_nest if level == 1]
+	if len(indices_at_index_one) != 1:
+		return (-1, -1)
+	return (indices_at_index_one[0], indices_at_index_one[0] + len(key))
 
 
 def detect_indentation_in_json_bytes(json_bytes: bytes, index: int) -> Tuple[int, str]:
