@@ -82,17 +82,15 @@ def seek_index_through_value_bytes(json_bytes: bytes, index: int) -> int:
 		elif current == byte_codes.OPEN_CURLY:
 			dict_depth += 1
 		# Handle closing brackets
-		elif current in [byte_codes.CLOSE_SQUARE, byte_codes.CLOSE_CURLY]:
-			if current == byte_codes.CLOSE_SQUARE:
-				list_depth -= 1
-			if current == byte_codes.CLOSE_CURLY:
-				dict_depth -= 1
-			if list_depth == 0:
-				if dict_depth == 0:
-					return i + 1
-				if dict_depth == -1:
-					return i  # Case: {"a": {}}
-		elif list_depth == 0 and ((dict_depth == 0 and current in [byte_codes.COMMA, byte_codes.NEWLINE]) or dict_depth == -1):
+		elif current == byte_codes.CLOSE_SQUARE:
+			list_depth -= 1
+			if list_depth == 0 and dict_depth <= 0:
+				return i + 1 + dict_depth  # dict_depth is -1 in case: {"a": {}}
+		elif current == byte_codes.CLOSE_CURLY:
+			dict_depth -= 1
+			if dict_depth <= 0 and list_depth == 0:
+				return i + 1 + dict_depth  # dict_depth is -1 in case: {"a": {}}
+		elif list_depth == 0 and ((dict_depth == 0 and (current == byte_codes.COMMA or current == byte_codes.NEWLINE)) or dict_depth == -1):
 			# Handle commas and newline as exit points
 			return i
 		i += 1
