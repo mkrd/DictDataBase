@@ -51,4 +51,5 @@ ignore = [
 	"E501", # line length
 	"UP007", # use X | Y for union (not possible in python 3.8)
     "UP006", # Use typing.Tuple for python 3.8 support
+    "W191", # indentation contains tabs
 ]
