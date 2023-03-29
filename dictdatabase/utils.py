@@ -90,9 +90,12 @@ def seek_index_through_value_bytes(json_bytes: bytes, index: int) -> int:
 			dict_depth -= 1
 			if dict_depth <= 0 and list_depth == 0:
 				return i + 1 + dict_depth  # dict_depth is -1 in case: {"a": {}}
-		elif list_depth == 0 and ((dict_depth == 0 and (current == byte_codes.COMMA or current == byte_codes.NEWLINE)) or dict_depth == -1):
-			# Handle commas and newline as exit points
-			return i
+		elif list_depth == 0:
+			if dict_depth == -1:
+				return i
+			if dict_depth == 0 and current in [byte_codes.COMMA, byte_codes.NEWLINE]:
+				# Handle commas and newline as exit points
+				return i
 		i += 1
 
 	raise TypeError("Invalid JSON")
