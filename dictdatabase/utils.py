@@ -1,8 +1,10 @@
 from __future__ import annotations
-from typing import Tuple
-import os
+
 import glob
-from . import config, byte_codes
+import os
+from typing import Tuple
+
+from . import byte_codes, config
 
 
 def file_info(db_name: str) -> Tuple[str, bool, str, bool]:
@@ -50,6 +52,9 @@ def seek_index_through_value_bytes(json_bytes: bytes, index: int) -> int:
 	- The end index of the value.
 	"""
 
+	# TODO: Try to implement this using bytes.find() instead of a loop
+	# This make count_nesting a lot faster
+
 	# See https://www.json.org/json-en.html for the JSON syntax
 
 	in_str, list_depth, dict_depth, i, len_json_bytes = False, 0, 0, index, len(json_bytes)
@@ -77,17 +82,15 @@ def seek_index_through_value_bytes(json_bytes: bytes, index: int) -> int:
 		elif current == byte_codes.OPEN_CURLY:
 			dict_depth += 1
 		# Handle closing brackets
-		elif current in [byte_codes.CLOSE_SQUARE, byte_codes.CLOSE_CURLY]:
-			if current == byte_codes.CLOSE_SQUARE:
-				list_depth -= 1
-			if current == byte_codes.CLOSE_CURLY:
-				dict_depth -= 1
-			if list_depth == 0:
-				if dict_depth == 0:
-					return i + 1
-				if dict_depth == -1:
-					return i  # Case: {"a": {}}
-		elif list_depth == 0 and ((dict_depth == 0 and current in [byte_codes.COMMA, byte_codes.NEWLINE]) or dict_depth == -1):
+		elif current == byte_codes.CLOSE_SQUARE:
+			list_depth -= 1
+			if list_depth == 0 and dict_depth <= 0:
+				return i + 1 + dict_depth  # dict_depth is -1 in case: {"a": {}}
+		elif current == byte_codes.CLOSE_CURLY:
+			dict_depth -= 1
+			if dict_depth <= 0 and list_depth == 0:
+				return i + 1 + dict_depth  # dict_depth is -1 in case: {"a": {}}
+		elif list_depth == 0 and ((dict_depth == 0 and (current == byte_codes.COMMA or current == byte_codes.NEWLINE)) or dict_depth == -1):
 			# Handle commas and newline as exit points
 			return i
 		i += 1
@@ -97,32 +100,31 @@ def seek_index_through_value_bytes(json_bytes: bytes, index: int) -> int:
 
 def count_nesting_in_bytes(json_bytes: bytes, start: int, end: int) -> int:
 	"""
-	Returns the number of nesting levels between the start and end indices.
+	Returns the number of nesting levels.
+	Considered bytes are from `start` inclusive to `end` exclusive.
+
 	The nesting is counted by the number of opening and closing brackets/braces
 	that are not in a string or escaped with a backslash.
 
 	Args:
 	- `json_bytes`: A bytes object containing valid JSON when decoded
 	"""
-
-	in_str, nesting, i = False, 0, start
-	while i < end:
-		byte_i = json_bytes[i]
-		if byte_i == byte_codes.BACKSLASH:
-			i += 1
-		elif byte_i == byte_codes.QUOTE:
-			in_str = not in_str
-		elif in_str:
-			pass
-		elif byte_i == byte_codes.OPEN_CURLY:
+	i, nesting = start, 0
+	# Find the number of opening curly braces
+	while (i := json_bytes.find(byte_codes.OPEN_CURLY, i, end)) != -1:
+		if i == 0 or json_bytes[i - 1] != byte_codes.BACKSLASH:
 			nesting += 1
-		elif byte_i == byte_codes.CLOSE_CURLY:
+		i += 1
+	i = start
+	# Find the number of closing curly braces
+	while (i := json_bytes.find(byte_codes.CLOSE_CURLY, i, end)) != -1:
+		if i == 0 or json_bytes[i - 1] != byte_codes.BACKSLASH:
 			nesting -= 1
 		i += 1
 	return nesting
 
 
-def find_outermost_key_in_json_bytes(json_bytes: bytes, key: str):
+def find_outermost_key_in_json_bytes(json_bytes: bytes, key: str) -> Tuple[int, int]:
 	"""
 	Returns the index of the key that is at the outermost nesting level. If the
 	key is not found, return -1. If the key you are looking for is `some_key`,
@@ -136,31 +138,46 @@ def find_outermost_key_in_json_bytes(json_bytes: bytes, key: str):
 	represented as bytes.
 
 	Returns:
-	- A tuple of the key start and end index, or `(-1, -1)` if the key is not found.
+	- A tuple of the key start (inclusive) and end (exclusive) index,
+	or `(-1, -1)` if the key is not found.
 	"""
+
+	# TODO: Very strict. the key must have a colon directly after it
+	# For example {"a": 1} will work, but {"a" : 1} will not work!
+
 	key = f"\"{key}\":".encode()
 
 	if (curr_i := json_bytes.find(key, 0)) == -1:
-		return -1, -1
+		return (-1, -1)
 
-	key_nest = [(curr_i, 0)]  # (key, nesting)
+	# Assert: Key was found and curr_i is the index of the first character of the key
 
+	# Keep track of all found keys and their nesting level
+	key_nest = [(curr_i, count_nesting_in_bytes(json_bytes, 0, curr_i))]
+
+	# As long as more keys are found, keep track of them and their nesting level
 	while (next_i := json_bytes.find(key, curr_i + len(key))) != -1:
 		nesting = count_nesting_in_bytes(json_bytes, curr_i + len(key), next_i)
 		key_nest.append((next_i, nesting))
 		curr_i = next_i
 
+	# Assert: all keys have been found, and their nesting relative to each other is
+	# stored in key_nest, whose length is at least 1.
+
 	# Early exit if there is only one key
 	if len(key_nest) == 1:
-		return key_nest[0][0], key_nest[0][0] + len(key)
+		index, level = key_nest[0]
+		return (index, index + len(key)) if level == 1 else (-1, -1)
 
 	# Relative to total nesting
 	for i in range(1, len(key_nest)):
 		key_nest[i] = (key_nest[i][0], key_nest[i - 1][1] + key_nest[i][1])
 
-	start_index = min(key_nest, key=lambda x: x[1])[0]
-	end_index = start_index + len(key)
-	return start_index, end_index
+	# Filter out all keys that are not at the outermost nesting level
+	indices_at_index_one = [i for i, level in key_nest if level == 1]
+	if len(indices_at_index_one) != 1:
+		return (-1, -1)
+	return (indices_at_index_one[0], indices_at_index_one[0] + len(key))
 
 
 def detect_indentation_in_json_bytes(json_bytes: bytes, index: int) -> Tuple[int, str]:

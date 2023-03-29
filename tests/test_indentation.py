@@ -4,6 +4,8 @@ import orjson
 import json
 from dictdatabase import utils, io_unsafe, config, io_bytes
 
+import pytest
+
 data = {
 	'a': 1,
 	'b': {
@@ -37,8 +39,8 @@ def test_indentation(use_test_dir, use_compression, use_orjson, indent):
 
 	assert io_bytes.read("test_indentation") == string_dump(data)
 
-	with DDB.at("test_indentation", key="d").session() as (session, db_d):
-		db_d["e"] = 4
-		session.write()
-	data["b"]["d"]["e"] = 4
+	# Accessing a key not at root level should raise an error
+	with pytest.raises(KeyError):
+		with DDB.at("test_indentation", key="d").session() as (session, db_d):
+			session.write()
 	assert io_bytes.read("test_indentation") == string_dump(data)
