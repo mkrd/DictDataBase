@@ -57,22 +57,33 @@ def seek_index_through_value_bytes(json_bytes: bytes, index: int) -> int:
 
 	# See https://www.json.org/json-en.html for the JSON syntax
 
-	in_str, list_depth, dict_depth, i, len_json_bytes = False, 0, 0, index, len(json_bytes)
+	list_depth, dict_depth, i, len_json_bytes = 0, 0, index, len(json_bytes)
 
 	while i < len_json_bytes:
 		current = json_bytes[i]
 		# If backslash, skip the next character
 		if current == byte_codes.BACKSLASH:
 			i += 1
-		# If quote, toggle in_str
+
+		# Assert: the current character is not escaped with a backslash
+
 		elif current == byte_codes.QUOTE:
-			in_str = not in_str
+			while True:
+				i = json_bytes.find(byte_codes.QUOTE, i + 1)
+				if i == -1:
+					raise TypeError("Invalid JSON")
+
+				j = i - 1
+				backslash_count = 0
+				while j >= 0 and json_bytes[j] == byte_codes.BACKSLASH:
+					backslash_count += 1
+					j -= 1
+				if backslash_count % 2 == 0:
+					break
+
 			# Possible exit point where string ends and nesting is zero
-			if not in_str and list_depth == 0 and dict_depth == 0:
+			if list_depth == 0 and dict_depth == 0:
 				return i + 1
-		# If in string, skip
-		elif in_str:
-			pass
 
 		# Invariant: Not in_str, not escaped
 
