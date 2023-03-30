@@ -90,7 +90,12 @@ class DDBMethodChooser:
 	op_type: OperationType
 
 
-	def __init__(self, path: tuple, key: str = None, where: Callable[[Any, Any], bool] = None):
+	def __init__(self,
+		path: tuple,
+		key: str = None,
+		where: Callable[[Any, Any], bool] = None,
+	) -> None:
+		# Convert path to a list of strings
 		pc = []
 		for p in path:
 			pc += p if isinstance(p,  list) else [p]
@@ -116,7 +121,7 @@ class DDBMethodChooser:
 		if self.where is not None:
 			raise RuntimeError("DDB.at(where=...).exists() cannot be used with the where parameter")
 
-		if len(utils.find_all(self.path)) == 0:
+		if not utils.file_exists(self.path):
 			return False
 		if self.key is None:
 			return True
@@ -124,7 +129,7 @@ class DDBMethodChooser:
 		return io_safe.partial_read(self.path, key=self.key) is not None
 
 
-	def create(self, data=None, force_overwrite: bool = False):
+	def create(self, data=None, force_overwrite: bool = False) -> None:
 		"""
 		Create a new file with the given data as the content. If the file
 		already exists, a FileExistsError will be raised unless

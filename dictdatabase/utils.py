@@ -23,6 +23,18 @@ def file_info(db_name: str) -> Tuple[str, bool, str, bool]:
 	return j, os.path.exists(j), d, os.path.exists(d)
 
 
+def file_exists(db_name: str) -> bool:
+	"""
+	Returns True if the given database exists, either as a JSON or DDB file.
+
+	Args:
+	- `db_name`: The name of the database
+	"""
+	base = f"{config.storage_directory}/{db_name}"
+	j, d = f"{base}.json", f"{base}.ddb"
+	return os.path.exists(j) or os.path.exists(d)
+
+
 def find_all(file_name: str) -> list[str]:
 	"""
 	Returns a list of all the database names that match the given glob file_name.
