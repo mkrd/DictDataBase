@@ -29,7 +29,7 @@ def string_dump(db: dict):
 
 
 
-def test_indentation(use_test_dir, use_compression, use_orjson, indent):
+def test_indentation(use_compression, use_orjson, indent):
 	DDB.at("test_indentation").create(data, force_overwrite=True)
 
 	with DDB.at("test_indentation", key="b").session() as (session, db_b):

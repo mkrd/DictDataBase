@@ -2,7 +2,7 @@ import dictdatabase as DDB
 import pytest
 
 
-def test_exists(use_test_dir, use_compression, use_orjson, indent):
+def test_exists(use_compression, use_orjson, indent):
 	DDB.at("test_exists").create({"a": 1}, force_overwrite=True)
 	assert DDB.at("test_exists").exists()
 	assert not DDB.at("test_exists/nonexistent").exists()

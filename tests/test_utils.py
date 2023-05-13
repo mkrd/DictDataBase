@@ -3,7 +3,7 @@ import orjson
 from dictdatabase import utils, byte_codes
 
 
-def test_seek_index_through_value_bytes(use_test_dir):
+def test_seek_index_through_value_bytes():
 	v = b'{"a": 1, "b": {}}'
 	assert utils.seek_index_through_value_bytes(v, 5) == 7
 	assert utils.seek_index_through_value_bytes(v, 6) == 7
@@ -16,7 +16,7 @@ def test_seek_index_through_value_bytes(use_test_dir):
 	assert utils.seek_index_through_value_bytes(n, 6) == 10
 
 
-def test_seek_index_through_value_bytes_2(use_test_dir):
+def test_seek_index_through_value_bytes_2():
 	def load_with_orjson(bytes, key):
 		return orjson.loads(bytes)[key]
 
