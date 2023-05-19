@@ -20,7 +20,7 @@ def read_counters(n, tables):
 	return True
 
 
-def test_stress_threaded(use_test_dir, use_compression, use_orjson):
+def test_stress_threaded(use_compression, use_orjson):
 	per_thread = 15
 	tables = 1
 	threads = 3

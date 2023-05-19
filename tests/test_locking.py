@@ -2,10 +2,9 @@ from dictdatabase import locking
 import pytest
 import threading
 import time
-from tests import TEST_DIR
 
 
-def test_double_lock_exception(use_test_dir, use_compression):
+def test_double_lock_exception(use_compression):
 	name = "test_double_lock_exception"
 	with pytest.raises(RuntimeError):
 		with locking.ReadLock(name):
@@ -16,7 +15,7 @@ def test_double_lock_exception(use_test_dir, use_compression):
 	assert len(ls.locks) == 0
 
 
-def test_get_lock_names(use_test_dir, use_compression):
+def test_get_lock_names(use_compression):
 	lock = locking.ReadLock("db")
 	lock._lock()
 
@@ -40,7 +39,7 @@ def test_get_lock_names(use_test_dir, use_compression):
 
 
 
-def test_remove_orphaned_locks(use_test_dir):
+def test_remove_orphaned_locks():
 	prev_config = locking.LOCK_TIMEOUT
 	locking.LOCK_TIMEOUT = 0.1
 	lock = locking.ReadLock("test_remove_orphaned_locks")
@@ -57,7 +56,7 @@ def test_remove_orphaned_locks(use_test_dir):
 	locking.LOCK_TIMEOUT = prev_config
 
 
-def test_AbstractLock(use_test_dir):
+def test_AbstractLock():
 	l = locking.AbstractLock("test_AbstractLock")
 	with pytest.raises(NotImplementedError):
 		l._lock()

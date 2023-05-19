@@ -3,7 +3,7 @@ import pytest
 
 
 
-def test_write_bytes(use_test_dir, name_of_test, use_compression):
+def test_write_bytes(name_of_test, use_compression):
     # No partial writing to compressed file allowed
     if use_compression:
         with pytest.raises(RuntimeError):
@@ -27,7 +27,7 @@ def test_write_bytes(use_test_dir, name_of_test, use_compression):
 
 
 
-def test_read_bytes(use_test_dir, name_of_test, use_compression):
+def test_read_bytes(name_of_test, use_compression):
     io_bytes.write(name_of_test, b"0123456789")
     # In range
     assert io_bytes.read(name_of_test, start=2, end=5) == b"234"

@@ -1,15 +1,11 @@
+from pathlib import Path
 import dictdatabase as DDB
-from tests import TEST_DIR
 import pytest
-import shutil
-import os
 
 
-@pytest.fixture(scope="session")
-def use_test_dir(request):
-	DDB.config.storage_directory = TEST_DIR
-	os.makedirs(TEST_DIR, exist_ok=True)
-	request.addfinalizer(lambda: shutil.rmtree(TEST_DIR))
+@pytest.fixture(autouse=True)
+def isolate_database_files(tmp_path: Path):
+	DDB.config.storage_directory = str(tmp_path)
 
 
 
