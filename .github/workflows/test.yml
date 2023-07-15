@@ -74,7 +74,8 @@ jobs:
           delete-branch: true
           
       - name: automerge
-        run: |
-          gh pr merge update-code-coverage-badge --auto
+        run: gh pr merge update-code-coverage-badge --auto
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
         
