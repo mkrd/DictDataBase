@@ -41,7 +41,6 @@ jobs:
   # JOB
   cov-badge-job:
     needs: tests-job
-    if: ${{ success() }}
     runs-on: ubuntu-latest
 
     steps:
