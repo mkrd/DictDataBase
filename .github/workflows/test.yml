@@ -11,48 +11,29 @@ jobs:
         python-version: ["3.8", "3.9", "3.10", "3.11"]
 
     steps:
-      #----------------------------------------------
-      #---- Checkout and install poetry and python
-      #----------------------------------------------
-
       - uses: actions/checkout@v3
-      - name: Install poetry
-        run: pipx install poetry
-      - uses: actions/setup-python@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-          cache: 'poetry'
 
-      #----------------------------------------------
-      #---- install dependencies
-      #----------------------------------------------
+      - name: Install poetry
+        run: pipx install poetry
 
-      - name: poetry install
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pypoetry
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+
+      - name: Install dependencies
         run: poetry install
 
-      #----------------------------------------------
-      #---- show installation details
-      #----------------------------------------------
-
-      - name: poetry --version
-        run: poetry --version
-      - name: python --version in venv
-        run: poetry run python --version
-      - name: ls -lah
-        run: ls -lah
-      - name: poetry show
-        run: poetry show
-
-      #----------------------------------------------
-      #---- Tests
-      #----------------------------------------------
-
-      - name: 🚀 Run tests with code coverage report
+      - name: Run tests with code coverage report
         run: poetry run pytest --cov=dictdatabase --cov-report term-missing
 
-      #----------------------------------------------
-      #---- Save coverage artifact
-      #----------------------------------------------
       - uses: actions/upload-artifact@v3
         with:
           name: coverage
@@ -61,15 +42,11 @@ jobs:
   # JOB
   cov-badge-job:
     needs: tests-job
+    if: ${{ success() }}
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
-      #----------------------------------------------
-      #---- Coverage badge
-      #----------------------------------------------
-      - name: ls-lah
-        run: ls -lah
-
       - uses: actions/download-artifact@v3
         with:
           name: coverage
@@ -79,19 +56,12 @@ jobs:
         with:
           output: assets/coverage.svg
 
-      - name: Verify Changed files
-        uses: tj-actions/verify-changed-files@v13
-        id: changed_files
-        with:
-          files: assets/coverage.svg
-
       - name: Set user info
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          
+
       - name: Create Pull Request
-        if: steps.changed_files.outputs.files_changed == 'true'
         id: create_pr
         uses: peter-evans/create-pull-request@v5
         with:
@@ -102,11 +72,12 @@ jobs:
           delete-branch: true
           labels: "automated pr"
           
-          
   # JOB
   auto-merge:
     needs: cov-badge-job
+    if: ${{ success() }}
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -117,3 +88,7 @@ jobs:
         uses: pascalgn/automerge-action@v0.14.3
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        with:
+          mergeMethod: squash
+          pullRequestFilter: labelled
+          label: automated pr
