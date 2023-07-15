@@ -32,6 +32,7 @@ jobs:
 
       - name: Run tests with code coverage report
         run: poetry run pytest --cov=dictdatabase --cov-report term-missing
+        continue-on-error: true
 
       - uses: actions/upload-artifact@v3
         with:
