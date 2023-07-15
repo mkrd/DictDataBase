@@ -40,7 +40,6 @@ def test_nested_file_creation(use_compression, use_orjson, indent):
 	db = make_complex_nested_random_dict(12, 6)
 	DDB.at("nested/file/creation/test").create(db, force_overwrite=True)
 	assert DDB.at("nested/file/creation/test").read() == db
-	assert False
 
 
 def test_create_same_file_twice(use_compression, use_orjson, indent):
