@@ -72,3 +72,11 @@ jobs:
           commit-message: "Update code coverage badge"
           branch: update-code-coverage-badge
           delete-branch: true
+          
+      - name: automerge
+        uses: "pascalgn/automerge-action@v0.15.3"
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          MERGE_LABELS: ""
+        
+        
