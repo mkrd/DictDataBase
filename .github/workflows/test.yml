@@ -85,17 +85,35 @@ jobs:
         with:
           files: assets/coverage.svg
 
-      - name: Commit files
-        if: steps.changed_files.outputs.files_changed == 'true'
+      - name: Set user info
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add assets/coverage.svg
-          git commit -m "Updated assets/coverage.svg"
-
-      - name: Push changes
+          
+      - name: Create Pull Request
         if: steps.changed_files.outputs.files_changed == 'true'
-        uses: ad-m/github-push-action@master
+        id: create_pr
+        uses: peter-evans/create-pull-request@v5
         with:
-          github_token: ${{ secrets.github_token }}
-          branch: ${{ github.ref }}
+          body: "This PR updates the code coverage badge."
+          commit-message: "Update code coverage badge"
+          base: ${{ github.ref }}
+          branch: "update-code-coverage-badge"
+          delete-branch: true
+          labels: "automated pr"
+          
+          
+  # JOB
+  auto-merge:
+    needs: cov-badge-job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Automatic Rebase
+        id: automatic_rebase
+        uses: cirrus-actions/rebase@1.5
+      - name: Auto Merge
+        uses: pascalgn/automerge-action@v0.14.3
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
