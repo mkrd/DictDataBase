@@ -75,12 +75,12 @@ jobs:
           name: coverage
 
       - name: GenerateCoverage Badge
-        uses: tj-actions/coverage-badge-py@v1.8
+        uses: tj-actions/coverage-badge-py@v2
         with:
           output: assets/coverage.svg
 
       - name: Verify Changed files
-        uses: tj-actions/verify-changed-files@v13
+        uses: tj-actions/verify-changed-files@v16
         id: changed_files
         with:
           files: assets/coverage.svg
