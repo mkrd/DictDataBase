@@ -37,7 +37,7 @@ class PartialFileHandle:
 def read(db_name: str) -> dict:
 	"""
 		Read the file at db_path from the configured storage directory.
-		Make sure the file exists. If it does notnot a FileNotFoundError is
+		Make sure the file exists. If it does not a FileNotFoundError is
 		raised.
 	"""
 	# Always use orjson to read the file, because it is faster
