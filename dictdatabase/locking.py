@@ -89,8 +89,7 @@ class FileLocksSnapshot:
 		# len(need_locks) is at least 1 since this function is only called if there is a need_lock
 		need_locks = [l for l in self.locks if l.stage == "need"]
 		# Sort by time_ns. If multiple, the the one with the smaller id is first
-		need_locks = sorted(need_locks, key=lambda l: int(l.id))
-		need_locks = sorted(need_locks, key=lambda l: int(l.time_ns))
+		need_locks = sorted(need_locks, key=lambda l: (int(l.time_ns), int(l.id)))
 		return need_locks[0].id == need_lock.id
 
 
