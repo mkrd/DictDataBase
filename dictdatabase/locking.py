@@ -99,23 +99,24 @@ class AbstractLock:
 		A subclass should implement _lock and call _init_lock_file in its __init__.
 	"""
 
-	__slots__ = ("db_name", "need_lock", "has_lock", "snapshot")
+	__slots__ = ("db_name", "need_lock", "has_lock", "snapshot", "mode")
 
 	db_name: str
 	need_lock: LockFileMeta
 	has_lock: LockFileMeta
 	snapshot: FileLocksSnapshot
+	mode: str
 
-	def __init__(self, db_name: str):
+	def __init__(self, db_name: str) -> None:
 		self.db_name = db_name.replace("/", "___").replace(".", "____")
 
-	def _init_lockfiles(self, mode: str):
+		# Create lock files
 		time_ns = time.monotonic_ns()
-		t_id = str(threading.get_native_id())
+		t_id = f"p{os.getpid()}t{threading.get_native_id()}"  # Ensure uniqueness across processes and threads
 		dir = os.path.join(config.storage_directory, ".ddb")
 
-		self.need_lock = LockFileMeta(dir, self.db_name, t_id, time_ns, "need", mode)
-		self.has_lock = LockFileMeta(dir, self.db_name, t_id, time_ns, "has", mode)
+		self.need_lock = LockFileMeta(dir, self.db_name, t_id, time_ns, "need", self.mode)
+		self.has_lock = LockFileMeta(dir, self.db_name, t_id, time_ns, "has", self.mode)
 
 		if not os.path.isdir(dir):
 			os.mkdir(dir)
@@ -141,9 +142,7 @@ class AbstractLock:
 
 
 class ReadLock(AbstractLock):
-	def __init__(self, db_name: str):
-		super().__init__(db_name)
-		self._init_lockfiles("read")
+	mode = "read"
 
 	def _lock(self):
 		# Instantly signal that we need to read
@@ -172,9 +171,7 @@ class ReadLock(AbstractLock):
 
 
 class WriteLock(AbstractLock):
-	def __init__(self, db_name: str):
-		super().__init__(db_name)
-		self._init_lockfiles("write")
+	mode = "write"
 
 	def _lock(self):
 		# Instantly signal that we need to write
