@@ -9,15 +9,15 @@ from . import config
 # Design decisions:
 # - Do not use pathlib, because it is slower than os
 
+# Constants
 SLEEP_TIMEOUT = 0.001
-
-# If a process crashes and doesn't remove its locks, remove them after a timeout
-LOCK_TIMEOUT = 60.0
+LOCK_TIMEOUT = 60.0  # Duration to wait before considering a lock as orphaned.
 
 
 def os_touch(path: str) -> None:
 	"""
-		Like touch, but works on Windows.
+	Create an empty file at the given path. This mimics the UNIX touch command
+	and is compatible with both Windows and UNIX systems.
 	"""
 	mode = 0o666
 	flags = os.O_CREAT | os.O_WRONLY | os.O_EXCL
@@ -26,6 +26,9 @@ def os_touch(path: str) -> None:
 
 
 class LockFileMeta:
+	"""
+	Metadata representation for a lock file.
+	"""
 
 	__slots__ = ("ddb_dir", "name", "id", "time_ns", "stage", "mode", "path")
 
@@ -38,17 +41,30 @@ class LockFileMeta:
 	path: str
 
 	def __init__(self, ddb_dir: str, name: str, id: str, time_ns: str, stage: str, mode: str) -> None:
-		self.ddb_dir, self.name, self.id = ddb_dir, name, id
-		self.time_ns, self.stage, self.mode = time_ns, stage, mode
+		self.ddb_dir = ddb_dir
+		self.name = name
+		self.id = id
+		self.time_ns = time_ns
+		self.stage = stage
+		self.mode = mode
 		lock_file = f"{name}.{id}.{time_ns}.{stage}.{mode}.lock"
 		self.path = os.path.join(ddb_dir, lock_file)
 
 	def new_with_updated_time(self) -> LockFileMeta:
+		"""
+		Create a new instance with an updated timestamp.
+		"""
 		time_ns = f"{time.monotonic_ns()}"
 		return LockFileMeta(self.ddb_dir, self.name, self.id, time_ns, self.stage, self.mode)
 
 
 class FileLocksSnapshot:
+	"""
+	Represents a snapshot of the current state of file locks in the directory.
+	This snapshot assists in deciding which lock should be acquired or released next.
+
+	On init, orphaned locks are removed.
+	"""
 
 	__slots__ = ("any_has_locks", "any_write_locks", "any_has_write_locks", "locks")
 
@@ -82,7 +98,7 @@ class FileLocksSnapshot:
 
 			self.locks.append(lock_meta)
 
-			# Lock existence
+			# Update lock state flags
 			if lock_meta.stage == "has":
 				self.any_has_locks = True
 				if lock_meta.mode == "write":
@@ -91,9 +107,15 @@ class FileLocksSnapshot:
 				self.any_write_locks = True
 
 	def exists(self, l: LockFileMeta) -> bool:
+		"""
+		Check if a lock with the same ID, stage, and mode exists in the current snapshot.
+		"""
 		return any(x.id == l.id and x.stage == l.stage and x.mode == l.mode for x in self.locks)
 
 	def oldest_need(self, need_lock: LockFileMeta) -> bool:
+		"""
+		Determine if the provided 'need_lock' is the oldest among all 'need' locks in the snapshot.
+		"""
 		# len(need_locks) is at least 1 since this function is only called if there is a need_lock
 		need_locks = [l for l in self.locks if l.stage == "need"]
 		# Sort by time_ns. If multiple, the the one with the smaller id is first
@@ -103,8 +125,8 @@ class FileLocksSnapshot:
 
 class AbstractLock:
 	"""
-		An abstract lock doesn't do anything by itself.
-		A subclass should implement _lock and call _init_lock_file in its __init__.
+	Abstract base class for file locks. This class doesn't lock/unlock by itself but
+	provides a blueprint for derived classes to implement.
 	"""
 
 	__slots__ = ("db_name", "need_lock", "has_lock", "snapshot", "mode")
@@ -116,23 +138,25 @@ class AbstractLock:
 	mode: str
 
 	def __init__(self, db_name: str) -> None:
+		# Normalize db_name to avoid file naming conflicts
 		self.db_name = db_name.replace("/", "___").replace(".", "____")
-
-		# Create lock files
 		time_ns = time.monotonic_ns()
-		t_id = f"{threading.get_native_id()}"  # Ensure uniqueness across processes and threads
+		t_id = f"{threading.get_native_id()}"  # ID that's unique across processes and threads.
 		dir = os.path.join(config.storage_directory, ".ddb")
 
 		self.need_lock = LockFileMeta(dir, self.db_name, t_id, time_ns, "need", self.mode)
 		self.has_lock = LockFileMeta(dir, self.db_name, t_id, time_ns, "has", self.mode)
 
+		# Ensure lock directory exists
 		if not os.path.isdir(dir):
 			os.makedirs(dir, exist_ok=True)
 
 	def _lock(self) -> None:
+		"""Override this method to implement locking mechanism."""
 		raise NotImplementedError
 
 	def _unlock(self) -> None:
+		"""Remove the lock files associated with this lock."""
 		for p in ("need_lock", "has_lock"):
 			try:
 				if lock := getattr(self, p, None):
@@ -150,21 +174,25 @@ class AbstractLock:
 
 
 class ReadLock(AbstractLock):
+	"""
+	A file-based read lock.
+	Multiple threads/processes can simultaneously hold a read lock unless there's a write lock.
+	"""
 	mode = "read"
 
 	def _lock(self) -> None:
-		# Instantly signal that we need to read
+		# Express intention to acquire read lock
 		os_touch(self.need_lock.path)
 		self.snapshot = FileLocksSnapshot(self.need_lock)
 
-		# Except if current thread already has a read lock
+		# If this thread already holds a read lock, raise an exception.
 		if self.snapshot.exists(self.has_lock):
 			os.unlink(self.need_lock.path)
 			raise RuntimeError("Thread already has a read lock. Do not try to obtain a read lock twice.")
 
 		start_time = time.time()
 
-		# Iterate until this is the oldest need* lock and no haswrite locks exist, or no *write locks exist
+		# Try to acquire lock until conditions are met or a timeout occurs
 		while True:
 			if not self.snapshot.any_write_locks or (
 				not self.snapshot.any_has_write_locks
@@ -181,21 +209,25 @@ class ReadLock(AbstractLock):
 
 
 class WriteLock(AbstractLock):
+	"""
+	A file-based write lock.
+	Only one thread/process can hold a write lock, blocking others from acquiring either read or write locks.
+	"""
 	mode = "write"
 
 	def _lock(self) -> None:
-		# Instantly signal that we need to write
+		# Express intention to acquire write lock
 		os_touch(self.need_lock.path)
 		self.snapshot = FileLocksSnapshot(self.need_lock)
 
-		# Except if current thread already has a write lock
+		# If this thread already holds a write lock, raise an exception.
 		if self.snapshot.exists(self.has_lock):
 			os.unlink(self.need_lock.path)
 			raise RuntimeError("Thread already has a write lock. Do not try to obtain a write lock twice.")
 
 		start_time = time.time()
 
-		# Iterate until this is the oldest need* lock and no has* locks exist
+		# Try to acquire lock until conditions are met or a timeout occurs
 		while True:
 			if not self.snapshot.any_has_locks and self.snapshot.oldest_need(self.need_lock):
 				self.has_lock = self.has_lock.new_with_updated_time()
