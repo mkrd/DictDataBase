@@ -3,7 +3,6 @@ from __future__ import annotations
 import os
 import threading
 import time
-from dataclasses import dataclass
 
 from . import config
 
@@ -26,8 +25,10 @@ def os_touch(path: str) -> None:
 	os.close(fd)
 
 
-@dataclass(frozen=True, slots=True)
 class LockFileMeta:
+
+	__slots__ = ("ddb_dir", "name", "id", "time_ns", "stage", "mode", "path")
+
 	ddb_dir: str
 	name: str
 	id: str
@@ -43,8 +44,10 @@ class LockFileMeta:
 		self.path = os.path.join(ddb_dir, lock_file)
 
 
-@dataclass(frozen=True, slots=True)
 class FileLocksSnapshot:
+
+	__slots__ = ("any_has_locks", "any_write_locks", "any_has_write_locks", "locks")
+
 	locks: list[LockFileMeta]
 	any_has_locks: bool = False
 	any_write_locks: bool = False
