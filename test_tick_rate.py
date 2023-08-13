@@ -1,5 +1,6 @@
 import time
 
+
 def get_tick_rate(clock_func, duration=1.0):
     start_time = time.time()
     end_time = start_time + duration
@@ -16,6 +17,7 @@ def get_tick_rate(clock_func, duration=1.0):
 
     return ticks / duration  # ticks per second
 
+
 if __name__ == "__main__":
     clock_funcs = {
         "time           ": time.time,
@@ -27,4 +29,4 @@ if __name__ == "__main__":
     }
 
     for name, func in clock_funcs.items():
-        print(f"Tick rate for {name}: {get_tick_rate(func)} ticks/second")
+        print(f"Tick rate for {name}: {get_tick_rate(func) / 1_000_000.0:.3f}M ticks/second")

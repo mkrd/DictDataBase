@@ -1,6 +1,7 @@
-import time
-import threading
 import multiprocessing
+import threading
+import time
+
 
 def print_clocks(label):
     print(f"--- {label} ---")
@@ -9,11 +10,14 @@ def print_clocks(label):
     print("perf_counter_ns():", time.perf_counter_ns())
     print("\n")
 
+
 def thread_function(thread_name):
     print_clocks(f"Thread-{thread_name}")
 
+
 def process_function(process_name):
     print_clocks(f"Process-{process_name}")
+
 
 if __name__ == "__main__":
     print_clocks("Main Thread")
