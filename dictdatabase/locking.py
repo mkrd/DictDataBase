@@ -1,7 +1,10 @@
 from __future__ import annotations
+
+import os
 import threading
 import time
-import os
+from dataclasses import dataclass
+
 from . import config
 
 # Design decisions:
@@ -13,7 +16,7 @@ SLEEP_TIMEOUT = 0.001
 LOCK_TIMEOUT = 30.0
 
 
-def os_touch(path: str):
+def os_touch(path: str) -> None:
 	"""
 		Like touch, but works on Windows.
 	"""
@@ -23,37 +26,32 @@ def os_touch(path: str):
 	os.close(fd)
 
 
+@dataclass(frozen=True, slots=True)
 class LockFileMeta:
-
-	__slots__ = ("ddb_dir", "name", "id", "time_ns", "stage", "mode", "path")
-
 	ddb_dir: str
-	id: str
 	name: str
+	id: str
 	time_ns: str
 	stage: str
 	mode: str
 	path: str
 
-	def __init__(self, ddb_dir, name, id, time_ns, stage, mode):
+	def __init__(self, ddb_dir: str, name: str, id: str, time_ns: str, stage: str, mode: str) -> None:
 		self.ddb_dir, self.name, self.id = ddb_dir, name, id
 		self.time_ns, self.stage, self.mode = time_ns, stage, mode
 		lock_file = f"{name}.{id}.{time_ns}.{stage}.{mode}.lock"
 		self.path = os.path.join(ddb_dir, lock_file)
 
 
+@dataclass(frozen=True, slots=True)
 class FileLocksSnapshot:
-
-	__slots__ = ("any_has_locks", "any_write_locks", "any_has_write_locks", "locks")
-
-	any_has_locks: bool
-	any_write_locks: bool
-	any_has_write_locks: bool
 	locks: list[LockFileMeta]
+	any_has_locks: bool = False
+	any_write_locks: bool = False
+	any_has_write_locks: bool = False
 
-	def __init__(self, need_lock: LockFileMeta):
-		self.any_has_locks, self.any_write_locks = False, False
-		self.any_has_write_locks, self.locks = False, []
+	def __init__(self, need_lock: LockFileMeta) -> None:
+		self.locks = []
 
 		for file_name in os.listdir(need_lock.ddb_dir):
 			if not file_name.endswith(".lock"):
