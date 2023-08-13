@@ -177,7 +177,7 @@ class ReadLock(AbstractLock):
 class WriteLock(AbstractLock):
 	mode = "write"
 
-	def _lock(self):
+	def _lock(self) -> None:
 		# Instantly signal that we need to write
 		os_touch(self.need_lock.path)
 		self.snapshot = FileLocksSnapshot(self.need_lock)
@@ -185,7 +185,7 @@ class WriteLock(AbstractLock):
 		# Except if current thread already has a write lock
 		if self.snapshot.exists(self.has_lock):
 			os.unlink(self.need_lock.path)
-			raise RuntimeError("Thread already has a write lock. Do try to obtain a write lock twice.")
+			raise RuntimeError("Thread already has a write lock. Do not try to obtain a write lock twice.")
 
 		# Iterate until this is the oldest need* lock and no has* locks exist
 		while True:
