@@ -49,12 +49,15 @@ class FileLocksSnapshot:
 	__slots__ = ("any_has_locks", "any_write_locks", "any_has_write_locks", "locks")
 
 	locks: list[LockFileMeta]
-	any_has_locks: bool = False
-	any_write_locks: bool = False
-	any_has_write_locks: bool = False
+	any_has_locks: bool
+	any_write_locks: bool
+	any_has_write_locks: bool
 
 	def __init__(self, need_lock: LockFileMeta) -> None:
 		self.locks = []
+		self.any_has_locks = False
+		self.any_write_locks = False
+		self.any_has_write_locks = False
 
 		for file_name in os.listdir(need_lock.ddb_dir):
 			if not file_name.endswith(".lock"):
