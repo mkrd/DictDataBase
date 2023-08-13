@@ -54,7 +54,7 @@ class LockFileMeta:
 		"""
 		Create a new instance with an updated timestamp.
 		"""
-		time_ns = f"{time.monotonic_ns()}"
+		time_ns = f"{time.time_ns()}"
 		return LockFileMeta(self.ddb_dir, self.name, self.id, time_ns, self.stage, self.mode)
 
 
@@ -90,7 +90,7 @@ class FileLocksSnapshot:
 
 			# Remove orphaned locks
 			if lock_meta.path != need_lock.path:
-				lock_age = time.monotonic_ns() - int(lock_meta.time_ns)
+				lock_age = time.time_ns() - int(lock_meta.time_ns)
 				if lock_age > LOCK_TIMEOUT * 1_000_000_000:
 					os.unlink(lock_meta.path)
 					print(f"Removed orphaned lock ({lock_meta.path})")
@@ -140,7 +140,7 @@ class AbstractLock:
 	def __init__(self, db_name: str) -> None:
 		# Normalize db_name to avoid file naming conflicts
 		self.db_name = db_name.replace("/", "___").replace(".", "____")
-		time_ns = time.monotonic_ns()
+		time_ns = time.time_ns()
 		t_id = f"{threading.get_native_id()}"  # ID that's unique across processes and threads.
 		dir = os.path.join(config.storage_directory, ".ddb")
 
@@ -166,10 +166,10 @@ class AbstractLock:
 			finally:
 				setattr(self, p, None)
 
-	def __enter__(self):
+	def __enter__(self) -> None:
 		self._lock()
 
-	def __exit__(self, exc_type, exc_val, exc_tb):
+	def __exit__(self, exc_type, exc_val, exc_tb) -> None:
 		self._unlock()
 
 
