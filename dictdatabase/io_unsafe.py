@@ -1,10 +1,13 @@
 from __future__ import annotations
-from typing import Tuple
-from dataclasses import dataclass
-import orjson
-import json
+
 import hashlib
-from . import config, utils, byte_codes, indexing, io_bytes
+import json
+from dataclasses import dataclass
+from typing import Tuple
+
+import orjson
+
+from . import byte_codes, config, indexing, io_bytes, utils
 
 
 @dataclass(frozen=True)  # slots=True not supported by python 3.8 and 3.9
@@ -116,7 +119,7 @@ def serialize_data_to_json_bytes(data: dict) -> bytes:
 		return db_dump.encode()
 
 
-def write(db_name: str, data: dict):
+def write(db_name: str, data: dict) -> None:
 	"""
 		Write the dict db dumped as a json string
 		to the file of the db_path.
@@ -130,7 +133,11 @@ def write(db_name: str, data: dict):
 ################################################################################
 
 
-def try_get_parial_file_handle_by_index(indexer: indexing.Indexer, db_name, key) -> Tuple[PartialFileHandle | None, bytes | None]:
+def try_get_parial_file_handle_by_index(
+	indexer: indexing.Indexer,
+	db_name: str,
+	key: str,
+) -> Tuple[PartialFileHandle | None, bytes | None]:
 	"""
 		Try to get a partial file handle by using the key entry in the index file.
 
@@ -202,7 +209,7 @@ def get_partial_file_handle(db_name: str, key: str) -> PartialFileHandle:
 	return PartialFileHandle(db_name, partial_dict, indent_level, indent_with, indexer)
 
 
-def partial_write(pf: PartialFileHandle):
+def partial_write(pf: PartialFileHandle) -> None:
 	"""
 		Write a partial file handle to the db.
 	"""
@@ -211,7 +218,7 @@ def partial_write(pf: PartialFileHandle):
 
 	# Add indentation
 	if pf.indent_level > 0 and pf.indent_with:
-		replace_this = "\n".encode()
+		replace_this = b"\n"
 		replace_with = ("\n" + (pf.indent_level * pf.indent_with)).encode()
 		partial_bytes = partial_bytes.replace(replace_this, replace_with)
 

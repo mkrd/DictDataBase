@@ -1,6 +1,6 @@
 import os
-from . import config, utils, io_unsafe, locking
 
+from . import config, io_unsafe, locking, utils
 
 
 def read(file_name: str) -> dict:
@@ -40,7 +40,7 @@ def partial_read(file_name: str, key: str) -> dict:
 
 
 
-def write(file_name: str, data: dict):
+def write(file_name: str, data: dict) -> None:
 	"""
 		Ensures that writing only starts if there is no reading or writing in progress.
 
@@ -57,7 +57,7 @@ def write(file_name: str, data: dict):
 
 
 
-def delete(file_name: str):
+def delete(file_name: str) -> None:
 	"""
 		Ensures that deleting only starts if there is no reading or writing in progress.
 

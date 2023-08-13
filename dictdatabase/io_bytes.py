@@ -1,7 +1,7 @@
-import zlib
 import os
-from . import config, utils
+import zlib
 
+from . import config, utils
 
 
 def read(db_name: str, *, start: int = None, end: int = None) -> bytes:
@@ -58,7 +58,7 @@ def read(db_name: str, *, start: int = None, end: int = None) -> bytes:
 
 
 
-def write(db_name: str, dump: bytes, *, start: int = None):
+def write(db_name: str, dump: bytes, *, start: int = None) -> None:
 	"""
 		Write the bytes to the file of the db_path. If the db was compressed but no
 		compression is enabled, remove the compressed file, and vice versa.

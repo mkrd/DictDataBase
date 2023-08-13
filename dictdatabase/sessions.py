@@ -1,9 +1,9 @@
 from __future__ import annotations
-from typing import Tuple, TypeVar, Generic, Any, Callable
-from . import utils, io_unsafe, locking
 
 from contextlib import contextmanager
+from typing import Any, Callable, Generic, Tuple, TypeVar
 
+from . import io_unsafe, locking, utils
 
 T = TypeVar("T")
 JSONSerializable = TypeVar("JSONSerializable", str, int, float, bool, None, list, dict)

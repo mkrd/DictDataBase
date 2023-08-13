@@ -1,7 +1,15 @@
 from __future__ import annotations
-from typing import TypeVar, Type, Any, Callable
-from . import utils, io_safe, config
-from . sessions import SessionFileFull, SessionFileKey, SessionFileWhere, SessionDirFull, SessionDirWhere
+
+from typing import Any, Callable, Type, TypeVar
+
+from . import config, io_safe, utils
+from .sessions import (
+	SessionDirFull,
+	SessionDirWhere,
+	SessionFileFull,
+	SessionFileKey,
+	SessionFileWhere,
+)
 
 T = TypeVar("T")
 
@@ -21,7 +29,7 @@ class OperationType:
 	- DDB.at("dir", key="subkey")
 	"""
 
-	def __init__(self, path, key, where):
+	def __init__(self, path: str, key: str, where: Callable) -> None:
 		self.dir = "*" in path
 		self.file = not self.dir
 		self.where = where is not None
@@ -33,23 +41,23 @@ class OperationType:
 			raise TypeError("Cannot specify sub-key when selecting a folder. Specify the key in the path instead.")
 
 	@property
-	def file_normal(self):
+	def file_normal(self) -> bool:
 		return self.file and not self.where and not self.key
 
 	@property
-	def file_key(self):
+	def file_key(self) -> bool:
 		return self.file and not self.where and self.key
 
 	@property
-	def file_where(self):
+	def file_where(self) -> bool:
 		return self.file and self.where and not self.key
 
 	@property
-	def dir_normal(self):
+	def dir_normal(self) -> bool:
 		return self.dir and not self.where and not self.key
 
 	@property
-	def dir_where(self):
+	def dir_where(self) -> bool:
 		return self.dir and self.where and not self.key
 
 
@@ -129,7 +137,7 @@ class DDBMethodChooser:
 		return io_safe.partial_read(self.path, key=self.key) is not None
 
 
-	def create(self, data=None, force_overwrite: bool = False) -> None:
+	def create(self, data: dict | None = None, force_overwrite: bool = False) -> None:
 		"""
 		Create a new file with the given data as the content. If the file
 		already exists, a FileExistsError will be raised unless
@@ -153,7 +161,7 @@ class DDBMethodChooser:
 		io_safe.write(self.path, data)
 
 
-	def delete(self):
+	def delete(self) -> None:
 		"""
 		Delete the file at the selected path.
 		"""

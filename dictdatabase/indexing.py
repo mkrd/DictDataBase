@@ -1,5 +1,7 @@
-import orjson
 import os
+
+import orjson
+
 from . import config
 
 # Problem: Multiple read processes will concurrently read and write the same file
@@ -40,7 +42,7 @@ class Indexer:
 
 	__slots__ = ("data", "path")
 
-	def __init__(self, db_name: str):
+	def __init__(self, db_name: str) -> None:
 		# Make path of index file
 		db_name = db_name.replace("/", "___")
 		self.path = os.path.join(config.storage_directory, ".ddb", f"{db_name}.index")
@@ -57,7 +59,7 @@ class Indexer:
 			self.data = {}
 
 
-	def get(self, key):
+	def get(self, key: str) -> list | None:
 		"""
 			Returns a list of 5 elements for a key if it exists, otherwise None
 			Elements:[start_index, end_index, indent_level, indent_with, value_hash]
@@ -65,7 +67,16 @@ class Indexer:
 		return self.data.get(key, None)
 
 
-	def write(self, key, start_index, end_index, indent_level, indent_with, value_hash, old_value_end):
+	def write(
+		self,
+		key: str,
+		start_index: int,
+		end_index: int,
+		indent_level: int,
+		indent_with: str,
+		value_hash: int,
+		old_value_end: int,
+	) -> None:
 		"""
 			Write index information for a key to the index file
 		"""

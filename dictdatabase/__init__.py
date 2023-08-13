@@ -1,2 +1,2 @@
-from . configuration import config
-from . models import at
+from .configuration import config  # noqa: F401
+from .models import at  # noqa: F401
