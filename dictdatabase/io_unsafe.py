@@ -133,7 +133,7 @@ def write(db_name: str, data: dict) -> None:
 ################################################################################
 
 
-def try_get_parial_file_handle_by_index(
+def try_get_partial_file_handle_by_index(
 	indexer: indexing.Indexer,
 	db_name: str,
 	key: str,
@@ -187,7 +187,7 @@ def get_partial_file_handle(db_name: str, key: str) -> PartialFileHandle:
 
 	# Search for key in the index file
 	indexer = indexing.Indexer(db_name)
-	partial_handle, all_file_bytes = try_get_parial_file_handle_by_index(indexer, db_name, key)
+	partial_handle, all_file_bytes = try_get_partial_file_handle_by_index(indexer, db_name, key)
 	if partial_handle is not None:
 		return partial_handle
 
