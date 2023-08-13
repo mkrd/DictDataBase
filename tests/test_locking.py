@@ -25,7 +25,7 @@ def test_get_lock_names(use_compression):
 	assert len(ls.locks) == 1
 
 	assert ls.locks[0].id == str(threading.get_native_id())
-	assert ls.locks[0].time_ns == str(lock.need_lock.time_ns)
+	assert int(ls.locks[0].time_ns) >= int(lock.need_lock.time_ns)
 	assert ls.locks[0].stage == "has"
 	assert ls.locks[0].mode == "read"
 

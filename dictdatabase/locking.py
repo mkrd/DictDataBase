@@ -43,6 +43,10 @@ class LockFileMeta:
 		lock_file = f"{name}.{id}.{time_ns}.{stage}.{mode}.lock"
 		self.path = os.path.join(ddb_dir, lock_file)
 
+	def new_with_updated_time(self) -> LockFileMeta:
+		time_ns = f"{time.monotonic_ns()}"
+		return LockFileMeta(self.ddb_dir, self.name, self.id, time_ns, self.stage, self.mode)
+
 
 class FileLocksSnapshot:
 
@@ -123,12 +127,12 @@ class AbstractLock:
 		self.has_lock = LockFileMeta(dir, self.db_name, t_id, time_ns, "has", self.mode)
 
 		if not os.path.isdir(dir):
-			os.mkdir(dir)
+			os.makedirs(dir, exist_ok=True)
 
-	def _lock(self):
+	def _lock(self) -> None:
 		raise NotImplementedError
 
-	def _unlock(self):
+	def _unlock(self) -> None:
 		for p in ("need_lock", "has_lock"):
 			try:
 				if lock := getattr(self, p, None):
@@ -148,7 +152,7 @@ class AbstractLock:
 class ReadLock(AbstractLock):
 	mode = "read"
 
-	def _lock(self):
+	def _lock(self) -> None:
 		# Instantly signal that we need to read
 		os_touch(self.need_lock.path)
 		self.snapshot = FileLocksSnapshot(self.need_lock)
@@ -158,19 +162,21 @@ class ReadLock(AbstractLock):
 			os.unlink(self.need_lock.path)
 			raise RuntimeError("Thread already has a read lock. Do not try to obtain a read lock twice.")
 
+		start_time = time.time()
+
 		# Iterate until this is the oldest need* lock and no haswrite locks exist, or no *write locks exist
 		while True:
-			# If no writing is happening, allow unlimited reading
-			if not self.snapshot.any_write_locks:
-				os_touch(self.has_lock.path)
-				os.unlink(self.need_lock.path)
-				return
-			# A needwrite or haswrite lock exists
-			if not self.snapshot.any_has_write_locks and self.snapshot.oldest_need(self.need_lock):
+			if not self.snapshot.any_write_locks or (
+				not self.snapshot.any_has_write_locks
+				and self.snapshot.oldest_need(self.need_lock)
+			):
+				self.has_lock = self.has_lock.new_with_updated_time()
 				os_touch(self.has_lock.path)
 				os.unlink(self.need_lock.path)
 				return
 			time.sleep(SLEEP_TIMEOUT)
+			if time.time() - start_time > LOCK_TIMEOUT:
+				raise RuntimeError("Timeout while waiting for read lock.")
 			self.snapshot = FileLocksSnapshot(self.need_lock)
 
 
@@ -187,11 +193,16 @@ class WriteLock(AbstractLock):
 			os.unlink(self.need_lock.path)
 			raise RuntimeError("Thread already has a write lock. Do not try to obtain a write lock twice.")
 
+		start_time = time.time()
+
 		# Iterate until this is the oldest need* lock and no has* locks exist
 		while True:
 			if not self.snapshot.any_has_locks and self.snapshot.oldest_need(self.need_lock):
+				self.has_lock = self.has_lock.new_with_updated_time()
 				os_touch(self.has_lock.path)
 				os.unlink(self.need_lock.path)
 				return
 			time.sleep(SLEEP_TIMEOUT)
+			if time.time() - start_time > LOCK_TIMEOUT:
+				raise RuntimeError("Timeout while waiting for write lock.")
 			self.snapshot = FileLocksSnapshot(self.need_lock)
