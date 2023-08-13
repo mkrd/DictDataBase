@@ -44,6 +44,15 @@ jobs:
         run: poetry show
 
       #----------------------------------------------
+      #---- Pre-Checks
+      #----------------------------------------------
+
+      - name: Show clock res
+        run: poetry run python test_tick_rate.py
+      - name: Test clocks
+        run: poetry run python test_clocks.py
+
+      #----------------------------------------------
       #---- Tests
       #----------------------------------------------
 
