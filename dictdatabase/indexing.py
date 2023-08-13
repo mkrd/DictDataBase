@@ -1,4 +1,5 @@
 import os
+from typing import Union
 
 import orjson
 
@@ -59,7 +60,7 @@ class Indexer:
 			self.data = {}
 
 
-	def get(self, key: str) -> list | None:
+	def get(self, key: str) -> Union[list, None]:
 		"""
 			Returns a list of 5 elements for a key if it exists, otherwise None
 			Elements:[start_index, end_index, indent_level, indent_with, value_hash]
