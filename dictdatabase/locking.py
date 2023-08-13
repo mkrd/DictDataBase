@@ -12,7 +12,7 @@ from . import config
 SLEEP_TIMEOUT = 0.001
 
 # If a process crashes and doesn't remove its locks, remove them after a timeout
-LOCK_TIMEOUT = 30.0
+LOCK_TIMEOUT = 60.0
 
 
 def os_touch(path: str) -> None:
