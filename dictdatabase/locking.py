@@ -112,7 +112,7 @@ class AbstractLock:
 
 		# Create lock files
 		time_ns = time.monotonic_ns()
-		t_id = f"p{os.getpid()}t{threading.get_native_id()}"  # Ensure uniqueness across processes and threads
+		t_id = f"{threading.get_native_id()}"  # Ensure uniqueness across processes and threads
 		dir = os.path.join(config.storage_directory, ".ddb")
 
 		self.need_lock = LockFileMeta(dir, self.db_name, t_id, time_ns, "need", self.mode)

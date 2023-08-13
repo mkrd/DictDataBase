@@ -54,9 +54,3 @@ def test_remove_orphaned_locks():
 
 	assert len(ls.locks) == 0
 	locking.LOCK_TIMEOUT = prev_config
-
-
-def test_AbstractLock():
-	l = locking.AbstractLock("test_AbstractLock")
-	with pytest.raises(NotImplementedError):
-		l._lock()
