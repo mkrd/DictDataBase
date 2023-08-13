@@ -3,7 +3,6 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
-from typing import Tuple
 
 import orjson
 
@@ -137,7 +136,7 @@ def try_get_partial_file_handle_by_index(
 	indexer: indexing.Indexer,
 	db_name: str,
 	key: str,
-) -> Tuple[PartialFileHandle | None, bytes | None]:
+) -> tuple[PartialFileHandle | None, bytes | None]:
 	"""
 		Try to get a partial file handle by using the key entry in the index file.
 
