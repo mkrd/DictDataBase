@@ -6,11 +6,14 @@ def get_tick_rate(clock_func, duration=1.0):
     end_time = start_time + duration
 
     # Initial reading
-    prev_value = clock_func()
-    ticks = 0
 
+    measurements = []
     while time.time() < end_time:
-        current_value = clock_func()
+        measurements.append(clock_func())
+
+    ticks = 0
+    prev_value = measurements[0]
+    for current_value in measurements[1:]:
         if current_value < prev_value:
             raise RuntimeError("Clock function is not monotonic")
         if current_value != prev_value:
