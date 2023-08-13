@@ -1,15 +1,10 @@
 import time
 
 
-def get_tick_rate(clock_func, duration=1.0):
+def get_tick_rate(clock_func):
     start_time = time.time()
-    end_time = start_time + duration
-
-    # Initial reading
-
-    measurements = []
-    while time.time() < end_time:
-        measurements.append(clock_func())
+    measurements = [clock_func() for _ in range(2_000_000)]
+    end_time = time.time()
 
     ticks = 0
     prev_value = measurements[0]
@@ -20,7 +15,7 @@ def get_tick_rate(clock_func, duration=1.0):
             ticks += 1
         prev_value = current_value
 
-    return ticks / duration  # ticks per second
+    return ticks / (end_time - start_time)  # ticks per second
 
 
 if __name__ == "__main__":
