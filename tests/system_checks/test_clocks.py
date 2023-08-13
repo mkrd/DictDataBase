@@ -3,7 +3,7 @@ import threading
 import time
 
 
-def print_clocks(label):
+def print_clocks(label: str) -> None:
     print(f"--- {label} ---")
     print("time_ns()        :", time.time_ns())
     print("monotonic_ns()   :", time.monotonic_ns())
@@ -11,11 +11,11 @@ def print_clocks(label):
     print("\n")
 
 
-def thread_function(thread_name):
+def thread_function(thread_name: str) -> None:
     print_clocks(f"Thread-{thread_name}")
 
 
-def process_function(process_name):
+def process_function(process_name: str) -> None:
     print_clocks(f"Process-{process_name}")
 
 

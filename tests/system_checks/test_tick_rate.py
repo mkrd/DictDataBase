@@ -1,7 +1,7 @@
 import time
 
 
-def get_tick_rate(clock_func):
+def get_tick_rate(clock_func: callable) -> float:
     start_time = time.time()
     measurements = [clock_func() for _ in range(2_000_000)]
     end_time = time.time()
