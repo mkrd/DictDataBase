@@ -65,7 +65,7 @@ def try_read_bytes_using_indexer(indexer: indexing.Indexer, db_name: str, key: s
 	return partial_bytes
 
 
-def partial_read_only(db_name: str, key: str) -> dict | None:
+def partial_read(db_name: str, key: str) -> dict | None:
 	"""
 		Partially read a key from a db.
 		The key MUST be unique in the entire db, otherwise the behavior is undefined.

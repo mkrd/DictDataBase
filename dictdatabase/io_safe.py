@@ -36,7 +36,7 @@ def partial_read(file_name: str, key: str) -> dict:
 		return None
 
 	with locking.ReadLock(file_name):
-		return io_unsafe.partial_read_only(file_name, key)
+		return io_unsafe.partial_read(file_name, key)
 
 
 
