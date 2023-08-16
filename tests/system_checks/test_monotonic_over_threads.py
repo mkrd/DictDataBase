@@ -3,7 +3,7 @@ import threading
 import time
 
 # Number of threads
-NUM_THREADS = 20
+NUM_THREADS = 64
 
 # Define the clocks to test
 clocks = {
@@ -19,9 +19,10 @@ clocks = {
 timestamps = queue.Queue()
 
 
-def capture_time(clock_func: callable) -> None:
+def capture_time(i, clock_func: callable) -> None:
     # Capture time using the given clock function and put it in the queue
-    for _ in range(100):
+    for _ in range(1000):
+        # print(f"Thread {i} capturing time")
         timestamps.put(clock_func())
 
 
@@ -32,8 +33,8 @@ def check_monotonicity_for_clock(clock_name: str, clock_func: callable) -> None:
 
     # Create and start threads
     threads = []
-    for _ in range(NUM_THREADS):
-        thread = threading.Thread(target=capture_time, args=(clock_func,))
+    for i in range(NUM_THREADS):
+        thread = threading.Thread(target=capture_time, args=(i, clock_func,))
         thread.start()
         threads.append(thread)
 
@@ -49,8 +50,10 @@ def check_monotonicity_for_clock(clock_name: str, clock_func: callable) -> None:
     # Check if the clock is monotonic
     is_monotonic = all(captured_times[i] <= captured_times[i+1] for i in range(len(captured_times)-1))
 
-    print(f"Clock: {clock_name}")
-    print("Is Monotonic:", is_monotonic)
+    if is_monotonic:
+        print(f"Clock: {clock_name} is monotonic over {NUM_THREADS} threads ✅")
+    else:
+        print(f"Clock: {clock_name} is not monotonic over {NUM_THREADS} threads ❌")
     print("-" * 40)
 
 
