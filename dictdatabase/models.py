@@ -227,6 +227,9 @@ class DDBMethodChooser:
 		Raises:
 		- `FileNotFoundError`: If the file does not exist.
 		- `KeyError`: If a key is specified and it does not exist.
+
+		Returns:
+		- Tuple of (session_object, data)
 		"""
 		if self.op_type.file_normal:
 			return SessionFileFull(self.path, as_type)
