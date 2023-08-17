@@ -13,13 +13,6 @@ from path_dict import PathDict
 DDB.config.storage_directory = ".ddb_bench_multi"
 
 
-
-
-
-
-
-
-
 def benchmark(iterations, setup: callable = None):
 	def decorator(function):
 		def wrapper(*args, **kwargs):
@@ -34,8 +27,6 @@ def benchmark(iterations, setup: callable = None):
 			print(f"⏱️ {iterations / (t2 - t1):.1f} op/s for {f_name} ({(t2 - t1):.1f} seconds)")
 		return wrapper
 	return decorator
-
-
 
 
 @benchmark(iterations=9000, setup=lambda kw: DDB.at(kw["name"]).create({"data": {"counter": 0}}, force_overwrite=True))
@@ -60,21 +51,6 @@ def sequential_partial_write_small_file(name):
 	with DDB.at(name, key="data").session() as (session, db):
 		db["counter"] += 1
 		session.write()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
