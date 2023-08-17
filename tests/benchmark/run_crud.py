@@ -8,13 +8,47 @@ import dictdatabase as DDB
 
 # TODO: Bench with and without key op, add delete op
 
+def do_create(return_dict: dict, id_counter: dict, operations: dict) -> None:
+	with DDB.at("db").session() as (session, db):
+		key = f"{id_counter['id']}"
+		db[key] = {"counter": 0}
+		id_counter["id"] += 1
+		operations['create'] += 1
+		session.write()
+		return_dict["created_ids"] += [key]
+
+
+def do_update(return_dict: dict, id_counter: dict, operations: dict) -> None:
+	# increment a random counter
+	with DDB.at("db").session() as (session, db):
+		key = random.choice(return_dict["created_ids"])
+		db[key]["counter"] += 1
+		operations['increment'] += 1
+		session.write()
+
+
+def do_delete(return_dict: dict, operations: dict) -> None:
+	# Delete a counter
+	with DDB.at("db").session() as (session, db):
+		key = random.choice(return_dict["created_ids"])
+		operations["increment"] -= db[key]["counter"]
+		operations['delete'] += 1
+		db.pop(key)
+		return_dict["created_ids"] = [i for i in return_dict["created_ids"] if i != key]
+		session.write()
+
+
+def do_read(return_dict: dict, operations: dict) -> None:
+	# read a counter
+	key = random.choice(return_dict["created_ids"])
+	DDB.at("db", key=key).read()
+	operations['read'] += 1
+
 
 def worker_process(i: int, return_dict: dict, id_counter: dict) -> None:
 	# Random seed to ensure each process gets different random numbers
 	random.seed(i)
-
 	DDB.config.storage_directory = ".ddb_bench_threaded"
-
 	operations = {
 		'create': 0,
 		'increment': 0,
@@ -25,35 +59,13 @@ def worker_process(i: int, return_dict: dict, id_counter: dict) -> None:
 	for _ in range(1000):
 		choice = random.random()
 		if choice < 0.05:  # 5% chance
-			# create a new counter
-			with DDB.at("db").session() as (session, db):
-				key = f"{id_counter['id']}"
-				db[key] = {"counter": 0}
-				id_counter["id"] += 1
-				operations['create'] += 1
-				session.write()
-				return_dict["created_ids"] += [key]
+			do_create(return_dict, id_counter, operations)
 		elif choice < 0.30:  # 25% chance
-			# increment a random counter
-			with DDB.at("db").session() as (session, db):
-				key = random.choice(return_dict["created_ids"])
-				db[key]["counter"] += 1
-				operations['increment'] += 1
-				session.write()
+			do_update(return_dict, id_counter, operations)
 		elif choice < 0.33:  # 3% chance
-			# Delete a counter
-			with DDB.at("db").session() as (session, db):
-				key = random.choice(return_dict["created_ids"])
-				operations["increment"] -= db[key]["counter"]
-				operations['delete'] += 1
-				db.pop(key)
-				return_dict["created_ids"] = [i for i in return_dict["created_ids"] if i != key]
-				session.write()
+			do_delete(return_dict, operations)
 		else:  # 67% chance
-			# read a counter
-			key = random.choice(return_dict["created_ids"])
-			DDB.at("db", key=key).read()
-			operations['read'] += 1
+			do_read(return_dict, operations)
 
 	# Return the operations for this worker
 	return_dict[i] = operations
