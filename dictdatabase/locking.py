@@ -182,6 +182,7 @@ class ReadLock(AbstractLock):
 
 	def _lock(self) -> None:
 		# Express intention to acquire read lock
+		os.makedirs(os.path.dirname(self.need_lock.path), exist_ok=True)
 		os_touch(self.need_lock.path)
 		self.snapshot = FileLocksSnapshot(self.need_lock)
 
@@ -217,6 +218,7 @@ class WriteLock(AbstractLock):
 
 	def _lock(self) -> None:
 		# Express intention to acquire write lock
+		os.makedirs(os.path.dirname(self.need_lock.path), exist_ok=True)
 		os_touch(self.need_lock.path)
 		self.snapshot = FileLocksSnapshot(self.need_lock)
 
