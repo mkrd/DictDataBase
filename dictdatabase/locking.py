@@ -21,6 +21,7 @@ def os_touch(path: str) -> None:
 	"""
 	mode = 0o666
 	flags = os.O_CREAT | os.O_WRONLY | os.O_EXCL
+	os.makedirs(os.path.dirname(path), exist_ok=True)
 	fd = os.open(path, flags, mode)
 	os.close(fd)
 
