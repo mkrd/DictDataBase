@@ -1,6 +1,6 @@
 ![Logo](https://github.com/mkrd/DictDataBase/blob/main/assets/logo.png?raw=true)
 
-[![Downloads](https://pepy.tech/badge/dictdatabase)](https://pepy.tech/project/dictdatabase)
+[![Downloads](https://static.pepy.tech/badge/dictdatabase)](https://pepy.tech/project/dictdatabase)
 ![Tests](https://github.com/mkrd/DictDataBase/actions/workflows/test.yml/badge.svg)
 ![Coverage](https://github.com/mkrd/DictDataBase/blob/main/assets/coverage.svg?raw=1)
 
