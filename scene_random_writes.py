@@ -1,8 +1,8 @@
-
-import dictdatabase as DDB
 import random
+
 from pyinstrument.profiler import Profiler
 
+import dictdatabase as DDB
 
 user_count = 100_000
 
@@ -25,10 +25,10 @@ print("Users created")
 p = Profiler(interval=0.0001)
 p.start()
 for it in range(500):
-    print(it)
-    user_id = str(random.randint(user_count - 100, user_count - 1))
-    with DDB.at("users", key=user_id).session() as (session, user):
-        user["age"] += 1
-        session.write()
+	print(it)
+	user_id = str(random.randint(user_count - 100, user_count - 1))
+	with DDB.at("users", key=user_id).session() as (session, user):
+		user["age"] += 1
+		session.write()
 p.stop()
 p.open_in_browser(timeline=False)

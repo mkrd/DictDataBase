@@ -1,10 +1,11 @@
-import dictdatabase as DDB
 import asyncio
+import os
 import shutil
 import time
-import os
 
 from utils import incrementor, print_and_assert_results
+
+import dictdatabase as DDB
 
 
 async def thread_job(i, n, file_count):
@@ -19,7 +20,6 @@ async def threaded_stress(file_count=2, thread_count=10, per_thread=500):
 
 	# Create tasks for concurrent execution
 	tasks = [(incrementor, (i, per_thread, file_count)) for i in range(thread_count)]
-
 
 	# Execute process pool running incrementor as the target task
 	t1 = time.monotonic()

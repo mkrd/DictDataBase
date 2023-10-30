@@ -33,6 +33,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
 show-fixes = true
+line-length = 120
 select = [
 	"ANN", # annotations
     "B", # bugbear
@@ -54,3 +55,7 @@ ignore = [
     "W191", # indentation contains tabs
     "E741", # ambiguous variable name
 ]
+
+[tool.ruff.format]
+indent-style = "tab"
+quote-style = "double"

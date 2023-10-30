@@ -2,9 +2,7 @@ import dictdatabase as DDB
 
 
 def test_indexer(use_compression, use_orjson, indent):
-	DDB.at("test_indexer").create(force_overwrite=True, data={
-		"a": {"e": 4}, "b": 2
-	})
+	DDB.at("test_indexer").create(force_overwrite=True, data={"a": {"e": 4}, "b": 2})
 
 	# Trigger create index entry for key "a"
 	assert DDB.at("test_indexer", key="a").read() == {"e": 4}

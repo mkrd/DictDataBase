@@ -1,14 +1,15 @@
-from calendar import c
 import json
-import dictdatabase as DDB
-from multiprocessing import Pool
+import os
+import random
 import shutil
 import time
-import os
+from calendar import c
 from dataclasses import dataclass
-import random
+from multiprocessing import Pool
+
 from path_dict import PathDict
 
+import dictdatabase as DDB
 
 DDB.config.storage_directory = ".ddb_bench_multi"
 
@@ -25,7 +26,9 @@ def benchmark(iterations, setup: callable = None):
 				function(*args, **kwargs)
 			t2 = time.monotonic()
 			print(f"⏱️ {iterations / (t2 - t1):.1f} op/s for {f_name} ({(t2 - t1):.1f} seconds)")
+
 		return wrapper
+
 	return decorator
 
 
@@ -51,7 +54,6 @@ def sequential_partial_write_small_file(name):
 	with DDB.at(name, key="data").session() as (session, db):
 		db["counter"] += 1
 		session.write()
-
 
 
 @dataclass
@@ -80,9 +82,6 @@ def print_and_assert_results(scenario: Scenario, t):
 		if db["counter"]["counter"] != scenario.ops * scenario.writers:
 			print("❌", db["counter"]["counter"], "!=", scenario.ops * scenario.writers)
 		assert db["counter"]["counter"] == scenario.ops * scenario.writers
-
-
-
 
 
 def process_job(mode, scenario, cfg):
@@ -128,42 +127,27 @@ def parallel_stressor(scenario: Scenario):
 
 
 scenarios = [
-
-
 	Scenario(readers=1, ops=6000),
 	Scenario(readers=2, ops=6000),
 	Scenario(readers=4, ops=6000),
 	Scenario(readers=8, ops=3000),
-
-
 	Scenario(writers=1, ops=6000),
 	Scenario(writers=2, ops=1000),
 	Scenario(writers=4, ops=800),
 	Scenario(writers=8, ops=200),
-
-
 	Scenario(readers=20, writers=20, ops=30),
-
-
 	Scenario(readers=8, ops=1500),
 	Scenario(readers=8, ops=1500, use_compression=True),
 	Scenario(readers=8, ops=1500, big_file=True),
-
-
 	Scenario(readers=8, writers=1, ops=200),
 	Scenario(readers=8, writers=1, ops=25, big_file=True),
-
-
 	Scenario(readers=1, writers=8, ops=200),
 	Scenario(readers=1, writers=8, ops=10, big_file=True),
-
-
 	Scenario(readers=8, writers=8, ops=100),
 	Scenario(readers=8, writers=8, ops=8, big_file=True),
 ]
 
 if __name__ == "__main__":
-
 	# print("✨ Simple sequential benchmarks")
 	# sequential_full_read_small_file()
 	# sequential_partial_read_small_file()

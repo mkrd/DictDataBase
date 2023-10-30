@@ -1,14 +1,15 @@
-from calendar import c
 import json
-import dictdatabase as DDB
-from multiprocessing import Pool
-import shutil
-import time
 import os
-from pyinstrument import Profiler
+import shutil
 import threading
+import time
+from calendar import c
+from multiprocessing import Pool
 
+from pyinstrument import Profiler
 from utils import print_and_assert_results
+
+import dictdatabase as DDB
 from dictdatabase.configuration import Confuguration
 
 
@@ -21,8 +22,6 @@ def proc_job(n, cfg):
 			for k, v in d.items():
 				v["counter"] += 1
 			session.write()
-
-
 
 
 def parallel_stressor(file_count):
@@ -42,12 +41,6 @@ def parallel_stressor(file_count):
 	t2 = time.monotonic()
 	for r in res:
 		print(r.get())
-
-
-
-
-
-
 
 
 if __name__ == "__main__":

@@ -1,7 +1,8 @@
-import dictdatabase as DDB
-from dictdatabase import utils, io_bytes
-from path_dict import pd
 import pytest
+from path_dict import pd
+
+import dictdatabase as DDB
+from dictdatabase import io_bytes, utils
 
 
 def test_except_during_open_session(use_compression, use_orjson, indent):
@@ -11,7 +12,6 @@ def test_except_during_open_session(use_compression, use_orjson, indent):
 	with pytest.raises(RuntimeError):
 		with DDB.at(name).session() as (session, test):
 			raise RuntimeError("Any Exception")
-
 
 
 def test_except_on_save_unserializable(use_compression, use_orjson, indent):
@@ -54,7 +54,6 @@ def test_except_on_write_outside_session(use_compression, use_orjson, indent):
 def test_wildcard_and_subkey_except(use_compression, use_orjson, indent):
 	with pytest.raises(TypeError):
 		DDB.at("test_wildcard_and_subkey_except/*", key="key").read()
-
 
 
 def test_utils_invalid_json_except():

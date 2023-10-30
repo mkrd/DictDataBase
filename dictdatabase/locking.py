@@ -178,6 +178,7 @@ class ReadLock(AbstractLock):
 	A file-based read lock.
 	Multiple threads/processes can simultaneously hold a read lock unless there's a write lock.
 	"""
+
 	mode = "read"
 
 	def _lock(self) -> None:
@@ -196,8 +197,7 @@ class ReadLock(AbstractLock):
 		# Try to acquire lock until conditions are met or a timeout occurs
 		while True:
 			if not self.snapshot.any_write_locks or (
-				not self.snapshot.any_has_write_locks
-				and self.snapshot.oldest_need(self.need_lock)
+				not self.snapshot.any_has_write_locks and self.snapshot.oldest_need(self.need_lock)
 			):
 				self.has_lock = self.has_lock.new_with_updated_time()
 				os_touch(self.has_lock.path)
@@ -214,6 +214,7 @@ class WriteLock(AbstractLock):
 	A file-based write lock.
 	Only one thread/process can hold a write lock, blocking others from acquiring either read or write locks.
 	"""
+
 	mode = "write"
 
 	def _lock(self) -> None:

@@ -1,6 +1,8 @@
-import dictdatabase as DDB
-from path_dict import pd
 from concurrent.futures import ThreadPoolExecutor, wait
+
+from path_dict import pd
+
+import dictdatabase as DDB
 
 
 def increment_counters(n, tables):

@@ -5,10 +5,10 @@ from . import config, io_unsafe, locking, utils
 
 def read(file_name: str) -> dict:
 	"""
-		Read the content of a file as a dict.
+	Read the content of a file as a dict.
 
-		Args:
-		- `file_name`: The name of the file to read from.
+	Args:
+	- `file_name`: The name of the file to read from.
 	"""
 
 	_, json_exists, _, ddb_exists = utils.file_info(file_name)
@@ -20,14 +20,13 @@ def read(file_name: str) -> dict:
 		return io_unsafe.read(file_name)
 
 
-
 def partial_read(file_name: str, key: str) -> dict:
 	"""
-		Read only the value of a key-value pair from a file.
+	Read only the value of a key-value pair from a file.
 
-		Args:
-		- `file_name`: The name of the file to read from.
-		- `key`: The key to read the value of.
+	Args:
+	- `file_name`: The name of the file to read from.
+	- `key`: The key to read the value of.
 	"""
 
 	_, json_exists, _, ddb_exists = utils.file_info(file_name)
@@ -39,14 +38,13 @@ def partial_read(file_name: str, key: str) -> dict:
 		return io_unsafe.partial_read(file_name, key)
 
 
-
 def write(file_name: str, data: dict) -> None:
 	"""
-		Ensures that writing only starts if there is no reading or writing in progress.
+	Ensures that writing only starts if there is no reading or writing in progress.
 
-		Args:
-		- `file_name`: The name of the file to write to.
-		- `data`: The data to write to the file.
+	Args:
+	- `file_name`: The name of the file to write to.
+	- `data`: The data to write to the file.
 	"""
 
 	dirname = os.path.dirname(f"{config.storage_directory}/{file_name}.any")
@@ -56,13 +54,12 @@ def write(file_name: str, data: dict) -> None:
 		io_unsafe.write(file_name, data)
 
 
-
 def delete(file_name: str) -> None:
 	"""
-		Ensures that deleting only starts if there is no reading or writing in progress.
+	Ensures that deleting only starts if there is no reading or writing in progress.
 
-		Args:
-		- `file_name`: The name of the file to delete.
+	Args:
+	- `file_name`: The name of the file to delete.
 	"""
 
 	json_path, json_exists, ddb_path, ddb_exists = utils.file_info(file_name)

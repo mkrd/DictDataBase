@@ -1,7 +1,7 @@
-import random
-import string
 import json
 import os
+import random
+import string
 
 
 def get_tasks_json():
@@ -11,7 +11,6 @@ def get_tasks_json():
 
 
 def make_complex_nested_random_dict(max_width, max_depth):
-
 	def random_string(choices, md):
 		length = random.randint(0, max_width)
 		letters = string.ascii_letters + "".join(["\\", " ", "🚀", '"'])
@@ -48,12 +47,6 @@ def make_complex_nested_random_dict(max_width, max_depth):
 			res[k] = v
 		return res
 
-	return random_dict([
-		random_string,
-		random_int,
-		random_float,
-		random_bool,
-		random_none,
-		random_list,
-		random_dict
-	], max_depth)
+	return random_dict(
+		[random_string, random_int, random_float, random_bool, random_none, random_list, random_dict], max_depth
+	)

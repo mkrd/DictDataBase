@@ -1,26 +1,34 @@
-from calendar import c
 import json
-import dictdatabase as DDB
-from multiprocessing import Pool
+import os
 import shutil
 import time
-import os
+from calendar import c
+from multiprocessing import Pool
+
 from pyinstrument import Profiler
+
+import dictdatabase as DDB
 
 
 def seq_job(n):
-	DDB.at("db").create([{
-		"counter": 0,
-		"firstname": "John",
-		"lastname": "Doe",
-		"age": 42,
-		"address": "1234 Main St",
-		"city": "Anytown",
-		"state": "CA",
-		"zip": "12345",
-		"phone": "123-456-7890",
-		"interests": ["Python", "Databases", "DDB", "DDB-CLI", "DDB-Web", "Google"],
-	}] * 50000, force_overwrite=True)
+	DDB.at("db").create(
+		[
+			{
+				"counter": 0,
+				"firstname": "John",
+				"lastname": "Doe",
+				"age": 42,
+				"address": "1234 Main St",
+				"city": "Anytown",
+				"state": "CA",
+				"zip": "12345",
+				"phone": "123-456-7890",
+				"interests": ["Python", "Databases", "DDB", "DDB-CLI", "DDB-Web", "Google"],
+			}
+		]
+		* 50000,
+		force_overwrite=True,
+	)
 	for _ in range(n):
 		t1 = time.monotonic_ns()
 		with DDB.at("db").session() as (session, db):

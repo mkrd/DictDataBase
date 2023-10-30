@@ -1,14 +1,12 @@
-import time
 import os
 import sqlite3
-import os
-import super_py as sp
+import time
 
+import super_py as sp
 
 
 def teardown():
 	os.remove("test.db")
-
 
 
 @sp.test(teardown=teardown)

@@ -1,7 +1,9 @@
-from dictdatabase import locking
-import pytest
 import threading
 import time
+
+import pytest
+
+from dictdatabase import locking
 
 
 def test_double_lock_exception(use_compression):
@@ -34,9 +36,6 @@ def test_get_lock_names(use_compression):
 	assert not ls.any_has_write_locks
 
 	lock._unlock()
-
-
-
 
 
 def test_remove_orphaned_locks():

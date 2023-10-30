@@ -9,10 +9,8 @@ T = TypeVar("T")
 JSONSerializable = TypeVar("JSONSerializable", str, int, float, bool, None, list, dict)
 
 
-
 def type_cast(obj, as_type):
 	return obj if as_type is None else as_type(obj)
-
 
 
 class SessionBase:
@@ -44,12 +42,11 @@ class SessionBase:
 			raise PermissionError("Only call write() inside a with statement.")
 
 
-
 @contextmanager
 def safe_context(super, self, *, db_names_to_lock=None):
 	"""
-		If an exception happens in the context, the __exit__ method of the passed super
-		class will be called.
+	If an exception happens in the context, the __exit__ method of the passed super
+	class will be called.
 	"""
 	super.__enter__()
 	try:
@@ -66,19 +63,17 @@ def safe_context(super, self, *, db_names_to_lock=None):
 		raise e
 
 
-
 ########################################################################################
 #### File sessions
 ########################################################################################
 
 
-
 class SessionFileFull(SessionBase, Generic[T]):
 	"""
-		Context manager for read-write access to a full file.
+	Context manager for read-write access to a full file.
 
-		Efficiency:
-		Reads and writes the entire file.
+	Efficiency:
+	Reads and writes the entire file.
 	"""
 
 	def __enter__(self) -> Tuple[SessionFileFull, JSONSerializable | T]:
@@ -91,15 +86,14 @@ class SessionFileFull(SessionBase, Generic[T]):
 		io_unsafe.write(self.db_name, self.data_handle)
 
 
-
 class SessionFileKey(SessionBase, Generic[T]):
 	"""
-		Context manager for read-write access to a single key-value item in a file.
+	Context manager for read-write access to a single key-value item in a file.
 
-		Efficiency:
-		Uses partial reading, which allows only reading the bytes of the key-value item.
-		When writing, only the bytes of the key-value and the bytes of the file after
-		the key-value are written.
+	Efficiency:
+	Uses partial reading, which allows only reading the bytes of the key-value item.
+	When writing, only the bytes of the key-value and the bytes of the file after
+	the key-value are written.
 	"""
 
 	def __init__(self, db_name: str, key: str, as_type: T):
@@ -117,16 +111,16 @@ class SessionFileKey(SessionBase, Generic[T]):
 		io_unsafe.partial_write(self.partial_handle)
 
 
-
 class SessionFileWhere(SessionBase, Generic[T]):
 	"""
-		Context manager for read-write access to selection of key-value items in a file.
-		The where callable is called with the key and value of each item in the file.
+	Context manager for read-write access to selection of key-value items in a file.
+	The where callable is called with the key and value of each item in the file.
 
-		Efficiency:
-		Reads and writes the entire file, so it is not more efficient than
-		SessionFileFull.
+	Efficiency:
+	Reads and writes the entire file, so it is not more efficient than
+	SessionFileFull.
 	"""
+
 	def __init__(self, db_name: str, where: Callable[[Any, Any], bool], as_type: T):
 		super().__init__(db_name, as_type)
 		self.where = where
@@ -145,22 +139,21 @@ class SessionFileWhere(SessionBase, Generic[T]):
 		io_unsafe.write(self.db_name, self.original_data)
 
 
-
 ########################################################################################
 #### File sessions
 ########################################################################################
 
 
-
 class SessionDirFull(SessionBase, Generic[T]):
 	"""
-		Context manager for read-write access to all files in a directory.
-		They are provided as a dict of {str(file_name): dict(file_content)}, where the
-		file name does not contain the directory name nor the file extension.
+	Context manager for read-write access to all files in a directory.
+	They are provided as a dict of {str(file_name): dict(file_content)}, where the
+	file name does not contain the directory name nor the file extension.
 
-		Efficiency:
-		Fully reads and writes all files.
+	Efficiency:
+	Fully reads and writes all files.
 	"""
+
 	def __init__(self, db_name: str, as_type: T):
 		super().__init__(utils.find_all(db_name), as_type)
 
@@ -175,15 +168,15 @@ class SessionDirFull(SessionBase, Generic[T]):
 			io_unsafe.write(name, self.data_handle[name.split("/")[-1]])
 
 
-
 class SessionDirWhere(SessionBase, Generic[T]):
 	"""
-		Context manager for read-write access to selection of files in a directory.
-		The where callable is called with the file name and parsed content of each file.
+	Context manager for read-write access to selection of files in a directory.
+	The where callable is called with the file name and parsed content of each file.
 
-		Efficiency:
-		Fully reads all files, but only writes the selected files.
+	Efficiency:
+	Fully reads all files, but only writes the selected files.
 	"""
+
 	def __init__(self, db_name: str, where: Callable[[Any, Any], bool], as_type: T):
 		super().__init__(utils.find_all(db_name), as_type)
 		self.where = where

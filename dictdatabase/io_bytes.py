@@ -6,37 +6,34 @@ from . import config, utils
 
 def read(db_name: str, *, start: int = None, end: int = None) -> bytes:
 	"""
-		Read the content of a file as bytes. Reading works even when the config
-		changes, so a compressed ddb file can also be read if compression is
-		disabled, and vice versa.
+	Read the content of a file as bytes. Reading works even when the config
+	changes, so a compressed ddb file can also be read if compression is
+	disabled, and vice versa.
 
-		If no compression is used, efficient reading can be done by specifying a start
-		and end byte index, such that only the bytes in that range are read from the
-		file.
+	If no compression is used, efficient reading can be done by specifying a start
+	and end byte index, such that only the bytes in that range are read from the
+	file.
 
-		If compression is used, specifying a start and end byte index is still possible,
-		but the entire file has to be read and decompressed first, and then the bytes
-		in the range are returned. This is because the compressed file is not seekable.
+	If compression is used, specifying a start and end byte index is still possible,
+	but the entire file has to be read and decompressed first, and then the bytes
+	in the range are returned. This is because the compressed file is not seekable.
 
-		Args:
-		- `db_name`: The name of the database file to read from.
-		- `start`: The start byte index to read from.
-		- `end`: The end byte index to read up to (not included).
+	Args:
+	- `db_name`: The name of the database file to read from.
+	- `start`: The start byte index to read from.
+	- `end`: The end byte index to read up to (not included).
 
-		Raises:
-		- `FileNotFoundError`: If the file does not exist as .json nor .ddb.
-		- `OSError`: If no compression is used and `start` is negative.
-		- `FileExistsError`: If the file exists as .json and .ddb.
+	Raises:
+	- `FileNotFoundError`: If the file does not exist as .json nor .ddb.
+	- `OSError`: If no compression is used and `start` is negative.
+	- `FileExistsError`: If the file exists as .json and .ddb.
 	"""
 
 	json_path, json_exists, ddb_path, ddb_exists = utils.file_info(db_name)
 
 	if json_exists:
 		if ddb_exists:
-			raise FileExistsError(
-				f"Inconsistent: \"{db_name}\" exists as .json and .ddb."
-				"Please remove one of them."
-			)
+			raise FileExistsError(f'Inconsistent: "{db_name}" exists as .json and .ddb.' "Please remove one of them.")
 		with open(json_path, "rb") as f:
 			if start is None and end is None:
 				return f.read()
@@ -46,7 +43,7 @@ def read(db_name: str, *, start: int = None, end: int = None) -> bytes:
 				return f.read()
 			return f.read(end - start)
 	if not ddb_exists:
-		raise FileNotFoundError(f"No database file exists for \"{db_name}\"")
+		raise FileNotFoundError(f'No database file exists for "{db_name}"')
 	with open(ddb_path, "rb") as f:
 		json_bytes = zlib.decompress(f.read())
 		if start is None and end is None:
@@ -56,19 +53,17 @@ def read(db_name: str, *, start: int = None, end: int = None) -> bytes:
 		return json_bytes[start:end]
 
 
-
-
 def write(db_name: str, dump: bytes, *, start: int = None) -> None:
 	"""
-		Write the bytes to the file of the db_path. If the db was compressed but no
-		compression is enabled, remove the compressed file, and vice versa.
+	Write the bytes to the file of the db_path. If the db was compressed but no
+	compression is enabled, remove the compressed file, and vice versa.
 
-		Args:
-		- `db_name`: The name of the database to write to.
-		- `dump`: The bytes to write to the file, representing correct JSON when
-		decoded.
-		- `start`: The start byte index to write to. If None, the whole file is overwritten.
-		If the original content was longer, the rest truncated.
+	Args:
+	- `db_name`: The name of the database to write to.
+	- `dump`: The bytes to write to the file, representing correct JSON when
+	decoded.
+	- `start`: The start byte index to write to. If None, the whole file is overwritten.
+	If the original content was longer, the rest truncated.
 	"""
 
 	json_path, json_exists, ddb_path, ddb_exists = utils.file_info(db_name)

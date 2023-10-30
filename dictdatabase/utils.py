@@ -9,14 +9,14 @@ from . import byte_codes, config
 
 def file_info(db_name: str) -> Tuple[str, bool, str, bool]:
 	"""
-		Returns a tuple of four elements, the first and third being the paths to the
-		JSON and DDB files, and the second and third being booleans indicating whether
-		those files exist:
+	Returns a tuple of four elements, the first and third being the paths to the
+	JSON and DDB files, and the second and third being booleans indicating whether
+	those files exist:
 
-		>>> (json_path, json_exists, ddb_path, ddb_exists)
+	>>> (json_path, json_exists, ddb_path, ddb_exists)
 
-		Args:
-		- `db_name`: The name of the database
+	Args:
+	- `db_name`: The name of the database
 	"""
 	base = f"{config.storage_directory}/{db_name}"
 	j, d = f"{base}.json", f"{base}.ddb"
@@ -171,7 +171,7 @@ def find_outermost_key_in_json_bytes(json_bytes: bytes, key: str) -> Tuple[int, 
 	# TODO: Very strict. the key must have a colon directly after it
 	# For example {"a": 1} will work, but {"a" : 1} will not work!
 
-	key = f"\"{key}\":".encode()
+	key = f'"{key}":'.encode()
 
 	if (curr_i := json_bytes.find(key, 0)) == -1:
 		return (-1, -1)

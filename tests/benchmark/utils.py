@@ -1,7 +1,9 @@
-import dictdatabase as DDB
-from path_dict import pd
 import random
 import time
+
+from path_dict import pd
+
+import dictdatabase as DDB
 
 
 def make_table(recursion_depth=3, keys_per_level=50):

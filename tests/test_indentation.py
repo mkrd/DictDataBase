@@ -1,20 +1,20 @@
-
-import dictdatabase as DDB
-import orjson
 import json
-from dictdatabase import utils, io_unsafe, config, io_bytes
 
+import orjson
 import pytest
 
+import dictdatabase as DDB
+from dictdatabase import config, io_bytes, io_unsafe, utils
+
 data = {
-	'a': 1,
-	'b': {
-		'c': 2,
+	"a": 1,
+	"b": {
+		"c": 2,
 		"cl": [1, "\\"],
-		'd': {
-			'e': 3,
+		"d": {
+			"e": 3,
 			"el": [1, "\\"],
-		}
+		},
 	},
 	"l": [1, "\\"],
 }
@@ -25,8 +25,6 @@ def string_dump(db: dict):
 		return json.dumps(db, indent=config.indent, sort_keys=True).encode()
 	option = (orjson.OPT_INDENT_2 if config.indent else 0) | orjson.OPT_SORT_KEYS
 	return orjson.dumps(db, option=option)
-
-
 
 
 def test_indentation(use_compression, use_orjson, indent):

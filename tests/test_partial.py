@@ -1,7 +1,9 @@
-import dictdatabase as DDB
-from path_dict import pd
 import json
+
 import pytest
+from path_dict import pd
+
+import dictdatabase as DDB
 
 
 def test_subread(use_compression, use_orjson, indent):
@@ -16,7 +18,6 @@ def test_subread(use_compression, use_orjson, indent):
 
 	assert DDB.at(name, key="a").read() == "Hello{}"
 	assert DDB.at(name, where=lambda k, v: isinstance(v, list)).read() == {"b": [0, 1]}
-
 
 	assert DDB.at(name, key="f").read() is None
 

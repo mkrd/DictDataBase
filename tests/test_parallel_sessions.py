@@ -1,6 +1,8 @@
-import dictdatabase as DDB
-from path_dict import pd
 from multiprocessing.pool import Pool
+
+from path_dict import pd
+
+import dictdatabase as DDB
 
 
 def increment_counters(n, tables, cfg):
@@ -75,11 +77,6 @@ def test_heavy_multiprocessing():
 	for t in range(tables):
 		db = DDB.at(f"test_stress_parallel{t}").read()
 		assert db["counter"] == threads * per_thread
-
-
-
-
-
 
 
 def read_partial(n, cfg):

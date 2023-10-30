@@ -1,6 +1,8 @@
 import itertools
+
 import orjson
-from dictdatabase import utils, byte_codes
+
+from dictdatabase import byte_codes, utils
 
 
 def test_seek_index_through_value_bytes():
@@ -21,7 +23,7 @@ def test_seek_index_through_value_bytes_2():
 		return orjson.loads(bytes)[key]
 
 	def load_with_seeker(bytes, key):
-		key_bytes = f"\"{key}\":".encode()
+		key_bytes = f'"{key}":'.encode()
 		a_val_start = bytes.find(key_bytes) + len(key_bytes)
 		if bytes[a_val_start] == byte_codes.SPACE:
 			a_val_start += 1
@@ -65,14 +67,14 @@ def test_seek_index_through_value_bytes_2():
 		"a\\b",
 		"\\",
 		"\\\\",
-		"\\\\\"",
-		"\\\"\\",
-		"\"\\\\",
-		"\"",
-		"\"\"",
-		"\"\"\\",
-		"\"\\\"",
-		"\\\"\"",
+		'\\\\"',
+		'\\"\\',
+		'"\\\\',
+		'"',
+		'""',
+		'""\\',
+		'"\\"',
+		'\\""',
 		# Booleans
 		True,
 		None,

@@ -1,7 +1,8 @@
+import json
+
+import pytest
 
 import dictdatabase as DDB
-import pytest
-import json
 from tests.utils import make_complex_nested_random_dict
 
 
@@ -22,10 +23,6 @@ def test_file_exists_error(use_compression, use_orjson, indent):
 def test_invalid_params(use_compression, use_orjson, indent):
 	with pytest.raises(TypeError):
 		DDB.at("test_invalid_params", key="any", where=lambda k, v: True).read()
-
-
-
-
 
 
 def test_read_integrity(use_compression, use_orjson, indent):
@@ -49,11 +46,6 @@ def test_read_integrity(use_compression, use_orjson, indent):
 		key_b = DDB.at("test_read_integrity", key="b").read()
 		assert key_a == json.loads(case)["a"]
 		assert key_b == json.loads(case)["b"]
-
-
-
-
-
 
 
 def test_create_and_read(use_compression, use_orjson, indent):

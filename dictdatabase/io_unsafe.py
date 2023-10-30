@@ -35,9 +35,9 @@ class PartialFileHandle:
 
 def read(db_name: str) -> dict:
 	"""
-		Read the file at db_path from the configured storage directory.
-		Make sure the file exists. If it does not a FileNotFoundError is
-		raised.
+	Read the file at db_path from the configured storage directory.
+	Make sure the file exists. If it does not a FileNotFoundError is
+	raised.
 	"""
 	# Always use orjson to read the file, because it is faster
 	return orjson.loads(io_bytes.read(db_name))
@@ -50,9 +50,9 @@ def read(db_name: str) -> dict:
 
 def try_read_bytes_using_indexer(indexer: indexing.Indexer, db_name: str, key: str) -> bytes | None:
 	"""
-		Check if the key info is saved in the file's index file.
-		If it is and the value has not changed, return the value bytes.
-		Otherwise return None.
+	Check if the key info is saved in the file's index file.
+	If it is and the value has not changed, return the value bytes.
+	Otherwise return None.
 	"""
 
 	if (index := indexer.get(key)) is None:
@@ -66,12 +66,12 @@ def try_read_bytes_using_indexer(indexer: indexing.Indexer, db_name: str, key: s
 
 def partial_read(db_name: str, key: str) -> dict | None:
 	"""
-		Partially read a key from a db.
-		The key MUST be unique in the entire db, otherwise the behavior is undefined.
-		This is a lot faster than reading the entire db, because it does not parse
-		the entire file, but only the part <value> part of the <key>: <value> pair.
+	Partially read a key from a db.
+	The key MUST be unique in the entire db, otherwise the behavior is undefined.
+	This is a lot faster than reading the entire db, because it does not parse
+	the entire file, but only the part <value> part of the <key>: <value> pair.
 
-		If the key is not found, a `KeyError` is raised.
+	If the key is not found, a `KeyError` is raised.
 	"""
 
 	# Search for key in the index file
@@ -90,7 +90,7 @@ def partial_read(db_name: str, key: str) -> dict | None:
 	start = key_end + (1 if all_file_bytes[key_end] == byte_codes.SPACE else 0)
 	end = utils.seek_index_through_value_bytes(all_file_bytes, start)
 
-	indent_level, indent_with  = utils.detect_indentation_in_json_bytes(all_file_bytes, key_start)
+	indent_level, indent_with = utils.detect_indentation_in_json_bytes(all_file_bytes, key_start)
 	value_bytes = all_file_bytes[start:end]
 	value_hash = hashlib.sha256(value_bytes).hexdigest()
 
@@ -106,9 +106,9 @@ def partial_read(db_name: str, key: str) -> dict | None:
 
 def serialize_data_to_json_bytes(data: dict) -> bytes:
 	"""
-		Serialize the data as json bytes. Depending on the config,
-		this can be done with orjson or the standard json module.
-		Additionally config.indent is respected.
+	Serialize the data as json bytes. Depending on the config,
+	this can be done with orjson or the standard json module.
+	Additionally config.indent is respected.
 	"""
 	if config.use_orjson:
 		option = (orjson.OPT_INDENT_2 if config.indent else 0) | orjson.OPT_SORT_KEYS
@@ -120,8 +120,8 @@ def serialize_data_to_json_bytes(data: dict) -> bytes:
 
 def write(db_name: str, data: dict) -> None:
 	"""
-		Write the dict db dumped as a json string
-		to the file of the db_path.
+	Write the dict db dumped as a json string
+	to the file of the db_path.
 	"""
 	data_bytes = serialize_data_to_json_bytes(data)
 	io_bytes.write(db_name, data_bytes)
@@ -138,12 +138,12 @@ def try_get_partial_file_handle_by_index(
 	key: str,
 ) -> tuple[PartialFileHandle | None, bytes | None]:
 	"""
-		Try to get a partial file handle by using the key entry in the index file.
+	Try to get a partial file handle by using the key entry in the index file.
 
-		If the data could be read from the index file, a tuple of the partial file
-		handle and None is returned.
-		If the data could not be read from the index file, a tuple of None and the file
-		bytes is returned, so that the file bytes can be searched for the key.
+	If the data could be read from the index file, a tuple of the partial file
+	handle and None is returned.
+	If the data could not be read from the index file, a tuple of None and the file
+	bytes is returned, so that the file bytes can be searched for the key.
 	"""
 
 	if (index := indexer.get(key)) is None:
@@ -176,12 +176,12 @@ def try_get_partial_file_handle_by_index(
 
 def get_partial_file_handle(db_name: str, key: str) -> PartialFileHandle:
 	"""
-		Partially read a key from a db.
-		The key MUST be unique in the entire db, otherwise the behavior is undefined.
-		This is a lot faster than reading the entire db, because it does not parse
-		the entire file, but only the part <value> part of the <key>: <value> pair.
+	Partially read a key from a db.
+	The key MUST be unique in the entire db, otherwise the behavior is undefined.
+	This is a lot faster than reading the entire db, because it does not parse
+	the entire file, but only the part <value> part of the <key>: <value> pair.
 
-		If the key is not found, a `KeyError` is raised.
+	If the key is not found, a `KeyError` is raised.
 	"""
 
 	# Search for key in the index file
@@ -194,13 +194,13 @@ def get_partial_file_handle(db_name: str, key: str) -> PartialFileHandle:
 	key_start, key_end = utils.find_outermost_key_in_json_bytes(all_file_bytes, key)
 
 	if key_end == -1:
-		raise KeyError(f"Key \"{key}\" not found in db \"{db_name}\"")
+		raise KeyError(f'Key "{key}" not found in db "{db_name}"')
 
 	# Key found, now determine the bounding byte indices of the value
 	start = key_end + (1 if all_file_bytes[key_end] == byte_codes.SPACE else 0)
 	end = utils.seek_index_through_value_bytes(all_file_bytes, start)
 
-	indent_level, indent_with  = utils.detect_indentation_in_json_bytes(all_file_bytes, key_start)
+	indent_level, indent_with = utils.detect_indentation_in_json_bytes(all_file_bytes, key_start)
 
 	partial_value = orjson.loads(all_file_bytes[start:end])
 	prefix_bytes = all_file_bytes[:start] if config.use_compression else None
@@ -210,7 +210,7 @@ def get_partial_file_handle(db_name: str, key: str) -> PartialFileHandle:
 
 def partial_write(pf: PartialFileHandle) -> None:
 	"""
-		Write a partial file handle to the db.
+	Write a partial file handle to the db.
 	"""
 
 	partial_bytes = serialize_data_to_json_bytes(pf.partial_dict.value)

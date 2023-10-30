@@ -1,7 +1,6 @@
-from multiprocessing import Pool
-import sys
 import sqlite3
-
+import sys
+from multiprocessing import Pool
 
 
 def incr_db(n, tables):
@@ -15,7 +14,6 @@ def incr_db(n, tables):
 	return True
 
 
-
 if __name__ == "__main__":
 	tables = int(sys.argv[1])
 	processes = int(sys.argv[2])
@@ -23,6 +21,12 @@ if __name__ == "__main__":
 
 	pool = Pool(processes=processes)
 	for _ in range(processes):
-		pool.apply_async(incr_db, args=(per_process, tables,))
+		pool.apply_async(
+			incr_db,
+			args=(
+				per_process,
+				tables,
+			),
+		)
 	pool.close()
 	pool.join()

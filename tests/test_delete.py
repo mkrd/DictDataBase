@@ -1,5 +1,6 @@
-import dictdatabase as DDB
 import pytest
+
+import dictdatabase as DDB
 
 
 def test_delete(use_compression, use_orjson, indent):
@@ -13,7 +14,6 @@ def test_delete(use_compression, use_orjson, indent):
 
 	with pytest.raises(RuntimeError):
 		DDB.at("test_delete", key="any").delete()
-
 
 
 def test_delete_nonexistent(use_compression, use_orjson, indent):

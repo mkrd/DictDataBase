@@ -61,7 +61,6 @@ class OperationType:
 		return self.dir and self.where and not self.key
 
 
-
 def at(*path, key: str = None, where: Callable[[Any, Any], bool] = None) -> DDBMethodChooser:
 	"""
 	Select a file or folder to perform an operation on.
@@ -89,7 +88,6 @@ def at(*path, key: str = None, where: Callable[[Any, Any], bool] = None) -> DDBM
 
 
 class DDBMethodChooser:
-
 	__slots__ = ("path", "key", "where", "op_type")
 
 	path: str
@@ -97,8 +95,8 @@ class DDBMethodChooser:
 	where: Callable[[Any, Any], bool]
 	op_type: OperationType
 
-
-	def __init__(self,
+	def __init__(
+		self,
 		path: tuple,
 		key: str = None,
 		where: Callable[[Any, Any], bool] = None,
@@ -106,7 +104,7 @@ class DDBMethodChooser:
 		# Convert path to a list of strings
 		pc = []
 		for p in path:
-			pc += p if isinstance(p,  list) else [p]
+			pc += p if isinstance(p, list) else [p]
 		self.path = "/".join([str(p) for p in pc])
 		self.key = key
 		self.where = where
@@ -114,7 +112,6 @@ class DDBMethodChooser:
 		# Invariants:
 		# - Both key and where cannot be not None at the same time
 		# - If key is not None, then there is no wildcard in the path.
-
 
 	def exists(self) -> bool:
 		"""
@@ -136,7 +133,6 @@ class DDBMethodChooser:
 		# Key is passed and occurs is True
 		return io_safe.partial_read(self.path, key=self.key) is not None
 
-
 	def create(self, data: dict | None = None, force_overwrite: bool = False) -> None:
 		"""
 		Create a new file with the given data as the content. If the file
@@ -154,12 +150,13 @@ class DDBMethodChooser:
 
 		# Except if db exists and force_overwrite is False
 		if not force_overwrite and self.exists():
-			raise FileExistsError(f"Database {self.path} already exists in {config.storage_directory}. Pass force_overwrite=True to overwrite.")
+			raise FileExistsError(
+				f"Database {self.path} already exists in {config.storage_directory}. Pass force_overwrite=True to overwrite."
+			)
 		# Write db to file
 		if data is None:
 			data = {}
 		io_safe.write(self.path, data)
-
 
 	def delete(self) -> None:
 		"""
@@ -168,7 +165,6 @@ class DDBMethodChooser:
 		if self.where is not None or self.key is not None:
 			raise RuntimeError("DDB.at().delete() cannot be used with the where or key parameters")
 		io_safe.delete(self.path)
-
 
 	def read(self, as_type: Type[T] = None) -> dict | T | None:
 		"""
@@ -212,8 +208,9 @@ class DDBMethodChooser:
 
 		return type_cast(data)
 
-
-	def session(self, as_type: Type[T] = None) -> SessionFileFull[T] | SessionFileKey[T] | SessionFileWhere[T] | SessionDirFull[T] | SessionDirWhere[T]:
+	def session(
+		self, as_type: Type[T] = None
+	) -> SessionFileFull[T] | SessionFileKey[T] | SessionFileWhere[T] | SessionDirFull[T] | SessionDirWhere[T]:
 		"""
 		Opens a session to the selected file(s) or folder, depending on previous
 		`.at(...)` selection. Inside the with block, you have exclusive access

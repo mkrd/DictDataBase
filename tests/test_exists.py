@@ -1,5 +1,6 @@
-import dictdatabase as DDB
 import pytest
+
+import dictdatabase as DDB
 
 
 def test_exists(use_compression, use_orjson, indent):

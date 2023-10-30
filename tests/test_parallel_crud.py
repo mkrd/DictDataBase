@@ -10,7 +10,7 @@ def do_create(name_of_test: str, return_dict: dict, id_counter: dict, operations
 		key = f"{id_counter['id']}"
 		db[key] = {"counter": 0}
 		id_counter["id"] += 1
-		operations['create'] += 1
+		operations["create"] += 1
 		session.write()
 		return_dict["created_ids"] += [key]
 
@@ -20,7 +20,7 @@ def do_update(name_of_test: str, return_dict: dict, operations: dict) -> None:
 	with DDB.at(name_of_test).session() as (session, db):
 		key = random.choice(return_dict["created_ids"])
 		db[key]["counter"] += 1
-		operations['increment'] += 1
+		operations["increment"] += 1
 		session.write()
 
 
@@ -29,7 +29,7 @@ def do_delete(name_of_test: str, return_dict: dict, operations: dict) -> None:
 	with DDB.at(name_of_test).session() as (session, db):
 		key = random.choice(return_dict["created_ids"])
 		operations["increment"] -= db[key]["counter"]
-		operations['delete'] += 1
+		operations["delete"] += 1
 		db.pop(key)
 		return_dict["created_ids"] = [i for i in return_dict["created_ids"] if i != key]
 		session.write()
@@ -39,7 +39,7 @@ def do_read(name_of_test: str, return_dict: dict, operations: dict) -> None:
 	# read a counter
 	key = random.choice(return_dict["created_ids"])
 	DDB.at(name_of_test, key=key).read()
-	operations['read'] += 1
+	operations["read"] += 1
 
 
 def worker_process(name_of_test: str, i: int, return_dict: dict, id_counter: dict) -> None:
@@ -47,9 +47,9 @@ def worker_process(name_of_test: str, i: int, return_dict: dict, id_counter: dic
 	random.seed(i)
 	DDB.config.storage_directory = ".ddb_bench_threaded"
 	operations = {
-		'create': 0,
-		'increment': 0,
-		'read': 0,
+		"create": 0,
+		"increment": 0,
+		"read": 0,
 		"delete": 0,
 	}
 
@@ -68,12 +68,9 @@ def worker_process(name_of_test: str, i: int, return_dict: dict, id_counter: dic
 	return_dict[i] = operations
 
 
-
 def test_multiprocessing_crud(name_of_test, use_compression, use_orjson):
 	pre_fill_count = 500
-	DDB.at(name_of_test).create({
-		f"{i}": {"counter": 0} for i in range(pre_fill_count)
-	}, force_overwrite=True)
+	DDB.at(name_of_test).create({f"{i}": {"counter": 0} for i in range(pre_fill_count)}, force_overwrite=True)
 
 	manager = Manager()
 	return_dict = manager.dict()
@@ -96,9 +93,9 @@ def test_multiprocessing_crud(name_of_test, use_compression, use_orjson):
 
 	db_state = DDB.at(name_of_test).read()
 
-	logged_increment_ops = sum(x['increment'] for k, x in return_dict.items() if k != "created_ids")
-	assert logged_increment_ops == sum(x['counter'] for x in db_state.values())
+	logged_increment_ops = sum(x["increment"] for k, x in return_dict.items() if k != "created_ids")
+	assert logged_increment_ops == sum(x["counter"] for x in db_state.values())
 
-	logged_create_ops = sum(x['create'] for k, x in return_dict.items() if k != "created_ids")
-	logged_delete_ops = sum(x['delete'] for k, x in return_dict.items() if k != "created_ids")
+	logged_create_ops = sum(x["create"] for k, x in return_dict.items() if k != "created_ids")
+	logged_delete_ops = sum(x["delete"] for k, x in return_dict.items() if k != "created_ids")
 	assert pre_fill_count + logged_create_ops - logged_delete_ops == len(db_state.keys())

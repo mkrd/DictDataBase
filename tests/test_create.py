@@ -1,8 +1,9 @@
-import dictdatabase as DDB
-from path_dict import pd
-import pytest
 import json
 
+import pytest
+from path_dict import pd
+
+import dictdatabase as DDB
 from tests.utils import make_complex_nested_random_dict
 
 

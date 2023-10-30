@@ -2,7 +2,6 @@ from __future__ import annotations
 
 
 class Confuguration:
-
 	__slots__ = ("storage_directory", "indent", "use_compression", "use_orjson")
 
 	storage_directory: str
