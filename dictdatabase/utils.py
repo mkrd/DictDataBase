@@ -91,9 +91,11 @@ def seek_index_through_value_bytes(json_bytes: bytes, index: int) -> int:
 					backslash_count += 1
 					j -= 1
 				if backslash_count % 2 == 0:
+					# If the number of backslashes is even, the quote is not escaped
 					break
+				# Else, the quote is escaped, and the loop continues
 
-			# Possible exit point where string ends and nesting is zero
+			# Exit point where string ends and nesting is zero
 			if list_depth == 0 and dict_depth == 0:
 				return i + 1
 
