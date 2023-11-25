@@ -87,4 +87,6 @@ def test_remove_orphaned_locks():
 
 	assert len(ls.locks) == 0
 
+	lock._unlock()
+
 	locking.AQUIRE_LOCK_TIMEOUT, locking.LOCK_KEEP_ALIVE_TIMEOUT, locking.REMOVE_ORPHAN_LOCK_TIMEOUT = prev

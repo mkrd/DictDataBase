@@ -11,7 +11,7 @@ from . import config
 
 # Constants
 SLEEP_TIMEOUT = 0.001
-LOCK_KEEP_ALIVE_TIMEOUT = 0.001
+LOCK_KEEP_ALIVE_TIMEOUT = SLEEP_TIMEOUT / 2
 REMOVE_ORPHAN_LOCK_TIMEOUT = 20.0  # Duration to wait before considering a lock as orphaned.
 AQUIRE_LOCK_TIMEOUT = 60.0
 
