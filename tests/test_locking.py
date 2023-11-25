@@ -65,17 +65,26 @@ def test_get_lock_names(use_compression):
 
 
 def test_remove_orphaned_locks():
-	prev_config = locking.LOCK_TIMEOUT
-	locking.LOCK_TIMEOUT = 0.1
+	# SLEEP_TIMEOUT = 0.001
+	# LOCK_KEEP_ALIVE_TIMEOUT = 0.001
+	# REMOVE_ORPHAN_LOCK_TIMEOUT = 20.0  # Duration to wait before considering a lock as orphaned.
+	# AQUIRE_LOCK_TIMEOUT = 60.0
+
+	prev = locking.AQUIRE_LOCK_TIMEOUT, locking.LOCK_KEEP_ALIVE_TIMEOUT, locking.REMOVE_ORPHAN_LOCK_TIMEOUT
+
+	locking.AQUIRE_LOCK_TIMEOUT = 10.0
+	locking.LOCK_KEEP_ALIVE_TIMEOUT = 1.0
+	locking.REMOVE_ORPHAN_LOCK_TIMEOUT = 0.1
 	lock = locking.ReadLock("test_remove_orphaned_locks")
 	lock._lock()
 
 	ls = locking.FileLocksSnapshot(lock.need_lock)
-	assert len(ls.locks) == 1
+	assert len(ls.locks) >= 1  ## The one lock or two if currently in keep alive handover
 
 	time.sleep(0.2)
 	# Trigger the removal of orphaned locks
 	ls = locking.FileLocksSnapshot(lock.need_lock)
 
 	assert len(ls.locks) == 0
-	locking.LOCK_TIMEOUT = prev_config
+
+	locking.AQUIRE_LOCK_TIMEOUT, locking.LOCK_KEEP_ALIVE_TIMEOUT, locking.REMOVE_ORPHAN_LOCK_TIMEOUT = prev
