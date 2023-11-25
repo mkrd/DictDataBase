@@ -20,7 +20,6 @@ python = "^3.8"
 orjson = "^3.8.7"
 
 [tool.poetry.group.dev.dependencies]
-pycodestyle = "^2.10.0"
 super-py = "^0.4.2"
 pyinstrument = "^4.4.0"
 pytest-cov = "^4.0.0"
