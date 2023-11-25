@@ -64,6 +64,15 @@ def test_get_lock_names(use_compression):
 	lock._unlock()
 
 
+def test_lock_must_implement_lock_function():
+	class BadLock(locking.AbstractLock):
+		mode = "read"
+
+	lock = BadLock("db")
+	with pytest.raises(NotImplementedError):
+		lock._lock()
+
+
 def test_remove_orphaned_locks():
 	# SLEEP_TIMEOUT = 0.001
 	# LOCK_KEEP_ALIVE_TIMEOUT = 0.001
@@ -88,5 +97,19 @@ def test_remove_orphaned_locks():
 	assert len(ls.locks) == 0
 
 	lock._unlock()
+
+	locking.AQUIRE_LOCK_TIMEOUT, locking.LOCK_KEEP_ALIVE_TIMEOUT, locking.REMOVE_ORPHAN_LOCK_TIMEOUT = prev
+
+
+def test_lock_keep_alive():
+	prev = locking.AQUIRE_LOCK_TIMEOUT, locking.LOCK_KEEP_ALIVE_TIMEOUT, locking.REMOVE_ORPHAN_LOCK_TIMEOUT
+
+	locking.LOCK_KEEP_ALIVE_TIMEOUT = 0.1
+	locking.ALIVE_LOCK_MAX_AGE = 0.5
+
+	lock = locking.ReadLock("test_lock_keep_alive")
+
+	with lock:
+		time.sleep(1.0)
 
 	locking.AQUIRE_LOCK_TIMEOUT, locking.LOCK_KEEP_ALIVE_TIMEOUT, locking.REMOVE_ORPHAN_LOCK_TIMEOUT = prev
