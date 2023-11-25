@@ -11,7 +11,8 @@ from . import config
 
 # Constants
 SLEEP_TIMEOUT = 0.001
-LOCK_KEEP_ALIVE_TIMEOUT = SLEEP_TIMEOUT / 2
+LOCK_KEEP_ALIVE_TIMEOUT = 0.0001
+ALIVE_LOCK_MAX_AGE = 10.0  # Duration to wait updating the timestamp of the lock file.
 REMOVE_ORPHAN_LOCK_TIMEOUT = 20.0  # Duration to wait before considering a lock as orphaned.
 AQUIRE_LOCK_TIMEOUT = 60.0
 
@@ -165,8 +166,11 @@ class AbstractLock:
 		"""
 		Keep the lock alive by updating the timestamp of the lock file.
 		"""
-		time.sleep(LOCK_KEEP_ALIVE_TIMEOUT)
+
 		while self.is_alive:
+			time.sleep(LOCK_KEEP_ALIVE_TIMEOUT)
+			if time.time_ns() - int(self.has_lock.time_ns) < ALIVE_LOCK_MAX_AGE * 1_000_000_000:
+				continue
 			new_has_lock = self.has_lock.new_with_updated_time()
 			os_touch(new_has_lock.path)
 			old_has_lock_path = self.has_lock.path
@@ -175,7 +179,6 @@ class AbstractLock:
 				os.unlink(old_has_lock_path)
 			except FileNotFoundError:
 				pass
-			time.sleep(LOCK_KEEP_ALIVE_TIMEOUT)
 
 	def _start_keep_alive_thread(self) -> None:
 		"""
