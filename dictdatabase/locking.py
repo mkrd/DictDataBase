@@ -12,7 +12,7 @@ from . import config
 
 # Constants
 SLEEP_TIMEOUT = 0.001 * 1  # (ms)
-LOCK_KEEP_ALIVE_TIMEOUT = 0.001 * 0.1  # (ms)
+LOCK_KEEP_ALIVE_TIMEOUT = 0.001 * 0.08  # (ms)
 
 # Duration to wait updating the timestamp of the lock file
 ALIVE_LOCK_REFRESH_INTERVAL_NS = 1_000_000_000 * 10  # (s)
