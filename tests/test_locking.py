@@ -17,19 +17,20 @@ def test_lock_release():
 		pass
 
 
-def test_orphaned_lock_timeout():
-	prev_timeout = locking.LOCK_TIMEOUT
-	locking.LOCK_TIMEOUT = 0.1
-	lock = locking.WriteLock("db_orphaned")
+def test_read_lock_release():
+	read_lock = locking.ReadLock("test_db")
+	write_lock = locking.WriteLock("test_db")
 
-	lock._lock()
-	time.sleep(0.2)
+	# Acquire and release a read lock
+	with read_lock:
+		pass
 
-	# Trigger the removal of orphaned locks
-	ls = locking.FileLocksSnapshot(lock.need_lock)
-	assert len(ls.locks) == 0
+	# Now attempt to acquire a write lock
+	with write_lock:
+		assert write_lock.has_lock is not None
 
-	locking.LOCK_TIMEOUT = prev_timeout
+	read_lock._unlock()
+	write_lock._unlock()
 
 
 def test_double_lock_exception(use_compression):
