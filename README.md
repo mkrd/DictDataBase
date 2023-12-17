@@ -235,18 +235,15 @@ DDB.locking.SLEEP_TIMEOUT = 0.001 # 1ms, default value
 A value of 1 millisecond is good and it is generally not recommended to change it,
 but you can still tune it to optimize performance in your use case.
 
-Lock Timeout
+
+Lock aquisition timeout
 ----------------------------------------------------------------------------------------
-When a lock file is older than the lock timeout, it is considered orphaned and will
-be removed. This could be the case when your operating terminates a thread or process
-while it holds a lock. The timeout can be adjusted:
+AQUIRE_LOCK_TIMEOUT specifies the maximum duration to wait for acquiring a lock before
+giving up and throwing a timeout error.
 
 ```python
-DDB.locking.LOCK_TIMEOUT = 30.0 # 30s, default value
+DDB.locking.REMOVE_ORPHAN_LOCK_TIMEOUT = 60.0 # 60s, default value
 ```
-
-Chose a value that is long enough where you know that your database operations will
-less than it.
 
 
 API Reference
