@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import os
 import threading
 import time
@@ -10,10 +11,16 @@ from . import config
 # - Do not use pathlib, because it is slower than os
 
 # Constants
-SLEEP_TIMEOUT = 0.001
-LOCK_KEEP_ALIVE_TIMEOUT = 0.0001
-ALIVE_LOCK_MAX_AGE = 10.0  # Duration to wait updating the timestamp of the lock file.
-REMOVE_ORPHAN_LOCK_TIMEOUT = 20.0  # Duration to wait before considering a lock as orphaned.
+SLEEP_TIMEOUT = 0.001 * 1  # (ms)
+LOCK_KEEP_ALIVE_TIMEOUT = 0.001 * 0.1  # (ms)
+
+# Duration to wait updating the timestamp of the lock file
+ALIVE_LOCK_REFRESH_INTERVAL_NS = 1_000_000_000 * 10  # (s)
+
+# Duration to wait before considering a lock as orphaned
+REMOVE_ORPHAN_LOCK_TIMEOUT = 20.0
+
+# Duration to wait before giving up on acquiring a lock
 AQUIRE_LOCK_TIMEOUT = 60.0
 
 
@@ -167,18 +174,22 @@ class AbstractLock:
 		Keep the lock alive by updating the timestamp of the lock file.
 		"""
 
+		current_has_lock_time_ns: int = int(self.has_lock.time_ns)
+
 		while self.is_alive:
 			time.sleep(LOCK_KEEP_ALIVE_TIMEOUT)
-			if time.time_ns() - int(self.has_lock.time_ns) < ALIVE_LOCK_MAX_AGE * 1_000_000_000:
+			if time.time_ns() - current_has_lock_time_ns < ALIVE_LOCK_REFRESH_INTERVAL_NS:
 				continue
+
+			# Assert: The lock is older than ALIVE_LOCK_REFRESH_INTERVAL_NS ns
+			# This means the has_lock must be refreshed
+
 			new_has_lock = self.has_lock.new_with_updated_time()
 			os_touch(new_has_lock.path)
-			old_has_lock_path = self.has_lock.path
+			with contextlib.suppress(FileNotFoundError):
+				os.unlink(self.has_lock.path)  # Remove old lock file
 			self.has_lock = new_has_lock
-			try:
-				os.unlink(old_has_lock_path)
-			except FileNotFoundError:
-				pass
+			current_has_lock_time_ns = int(new_has_lock.time_ns)
 
 	def _start_keep_alive_thread(self) -> None:
 		"""
@@ -216,7 +227,7 @@ class AbstractLock:
 	def __enter__(self) -> None:
 		self._lock()
 
-	def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+	def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # noqa: ANN001
 		self._unlock()
 
 
