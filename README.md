@@ -143,7 +143,7 @@ Write dicts
 ```python
 with DDB.at("users").session() as (session, users):
    users["u3"]["age"] = 99
-print(DDB.at("users", key="u3").read()["age])
+print(DDB.at("users", key="u3").read()["age"])
 >>> 99
 ```
 > If you do not call session.write(), changes will not be written to disk!
