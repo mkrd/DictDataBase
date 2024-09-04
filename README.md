@@ -93,7 +93,7 @@ users_dict = {
    "u2": { "name" : "Sue", "age": 21, "job": "Architect" },
    "u3": { "name" : "Joe", "age": 50, "job": "Manager" },
 }
-DDB.at("users").create(user_data_dict)
+DDB.at("users").create(users_dict)
 ```
 There is now a file called `users.json` or `users.ddb` in your specified storage
 directory depending on if you use compression.
