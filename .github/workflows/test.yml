@@ -1,53 +1,54 @@
 name: Tests
 on: [push, pull_request]
+
 jobs:
 
-  # JOB
+  # JOB: Tests
   tests-job:
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
 
     steps:
       #----------------------------------------------
       #---- Checkout and install poetry and python
       #----------------------------------------------
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install poetry
         run: pipx install poetry
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'poetry'
 
       #----------------------------------------------
-      #---- install dependencies
+      #---- Install dependencies
       #----------------------------------------------
 
-      - name: poetry install
+      - name: Poetry install
         run: poetry install
 
       #----------------------------------------------
-      #---- show installation details
+      #---- Show installation details
       #----------------------------------------------
 
-      - name: poetry --version
+      - name: Poetry version
         run: poetry --version
-      - name: python --version in venv
+      - name: Python version in venv
         run: poetry run python --version
-      - name: ls -lah
+      - name: List files
         run: ls -lah
-      - name: poetry show
+      - name: Poetry show
         run: poetry show
 
       #----------------------------------------------
       #---- Pre-Checks
       #----------------------------------------------
 
-      - name: Show clock res
+      - name: Show clock resolution
         run: poetry run python tests/system_checks/test_tick_rate.py
       - name: Test clocks
         run: poetry run python tests/system_checks/test_clocks.py
@@ -55,7 +56,7 @@ jobs:
         run: poetry run python tests/system_checks/test_monotonic_over_threads.py
 
       #----------------------------------------------
-      #---- Tests
+      #---- Run tests with coverage report
       #----------------------------------------------
 
       - name: 🚀 Run tests with code coverage report
@@ -64,39 +65,58 @@ jobs:
       #----------------------------------------------
       #---- Save coverage artifact
       #----------------------------------------------
-      - uses: actions/upload-artifact@v3
-        with:
-          name: coverage
-          path: .coverage
 
-  # JOB
+      - name: Debug coverage file
+        run: ls -lah
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.python-version }}
+          include-hidden-files: true
+          if-no-files-found: error
+          path: ".coverage"
+
+  # JOB: Coverage Badge
   cov-badge-job:
     needs: tests-job
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+
       #----------------------------------------------
-      #---- Coverage badge
+      #---- Download and debug artifact
       #----------------------------------------------
-      - name: ls-lah
+
+      - name: Debug workspace
         run: ls -lah
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
-          name: coverage
+          name: coverage-3.12
+          path: .
 
-      - name: GenerateCoverage Badge
+      - name: Debug downloaded artifact
+        run: ls -lah
+
+      #----------------------------------------------
+      #---- Generate coverage badge
+      #----------------------------------------------
+
+      - name: Generate Coverage Badge
         uses: tj-actions/coverage-badge-py@v2
         with:
           output: assets/coverage.svg
 
-      - name: Verify Changed files
+      #----------------------------------------------
+      #---- Verify and commit changes
+      #----------------------------------------------
+
+      - name: Verify Changed Files
         uses: tj-actions/verify-changed-files@v16
         id: changed_files
         with:
           files: assets/coverage.svg
 
-      - name: Commit files
+      - name: Commit Files
         if: steps.changed_files.outputs.files_changed == 'true'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
@@ -104,7 +124,7 @@ jobs:
           git add assets/coverage.svg
           git commit -m "Updated assets/coverage.svg"
 
-      - name: Push changes
+      - name: Push Changes
         if: steps.changed_files.outputs.files_changed == 'true'
         uses: ad-m/github-push-action@master
         with:

@@ -14,7 +14,7 @@ it.
 - **Compression**. Configure if the files should be stored as raw json or as json
 compressed with zlib.
 - **Fast**. Key-value pairs inside a json file can be accessed quickly and efficiently because the keys are indexed.
-- **Tested** with 99%+ coverage.
+- **Tested** with 98%+ coverage on Python 3.8 to 3.13.
 
 ### Why use DictDataBase
 - Your application concurrently reads and writes data from multiple processes or threads.
