@@ -35,14 +35,16 @@ jobs:
       #---- Show installation details
       #----------------------------------------------
 
-      - name: Poetry version
+      - name: poetry --version
         run: poetry --version
-      - name: Python version in venv
+      - name: poetry run python --version
         run: poetry run python --version
-      - name: List files
+      - name: ls -lah
         run: ls -lah
-      - name: Poetry show
+      - name: poetry show
         run: poetry show
+      - name: poetry show --tree
+        run: poetry show --tree
 
       #----------------------------------------------
       #---- Pre-Checks
