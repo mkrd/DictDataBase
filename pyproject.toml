@@ -1,11 +1,11 @@
-[tool.poetry]
+[project]
 name = "dictdatabase"
-version = "2.5.0"
-repository = "https://github.com/mkrd/DictDataBase"
+version = "2.5.1"
 description = "Easy-to-use database using dicts"
-authors = ["Marcel Kröker <kroeker.marcel@gmail.com>"]
-license = "MIT"
 readme = "README.md"
+authors = [{ name = "Marcel Kröker", email = "kroeker.marcel@gmail.com" }]
+license = { file = "LICENSE" }
+requires-python = ">=3.8,<3.14"
 classifiers=[
 	"Programming Language :: Python :: 3",
 	"License :: OSI Approved :: MIT License",
@@ -14,20 +14,19 @@ classifiers=[
 	"Programming Language :: Python",
 	"Topic :: Software Development :: Libraries :: Python Modules"
 ]
+dependencies = [
+    "orjson ~= 3.8.7"
+]
+[dependency-groups]
+dev = [
+    "super-py ~= 0.4.2",
+    "pyinstrument ~= 4.4.0",
+    "pytest-cov ~= 4.0.0",
+    "path-dict ~= 3.0.4",
+]
 
-[tool.poetry.dependencies]
-python = "^3.8"
-orjson = "^3.10.0"
-
-[tool.poetry.group.dev.dependencies]
-super-py = "^0.4.2"
-pyinstrument = "^4.4.0"
-pytest-cov = "^4.0.0"
-path-dict = "^3.0.4"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[tool.setuptools]
+packages = ["dictdatabase"]
 
 
 [tool.ruff]
