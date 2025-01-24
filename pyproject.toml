@@ -17,7 +17,7 @@ classifiers=[
 
 [tool.poetry.dependencies]
 python = "^3.8"
-orjson = "^3.8.7"
+orjson = "^3.10.0"
 
 [tool.poetry.group.dev.dependencies]
 super-py = "^0.4.2"
