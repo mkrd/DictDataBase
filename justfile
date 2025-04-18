@@ -26,4 +26,4 @@ publish:
     uv build
     uv publish
     rm -rf dist
-    rm -rf flask_squeeze.egg-info
+    rm -rf dictdatabase.egg-info
