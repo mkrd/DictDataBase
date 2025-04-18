@@ -21,3 +21,9 @@ benchmark_threaded:
 alias ba := benchmark_async
 benchmark_async:
     poetry run python tests/benchmark/run_async.py
+
+publish:
+    uv build
+    uv publish
+    rm -rf dist
+    rm -rf dictdatabase.egg-info
