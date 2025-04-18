@@ -17,6 +17,8 @@ requires-python = ">=3.8,<3.14"
 dependencies = [
     "orjson ~= 3.8.7"
 ]
+
+
 [dependency-groups]
 dev = [
     "super-py ~= 0.4.2",
@@ -25,9 +27,11 @@ dev = [
     "path-dict ~= 3.0.4",
 ]
 
+
 [tool.setuptools]
 packages = ["dictdatabase"]
-license-files = []
+license-files = [] # Workaround for https://github.com/astral-sh/uv/issues/9513
+
 
 [tool.uv]
 package = true
@@ -56,6 +60,7 @@ ignore = [
     "W191", # indentation contains tabs
     "E741", # ambiguous variable name
 ]
+
 
 [tool.ruff.format]
 indent-style = "tab"
