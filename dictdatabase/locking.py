@@ -40,7 +40,7 @@ class LockFileMeta:
 	Metadata representation for a lock file.
 	"""
 
-	__slots__ = ("ddb_dir", "name", "id", "time_ns", "stage", "mode", "path")
+	__slots__ = ("ddb_dir", "id", "mode", "name", "path", "stage", "time_ns")
 
 	ddb_dir: str
 	name: str
@@ -142,7 +142,7 @@ class AbstractLock:
 	provides a blueprint for derived classes to implement.
 	"""
 
-	__slots__ = ("db_name", "need_lock", "has_lock", "snapshot", "mode", "is_alive" "keep_alive_thread")
+	__slots__ = ("db_name", "need_lock", "has_lock", "snapshot", "mode", "is_alivekeep_alive_thread")
 
 	db_name: str
 	need_lock: LockFileMeta
@@ -155,7 +155,7 @@ class AbstractLock:
 	def __init__(self, db_name: str) -> None:
 		# Normalize db_name to avoid file naming conflicts
 		self.db_name = db_name.replace("/", "___").replace(".", "____")
-		time_ns = time.time_ns()
+		time_ns = str(time.time_ns())
 		t_id = f"{threading.get_native_id()}"  # ID that's unique across processes and threads.
 		dir = os.path.join(config.storage_directory, ".ddb")
 

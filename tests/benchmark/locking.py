@@ -15,9 +15,9 @@ path.mkdir(exist_ok=True, parents=True)
 # 25.11.22: 4156ms
 with profiler.Profiler() as p:
 	for _ in range(25_000):
-		l = locking.ReadLock("db")
-		l._lock()
-		l._unlock()
+		read_lock = locking.ReadLock("db")
+		read_lock._lock()  # noqa: SLF001
+		read_lock._unlock()  # noqa: SLF001
 p.open_in_browser()
 
 
@@ -25,14 +25,14 @@ p.open_in_browser()
 # 25.11.22: 4159ms
 with profiler.Profiler() as p:
 	for _ in range(25_000):
-		l = locking.WriteLock("db")
-		l._lock()
-		l._unlock()
+		write_lock = locking.WriteLock("db")
+		write_lock._lock()  # noqa: SLF001
+		write_lock._unlock()  # noqa: SLF001
 p.open_in_browser()
 
 
-l = locking.WriteLock("db/test.some")
-l._lock()
+write_lock = locking.WriteLock("db/test.some")
+write_lock._lock()  # noqa: SLF001
 
 
 shutil.rmtree(DDB.config.storage_directory)

@@ -1,6 +1,7 @@
 import queue
 import threading
 import time
+from typing import Callable
 
 # Number of threads
 NUM_THREADS = 64
@@ -19,14 +20,14 @@ clocks = {
 timestamps = queue.Queue()
 
 
-def capture_time(i, clock_func: callable) -> None:
+def capture_time(i, clock_func: Callable) -> None:
 	# Capture time using the given clock function and put it in the queue
 	for _ in range(1000):
 		# print(f"Thread {i} capturing time")
 		timestamps.put(clock_func())
 
 
-def check_monotonicity_for_clock(clock_name: str, clock_func: callable) -> None:
+def check_monotonicity_for_clock(clock_name: str, clock_func: Callable) -> None:
 	# Clear the queue for the next clock
 	while not timestamps.empty():
 		timestamps.get()

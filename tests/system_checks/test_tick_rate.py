@@ -1,7 +1,8 @@
 import time
+from typing import Callable
 
 
-def get_tick_rate(clock_func: callable) -> float:
+def get_tick_rate(clock_func: Callable) -> float:
 	start_time = time.time()
 	measurements = [clock_func() for _ in range(2_000_000)]
 	end_time = time.time()
@@ -10,7 +11,8 @@ def get_tick_rate(clock_func: callable) -> float:
 	prev_value = measurements[0]
 	for current_value in measurements[1:]:
 		if current_value < prev_value:
-			raise RuntimeError("Clock function is not monotonic")
+			msg = "Clock function is not monotonic"
+			raise RuntimeError(msg)
 		if current_value != prev_value:
 			ticks += 1
 		prev_value = current_value
