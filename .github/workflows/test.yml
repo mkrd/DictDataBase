@@ -49,11 +49,11 @@ jobs:
       #----------------------------------------------
 
       - name: Show clock resolution
-        run: poetry run python tests/system_checks/test_tick_rate.py
+        run: uv run python tests/system_checks/test_tick_rate.py
       - name: Test clocks
-        run: poetry run python tests/system_checks/test_clocks.py
+        run: uv run python tests/system_checks/test_clocks.py
       - name: Test monotonicity
-        run: poetry run python tests/system_checks/test_monotonic_over_threads.py
+        run: uv run python tests/system_checks/test_monotonic_over_threads.py
 
       #----------------------------------------------
       #---- Run tests with coverage report
