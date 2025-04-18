@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import os
 import random
@@ -6,6 +8,7 @@ import time
 from calendar import c
 from dataclasses import dataclass
 from multiprocessing import Pool
+from typing import Callable
 
 from path_dict import PathDict
 
@@ -14,7 +17,7 @@ import dictdatabase as DDB
 DDB.config.storage_directory = ".ddb_bench_multi"
 
 
-def benchmark(iterations, setup: callable = None):
+def benchmark(iterations, setup: Callable | None = None):
 	def decorator(function):
 		def wrapper(*args, **kwargs):
 			f_name = function.__name__

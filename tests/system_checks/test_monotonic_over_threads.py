@@ -17,7 +17,7 @@ clocks = {
 }
 
 # Queue to store timestamps in order
-timestamps = queue.Queue()
+timestamps: queue.Queue = queue.Queue()
 
 
 def capture_time(i, clock_func: Callable) -> None:

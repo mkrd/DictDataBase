@@ -36,9 +36,11 @@ class OperationType:
 		self.key = key is not None
 
 		if self.key and self.where:
-			raise TypeError("Cannot specify both key and where")
+			msg = "Cannot specify both key and where"
+			raise TypeError(msg)
 		if self.key and self.dir:
-			raise TypeError("Cannot specify sub-key when selecting a folder. Specify the key in the path instead.")
+			msg = "Cannot specify sub-key when selecting a folder. Specify the key in the path instead."
+			raise TypeError(msg)
 
 	@property
 	def file_normal(self) -> bool:
@@ -88,7 +90,7 @@ def at(*path, key: str | None = None, where: Callable[[Any, Any], bool] | None =
 
 
 class DDBMethodChooser:
-	__slots__ = ("path", "key", "where", "op_type")
+	__slots__ = ("key", "op_type", "path", "where")
 
 	path: str
 	key: str
@@ -124,7 +126,8 @@ class DDBMethodChooser:
 		As long it exists as a key in any dict, it will be found.
 		"""
 		if self.where is not None:
-			raise RuntimeError("DDB.at(where=...).exists() cannot be used with the where parameter")
+			msg = "DDB.at(where=...).exists() cannot be used with the where parameter"
+			raise RuntimeError(msg)
 
 		if not utils.file_exists(self.path):
 			return False
@@ -163,7 +166,8 @@ class DDBMethodChooser:
 		Delete the file at the selected path.
 		"""
 		if self.where is not None or self.key is not None:
-			raise RuntimeError("DDB.at().delete() cannot be used with the where or key parameters")
+			msg = "DDB.at().delete() cannot be used with the where or key parameters"
+			raise RuntimeError(msg)
 		io_safe.delete(self.path)
 
 	def read(self, as_type: Type[T] | None = None) -> dict | T | None:
@@ -180,7 +184,7 @@ class DDBMethodChooser:
 				return value
 			return as_type(value)
 
-		data = {}
+		data: dict = {}
 
 		if self.op_type.file_normal:
 			data = io_safe.read(self.path)

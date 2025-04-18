@@ -57,9 +57,15 @@ ignore = [
     "ANN201", # Missing return type annotation for public function
     "ARG001", # Unused function argument
     "T201", # `print` found
+    "ERA001", # Found commented-out code
 ]
 
 
 [tool.ruff.format]
 indent-style = "tab"
 quote-style = "double"
+
+
+
+[tool.mypy]
+ignore_missing_imports = true

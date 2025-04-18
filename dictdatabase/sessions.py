@@ -13,12 +13,12 @@ def type_cast(obj, as_type):
 	return obj if as_type is None else as_type(obj)
 
 
-class SessionBase:
+class SessionBase[T]:
 	in_session: bool
 	db_name: str
 	as_type: T
 
-	def __init__(self, db_name: str, as_type):
+	def __init__(self, db_name: str, as_type: T) -> None:
 		self.in_session = False
 		self.db_name = db_name
 		self.as_type = as_type
@@ -27,7 +27,7 @@ class SessionBase:
 		self.in_session = True
 		self.data_handle = {}
 
-	def __exit__(self, type, value, tb):
+	def __exit__(self, type, value, tb) -> None:
 		write_lock = getattr(self, "write_lock", None)
 		if write_lock is not None:
 			if isinstance(write_lock, list):
