@@ -1,11 +1,13 @@
+from __future__ import annotations
+
 import json
 import os
 import random
 import shutil
 import time
-from calendar import c
 from dataclasses import dataclass
 from multiprocessing import Pool
+from typing import Callable
 
 from path_dict import PathDict
 
@@ -14,7 +16,7 @@ import dictdatabase as DDB
 DDB.config.storage_directory = ".ddb_bench_multi"
 
 
-def benchmark(iterations, setup: callable = None):
+def benchmark(iterations, setup: Callable | None = None):
 	def decorator(function):
 		def wrapper(*args, **kwargs):
 			f_name = function.__name__
@@ -107,7 +109,7 @@ def parallel_stressor(scenario: Scenario):
 	# Create Tables
 	for t in range(scenario.files):
 		if scenario.big_file:
-			with open(os.path.join(os.getcwd(), "test_db/production_database/tasks.json"), "r") as f:
+			with open(os.path.join(os.getcwd(), "test_db/production_database/tasks.json")) as f:
 				db = json.loads(f.read())
 				db["counter"] = {"counter": 0}
 		else:

@@ -36,9 +36,11 @@ class OperationType:
 		self.key = key is not None
 
 		if self.key and self.where:
-			raise TypeError("Cannot specify both key and where")
+			msg = "Cannot specify both key and where"
+			raise TypeError(msg)
 		if self.key and self.dir:
-			raise TypeError("Cannot specify sub-key when selecting a folder. Specify the key in the path instead.")
+			msg = "Cannot specify sub-key when selecting a folder. Specify the key in the path instead."
+			raise TypeError(msg)
 
 	@property
 	def file_normal(self) -> bool:
@@ -61,7 +63,7 @@ class OperationType:
 		return self.dir and self.where and not self.key
 
 
-def at(*path, key: str = None, where: Callable[[Any, Any], bool] = None) -> DDBMethodChooser:
+def at(*path, key: str | None = None, where: Callable[[Any, Any], bool] | None = None) -> DDBMethodChooser:
 	"""
 	Select a file or folder to perform an operation on.
 	If you want to select a specific key in a file, use the `key` parameter,
@@ -88,7 +90,7 @@ def at(*path, key: str = None, where: Callable[[Any, Any], bool] = None) -> DDBM
 
 
 class DDBMethodChooser:
-	__slots__ = ("path", "key", "where", "op_type")
+	__slots__ = ("key", "op_type", "path", "where")
 
 	path: str
 	key: str
@@ -98,8 +100,8 @@ class DDBMethodChooser:
 	def __init__(
 		self,
 		path: tuple,
-		key: str = None,
-		where: Callable[[Any, Any], bool] = None,
+		key: str | None = None,
+		where: Callable[[Any, Any], bool] | None = None,
 	) -> None:
 		# Convert path to a list of strings
 		pc = []
@@ -124,7 +126,8 @@ class DDBMethodChooser:
 		As long it exists as a key in any dict, it will be found.
 		"""
 		if self.where is not None:
-			raise RuntimeError("DDB.at(where=...).exists() cannot be used with the where parameter")
+			msg = "DDB.at(where=...).exists() cannot be used with the where parameter"
+			raise RuntimeError(msg)
 
 		if not utils.file_exists(self.path):
 			return False
@@ -146,13 +149,13 @@ class DDBMethodChooser:
 		exists, defaults to False (optional).
 		"""
 		if self.where is not None or self.key is not None:
-			raise RuntimeError("DDB.at().create() cannot be used with the where or key parameters")
+			msg = "DDB.at().create() cannot be used with the where or key parameters"
+			raise RuntimeError(msg)
 
 		# Except if db exists and force_overwrite is False
 		if not force_overwrite and self.exists():
-			raise FileExistsError(
-				f"Database {self.path} already exists in {config.storage_directory}. Pass force_overwrite=True to overwrite."
-			)
+			msg = f"Database {self.path} already exists in {config.storage_directory}. Pass force_overwrite=True to overwrite."
+			raise FileExistsError(msg)
 		# Write db to file
 		if data is None:
 			data = {}
@@ -163,10 +166,11 @@ class DDBMethodChooser:
 		Delete the file at the selected path.
 		"""
 		if self.where is not None or self.key is not None:
-			raise RuntimeError("DDB.at().delete() cannot be used with the where or key parameters")
+			msg = "DDB.at().delete() cannot be used with the where or key parameters"
+			raise RuntimeError(msg)
 		io_safe.delete(self.path)
 
-	def read(self, as_type: Type[T] = None) -> dict | T | None:
+	def read(self, as_type: Type[T] | None = None) -> dict | T | None:
 		"""
 		Reads a file or folder depending on previous `.at(...)` selection.
 
@@ -180,7 +184,7 @@ class DDBMethodChooser:
 				return value
 			return as_type(value)
 
-		data = {}
+		data: dict = {}
 
 		if self.op_type.file_normal:
 			data = io_safe.read(self.path)
@@ -209,7 +213,7 @@ class DDBMethodChooser:
 		return type_cast(data)
 
 	def session(
-		self, as_type: Type[T] = None
+		self, as_type: Type[T] | None = None
 	) -> SessionFileFull[T] | SessionFileKey[T] | SessionFileWhere[T] | SessionDirFull[T] | SessionDirWhere[T]:
 		"""
 		Opens a session to the selected file(s) or folder, depending on previous
@@ -228,6 +232,7 @@ class DDBMethodChooser:
 		Returns:
 		- Tuple of (session_object, data)
 		"""
+
 		if self.op_type.file_normal:
 			return SessionFileFull(self.path, as_type)
 		if self.op_type.file_key:
@@ -238,3 +243,6 @@ class DDBMethodChooser:
 			return SessionDirFull(self.path, as_type)
 		if self.op_type.dir_where:
 			return SessionDirWhere(self.path, self.where, as_type)
+
+		msg = "Invalid operation type"
+		raise RuntimeError(msg)

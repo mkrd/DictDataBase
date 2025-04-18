@@ -83,7 +83,8 @@ def seek_index_through_value_bytes(json_bytes: bytes, index: int) -> int:
 			while True:
 				i = json_bytes.find(byte_codes.QUOTE, i + 1)
 				if i == -1:
-					raise TypeError("Invalid JSON")
+					msg = "Invalid JSON"
+					raise TypeError(msg)
 
 				j = i - 1
 				backslash_count = 0
@@ -123,7 +124,8 @@ def seek_index_through_value_bytes(json_bytes: bytes, index: int) -> int:
 				return i
 		i += 1
 
-	raise TypeError("Invalid JSON")
+	msg = "Invalid JSON"
+	raise TypeError(msg)
 
 
 def count_nesting_in_bytes(json_bytes: bytes, start: int, end: int) -> int:
@@ -173,9 +175,9 @@ def find_outermost_key_in_json_bytes(json_bytes: bytes, key: str) -> Tuple[int, 
 	# TODO: Very strict. the key must have a colon directly after it
 	# For example {"a": 1} will work, but {"a" : 1} will not work!
 
-	key = f'"{key}":'.encode()
+	key_bytes = f'"{key}":'.encode()
 
-	if (curr_i := json_bytes.find(key, 0)) == -1:
+	if (curr_i := json_bytes.find(key_bytes, 0)) == -1:
 		return (-1, -1)
 
 	# Assert: Key was found and curr_i is the index of the first character of the key
@@ -184,8 +186,8 @@ def find_outermost_key_in_json_bytes(json_bytes: bytes, key: str) -> Tuple[int, 
 	key_nest = [(curr_i, count_nesting_in_bytes(json_bytes, 0, curr_i))]
 
 	# As long as more keys are found, keep track of them and their nesting level
-	while (next_i := json_bytes.find(key, curr_i + len(key))) != -1:
-		nesting = count_nesting_in_bytes(json_bytes, curr_i + len(key), next_i)
+	while (next_i := json_bytes.find(key_bytes, curr_i + len(key_bytes))) != -1:
+		nesting = count_nesting_in_bytes(json_bytes, curr_i + len(key_bytes), next_i)
 		key_nest.append((next_i, nesting))
 		curr_i = next_i
 
@@ -195,7 +197,7 @@ def find_outermost_key_in_json_bytes(json_bytes: bytes, key: str) -> Tuple[int, 
 	# Early exit if there is only one key
 	if len(key_nest) == 1:
 		index, level = key_nest[0]
-		return (index, index + len(key)) if level == 1 else (-1, -1)
+		return (index, index + len(key_bytes)) if level == 1 else (-1, -1)
 
 	# Relative to total nesting
 	for i in range(1, len(key_nest)):
@@ -205,7 +207,7 @@ def find_outermost_key_in_json_bytes(json_bytes: bytes, key: str) -> Tuple[int, 
 	indices_at_index_one = [i for i, level in key_nest if level == 1]
 	if len(indices_at_index_one) != 1:
 		return (-1, -1)
-	return (indices_at_index_one[0], indices_at_index_one[0] + len(key))
+	return (indices_at_index_one[0], indices_at_index_one[0] + len(key_bytes))
 
 
 def detect_indentation_in_json_bytes(json_bytes: bytes, index: int) -> Tuple[int, str]:
@@ -221,7 +223,7 @@ def detect_indentation_in_json_bytes(json_bytes: bytes, index: int) -> Tuple[int
 	- A tuple of the indentation level and the whitespace used
 	"""
 
-	indentation_bytes, contains_tab = bytes(), False
+	indentation_bytes, contains_tab = b"", False
 	for i in range(index - 1, -1, -1):
 		if json_bytes[i] not in [byte_codes.SPACE, byte_codes.TAB]:
 			break

@@ -45,6 +45,16 @@ jobs:
         run: uv tree
 
       #----------------------------------------------
+      #---- Linting and Static Analysis
+      #----------------------------------------------
+
+      - name: 🔎 Run Ruff
+        run: uv run ruff check . # Or 'ruff format --check .' if you want formatting checks
+
+      - name: 🐍 Mypy Static Type Checker
+        run: uv run mypy .
+
+      #----------------------------------------------
       #---- Pre-Checks
       #----------------------------------------------
 

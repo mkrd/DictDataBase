@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import os
 import zlib
 
 from . import config, utils
 
 
-def read(db_name: str, *, start: int = None, end: int = None) -> bytes:
+def read(db_name: str, *, start: int | None = None, end: int | None = None) -> bytes:
 	"""
 	Read the content of a file as bytes. Reading works even when the config
 	changes, so a compressed ddb file can also be read if compression is
@@ -33,7 +35,8 @@ def read(db_name: str, *, start: int = None, end: int = None) -> bytes:
 
 	if json_exists:
 		if ddb_exists:
-			raise FileExistsError(f'Inconsistent: "{db_name}" exists as .json and .ddb.' "Please remove one of them.")
+			msg = f'Inconsistent: "{db_name}" exists as .json and .ddb.Please remove one of them.'
+			raise FileExistsError(msg)
 		with open(json_path, "rb") as f:
 			if start is None and end is None:
 				return f.read()
@@ -43,7 +46,8 @@ def read(db_name: str, *, start: int = None, end: int = None) -> bytes:
 				return f.read()
 			return f.read(end - start)
 	if not ddb_exists:
-		raise FileNotFoundError(f'No database file exists for "{db_name}"')
+		msg = f'No database file exists for "{db_name}"'
+		raise FileNotFoundError(msg)
 	with open(ddb_path, "rb") as f:
 		json_bytes = zlib.decompress(f.read())
 		if start is None and end is None:
@@ -53,7 +57,7 @@ def read(db_name: str, *, start: int = None, end: int = None) -> bytes:
 		return json_bytes[start:end]
 
 
-def write(db_name: str, dump: bytes, *, start: int = None) -> None:
+def write(db_name: str, dump: bytes, *, start: int | None = None) -> None:
 	"""
 	Write the bytes to the file of the db_path. If the db was compressed but no
 	compression is enabled, remove the compressed file, and vice versa.
@@ -72,7 +76,8 @@ def write(db_name: str, dump: bytes, *, start: int = None) -> None:
 	remove_file = None
 	if config.use_compression:
 		if start is not None:
-			raise RuntimeError("Cannot write to compressed file at a specific index")
+			msg = "Cannot write to compressed file at a specific index"
+			raise RuntimeError(msg)
 		write_file = ddb_path
 		if json_exists:
 			remove_file = json_path

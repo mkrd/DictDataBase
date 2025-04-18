@@ -40,7 +40,7 @@ class LockFileMeta:
 	Metadata representation for a lock file.
 	"""
 
-	__slots__ = ("ddb_dir", "name", "id", "time_ns", "stage", "mode", "path")
+	__slots__ = ("ddb_dir", "id", "mode", "name", "path", "stage", "time_ns")
 
 	ddb_dir: str
 	name: str
@@ -79,7 +79,7 @@ class FileLocksSnapshot:
 	On init, orphaned locks are removed.
 	"""
 
-	__slots__ = ("any_has_locks", "any_write_locks", "any_has_write_locks", "locks")
+	__slots__ = ("any_has_locks", "any_has_write_locks", "any_write_locks", "locks")
 
 	locks: list[LockFileMeta]
 	any_has_locks: bool
@@ -142,7 +142,7 @@ class AbstractLock:
 	provides a blueprint for derived classes to implement.
 	"""
 
-	__slots__ = ("db_name", "need_lock", "has_lock", "snapshot", "mode", "is_alive" "keep_alive_thread")
+	__slots__ = ("db_name", "has_lock", "is_alive", "keep_alive_thread", "mode", "need_lock", "snapshot")
 
 	db_name: str
 	need_lock: LockFileMeta
@@ -150,12 +150,12 @@ class AbstractLock:
 	snapshot: FileLocksSnapshot
 	mode: str
 	is_alive: bool
-	keep_alive_thread: threading.Thread
+	keep_alive_thread: threading.Thread | None
 
 	def __init__(self, db_name: str) -> None:
 		# Normalize db_name to avoid file naming conflicts
 		self.db_name = db_name.replace("/", "___").replace(".", "____")
-		time_ns = time.time_ns()
+		time_ns = str(time.time_ns())
 		t_id = f"{threading.get_native_id()}"  # ID that's unique across processes and threads.
 		dir = os.path.join(config.storage_directory, ".ddb")
 
@@ -197,7 +197,8 @@ class AbstractLock:
 		"""
 
 		if self.keep_alive_thread is not None:
-			raise RuntimeError("Keep alive thread already exists.")
+			msg = "Keep alive thread already exists."
+			raise RuntimeError(msg)
 
 		self.is_alive = True
 		self.keep_alive_thread = threading.Thread(target=self._keep_alive_thread, daemon=False)
@@ -227,7 +228,7 @@ class AbstractLock:
 	def __enter__(self) -> None:
 		self._lock()
 
-	def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # noqa: ANN001
+	def __exit__(self, exc_type, exc_val, exc_tb) -> None:
 		self._unlock()
 
 
@@ -248,7 +249,8 @@ class ReadLock(AbstractLock):
 		# If this thread already holds a read lock, raise an exception.
 		if self.snapshot.exists(self.has_lock):
 			os.unlink(self.need_lock.path)
-			raise RuntimeError("Thread already has a read lock. Do not try to obtain a read lock twice.")
+			msg = "Thread already has a read lock. Do not try to obtain a read lock twice."
+			raise RuntimeError(msg)
 
 		start_time = time.time()
 
@@ -264,7 +266,8 @@ class ReadLock(AbstractLock):
 				return
 			time.sleep(SLEEP_TIMEOUT)
 			if time.time() - start_time > AQUIRE_LOCK_TIMEOUT:
-				raise RuntimeError("Timeout while waiting for read lock.")
+				msg = "Timeout while waiting for read lock."
+				raise RuntimeError(msg)
 			self.snapshot = FileLocksSnapshot(self.need_lock)
 
 
@@ -285,7 +288,8 @@ class WriteLock(AbstractLock):
 		# If this thread already holds a write lock, raise an exception.
 		if self.snapshot.exists(self.has_lock):
 			os.unlink(self.need_lock.path)
-			raise RuntimeError("Thread already has a write lock. Do not try to obtain a write lock twice.")
+			msg = "Thread already has a write lock. Do not try to obtain a write lock twice."
+			raise RuntimeError(msg)
 
 		start_time = time.time()
 
@@ -299,5 +303,6 @@ class WriteLock(AbstractLock):
 				return
 			time.sleep(SLEEP_TIMEOUT)
 			if time.time() - start_time > AQUIRE_LOCK_TIMEOUT:
-				raise RuntimeError("Timeout while waiting for write lock.")
+				msg = "Timeout while waiting for write lock."
+				raise RuntimeError(msg)
 			self.snapshot = FileLocksSnapshot(self.need_lock)

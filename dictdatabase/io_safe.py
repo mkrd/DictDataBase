@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import os
 
 from . import config, io_unsafe, locking, utils
 
 
-def read(file_name: str) -> dict:
+def read(file_name: str) -> dict | None:
 	"""
 	Read the content of a file as a dict.
 
@@ -20,7 +22,7 @@ def read(file_name: str) -> dict:
 		return io_unsafe.read(file_name)
 
 
-def partial_read(file_name: str, key: str) -> dict:
+def partial_read(file_name: str, key: str) -> dict | None:
 	"""
 	Read only the value of a key-value pair from a file.
 
