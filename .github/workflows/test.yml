@@ -60,7 +60,7 @@ jobs:
       #----------------------------------------------
 
       - name: 🚀 Run tests with code coverage report
-        run: uv run pytest --cov=flask_squeeze --cov-report term-missing
+        run: uv run pytest --cov=dictdatabase --cov-report term-missing
 
       #----------------------------------------------
       #---- Save coverage artifact
