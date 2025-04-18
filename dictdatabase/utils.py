@@ -124,7 +124,8 @@ def seek_index_through_value_bytes(json_bytes: bytes, index: int) -> int:
 				return i
 		i += 1
 
-	raise TypeError("Invalid JSON")
+	msg = "Invalid JSON"
+	raise TypeError(msg)
 
 
 def count_nesting_in_bytes(json_bytes: bytes, start: int, end: int) -> int:
@@ -222,7 +223,7 @@ def detect_indentation_in_json_bytes(json_bytes: bytes, index: int) -> Tuple[int
 	- A tuple of the indentation level and the whitespace used
 	"""
 
-	indentation_bytes, contains_tab = bytes(), False
+	indentation_bytes, contains_tab = b"", False
 	for i in range(index - 1, -1, -1):
 		if json_bytes[i] not in [byte_codes.SPACE, byte_codes.TAB]:
 			break

@@ -5,7 +5,6 @@ import os
 import random
 import shutil
 import time
-from calendar import c
 from dataclasses import dataclass
 from multiprocessing import Pool
 from typing import Callable
@@ -110,7 +109,7 @@ def parallel_stressor(scenario: Scenario):
 	# Create Tables
 	for t in range(scenario.files):
 		if scenario.big_file:
-			with open(os.path.join(os.getcwd(), "test_db/production_database/tasks.json"), "r") as f:
+			with open(os.path.join(os.getcwd(), "test_db/production_database/tasks.json")) as f:
 				db = json.loads(f.read())
 				db["counter"] = {"counter": 0}
 		else:
