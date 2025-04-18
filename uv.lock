@@ -198,7 +198,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "orjson", specifier = "~=3.10.0" }]
+requires-dist = [{ name = "orjson", specifier = ">=3.9,<4.0" }]
 
 [package.metadata.requires-dev]
 dev = [
