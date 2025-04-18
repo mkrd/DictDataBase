@@ -13,38 +13,36 @@ jobs:
 
     steps:
       #----------------------------------------------
-      #---- Checkout and install poetry and python
+      #---- Checkout and install uv and python
       #----------------------------------------------
 
       - uses: actions/checkout@v4
-      - name: Install poetry
-        run: pipx install poetry
-      - uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
         with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'poetry'
+          enable-cache: true
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
 
       #----------------------------------------------
       #---- Install dependencies
       #----------------------------------------------
 
-      - name: Poetry install
-        run: poetry install
+      - name: uv install
+        run: uv sync --all-extras --dev
 
       #----------------------------------------------
       #---- Show installation details
       #----------------------------------------------
 
-      - name: poetry --version
-        run: poetry --version
-      - name: poetry run python --version
-        run: poetry run python --version
+      - name: uv --version
+        run: uv --version
+      - name: uv run python --version
+        run: uv run python --version
       - name: ls -lah
         run: ls -lah
-      - name: poetry show
-        run: poetry show
-      - name: poetry show --tree
-        run: poetry show --tree
+      - name: uv tree
+        run: uv tree
 
       #----------------------------------------------
       #---- Pre-Checks
@@ -62,7 +60,7 @@ jobs:
       #----------------------------------------------
 
       - name: 🚀 Run tests with code coverage report
-        run: poetry run pytest --cov=dictdatabase --cov-report term-missing
+        run: uv run pytest --cov=flask_squeeze --cov-report term-missing
 
       #----------------------------------------------
       #---- Save coverage artifact
@@ -113,7 +111,7 @@ jobs:
       #----------------------------------------------
 
       - name: Verify Changed Files
-        uses: tj-actions/verify-changed-files@v16
+        uses: tj-actions/verify-changed-files@v17
         id: changed_files
         with:
           files: assets/coverage.svg
