@@ -77,6 +77,8 @@ jobs:
 
   # JOB: Coverage Badge
   cov-badge-job:
+    # Only run this job on push events to the main branch, after tests succeed
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.tests-job.result == 'success'
     needs: tests-job
     runs-on: ubuntu-latest
     steps:
